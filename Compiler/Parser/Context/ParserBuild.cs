@@ -1,0 +1,101 @@
+using System.Diagnostics;
+using DrzSharp.Compiler.Core;
+
+namespace DrzSharp.Compiler.Parser;
+
+public interface ParserBuildContext : ParserContext
+{
+    public int NestSpan(TokenSpan span, SchemeTASTArgs args = new());
+    public bool TryNestSpan(TokenSpan span, out int nestId, SchemeTASTArgs args = new());
+    public int[] NestSpans(TokenSpan[] spans, SchemeTASTArgs args = new());
+
+    public void NestRule(ParserRuleInstance inst, SchemeTASTArgs args = new());
+    public bool TryNestRule(ParserRuleInstance? inst, SchemeTASTArgs args = new());
+    public void NestRules(ParserRuleInstance[] insts, SchemeTASTArgs args = new());
+}
+
+public partial class ParserProcess : ParserBuildContext
+{
+    private int Nest(TokenSpan span, SchemeTASTArgs args)
+    {
+        ref readonly var node = ref TAST.NodeAt(span.NodeId);
+        int start = -1;
+
+        //EVAL
+        int i = TAST.SkipOffset(node, span.Offset, out var childExists, out var child);
+        int rem = span.Start;
+        while (i < node.Length)
+        {
+            if (rem <= 0)
+            {
+                if (start < 0) (start, rem) = (rem, node.Length);
+                else break;
+            }
+
+            if (childExists && child.RelStart == i)
+            {
+                i += child.RelLength;
+                rem -= child.Length;
+                continue;
+            }
+
+            i++;
+            rem--;
+        }
+        return TAST.Nest(span.NodeId, start, i - start, args);
+    }
+    public int NestSpan(TokenSpan span, SchemeTASTArgs args = new())
+    {
+        bool isNestValid = IsNestValidAtSpan(span, out var hasNest, out int nestId);
+        Debug.Assert(isNestValid);
+
+        if (hasNest) return nestId;
+        return Nest(span, args);
+    }
+    public bool TryNestSpan(TokenSpan span, out int nestId, SchemeTASTArgs args = new())
+    {
+        nestId = 0;
+        if (!span.IsValid) return false;
+
+        nestId = NestSpan(span, args);
+        return true;
+    }
+    public int[] NestSpans(TokenSpan[] spans, SchemeTASTArgs args = new())
+    {
+        int[] res = new int[spans.Length];
+        for (int i = 0; i < spans.Length; i++)
+            res[i] = NestSpan(spans[i], args);
+
+        return res;
+    }
+
+    private ParserRuleInstance? _buildCaller = null;
+    public void NestRule(ParserRuleInstance inst, SchemeTASTArgs args = new())
+    {
+        var caller = _buildCaller;
+
+        //APPLY NESTING
+        if (inst.NodeId < 0)
+        {
+            _buildCaller = inst;
+            inst.Build(this);
+
+            Debug.Assert(IsNestValidAtSpan(inst.Span, out _, out _));
+            inst.NodeId = Nest(inst.Span, args);
+            Site._ruleAppliance[inst.NodeId] = inst;
+        }
+        inst.Parent = _buildCaller = caller;
+    }
+    public bool TryNestRule(ParserRuleInstance? inst, SchemeTASTArgs args = new())
+    {
+        if (inst is null) return false;
+
+        NestRule(inst, args);
+        return true;
+    }
+    public void NestRules(ParserRuleInstance[] insts, SchemeTASTArgs args = new())
+    {
+        for (int i = 0; i < insts.Length; i++)
+            NestRule(insts[i], args);
+    }
+}

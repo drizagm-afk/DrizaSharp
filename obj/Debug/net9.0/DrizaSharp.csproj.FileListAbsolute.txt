@@ -1,0 +1,14 @@
+c:\Driza\DrizaSharp\bin\Debug\net9.0\DrizaSharp.exe
+c:\Driza\DrizaSharp\bin\Debug\net9.0\DrizaSharp.deps.json
+c:\Driza\DrizaSharp\bin\Debug\net9.0\DrizaSharp.runtimeconfig.json
+c:\Driza\DrizaSharp\bin\Debug\net9.0\DrizaSharp.dll
+c:\Driza\DrizaSharp\bin\Debug\net9.0\DrizaSharp.pdb
+c:\Driza\DrizaSharp\obj\Debug\net9.0\DrizaSharp.GeneratedMSBuildEditorConfig.editorconfig
+c:\Driza\DrizaSharp\obj\Debug\net9.0\DrizaSharp.AssemblyInfoInputs.cache
+c:\Driza\DrizaSharp\obj\Debug\net9.0\DrizaSharp.AssemblyInfo.cs
+c:\Driza\DrizaSharp\obj\Debug\net9.0\DrizaSharp.csproj.CoreCompileInputs.cache
+c:\Driza\DrizaSharp\obj\Debug\net9.0\DrizaSharp.dll
+c:\Driza\DrizaSharp\obj\Debug\net9.0\refint\DrizaSharp.dll
+c:\Driza\DrizaSharp\obj\Debug\net9.0\DrizaSharp.pdb
+c:\Driza\DrizaSharp\obj\Debug\net9.0\DrizaSharp.genruntimeconfig.cache
+c:\Driza\DrizaSharp\obj\Debug\net9.0\ref\DrizaSharp.dll
