@@ -3,7 +3,7 @@ namespace DrzSharp.Compiler.Parser;
 public partial class ParserProcess
 {
     private void BuildRule(ParserRuleInstance inst) => NestRule(inst);
-    private void EndBuild() => _buildCaller = null;
+    private void EndBuild() => RuleInst = null;
 }
 
 public partial class ParserSite

@@ -76,9 +76,9 @@ public partial class ParserProcess
     }
 }
 
-public partial class ParserSite(int siteId, int fileId, int nodeId)
+public partial class ParserSite(int siteId, int fileId, int rootId)
 {
     public readonly int SiteId = siteId;
     public readonly int FileId = fileId;
-    public readonly int NodeId = nodeId;
+    public readonly int RootId = rootId;
 }

@@ -7,11 +7,11 @@ public partial class ParserProcess
     //MUTATE PROCESS
     private void MutateRule(ParserRuleInstance inst)
     => MutateRule(TAST.NodeAt(inst.NodeId), inst);
-    private void EndMutate() => _reNodeId = -1;
+    private void EndMutate() => RuleInst = null;
 
     private void MutateRule(in TASTNode node, ParserRuleInstance inst)
     {
-        _reNodeId = node.Id;
+        RuleInst = inst;
 
         inst.Mutate(this);
         ApplyRewrite();

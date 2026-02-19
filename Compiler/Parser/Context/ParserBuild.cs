@@ -3,7 +3,7 @@ using DrzSharp.Compiler.Core;
 
 namespace DrzSharp.Compiler.Parser;
 
-public interface ParserBuildContext : ParserContext
+public interface ParserBuildContext : ParserContext, ParserPassContext
 {
     public int NestSpan(TokenSpan span, SchemeTASTArgs args = new());
     public bool TryNestSpan(TokenSpan span, out int nestId, SchemeTASTArgs args = new());
@@ -69,22 +69,21 @@ public partial class ParserProcess : ParserBuildContext
         return res;
     }
 
-    private ParserRuleInstance? _buildCaller = null;
     public void NestRule(ParserRuleInstance inst, SchemeTASTArgs args = new())
     {
-        var caller = _buildCaller;
+        var caller = RuleInst;
 
         //APPLY NESTING
         if (inst.NodeId < 0)
         {
-            _buildCaller = inst;
+            RuleInst = inst;
             inst.Build(this);
 
             Debug.Assert(IsNestValidAtSpan(inst.Span, out _, out _));
             inst.NodeId = Nest(inst.Span, args);
             Site._ruleAppliance[inst.NodeId] = inst;
         }
-        inst.Parent = _buildCaller = caller;
+        inst.Parent = RuleInst = caller;
     }
     public bool TryNestRule(ParserRuleInstance? inst, SchemeTASTArgs args = new())
     {

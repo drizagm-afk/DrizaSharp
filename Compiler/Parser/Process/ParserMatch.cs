@@ -10,7 +10,7 @@ public partial class ParserProcess
     public void EvalMatch(ParserSite site)
     {
         Site = site;
-        EvalMatch(site.NodeId);
+        EvalMatch(site.RootId);
     }
     private void EvalMatch(int nodeId)
     {
@@ -147,9 +147,8 @@ public partial class ParserProcess
                 if (length <= 0) return false;
             }
             return true;
-
         }
-        if (!matchRule(rule)) return null;
+        if (!matchRule(rule) || length <= 0) return null;
 
         //INSTANTIATE
         return GetRuleInstance(rule, span.With(length: length));
@@ -157,7 +156,25 @@ public partial class ParserProcess
 
     //RULE CLASS MATCH
     private ParserRuleInstance? EvalRuleMatch(ParserRuleClass rule, TokenSpan span)
-    => TryMatchRuleClass(0, rule, span);
+    {
+        int length = 0;
+        bool matchRule(ParserRuleBase? rule)
+        {
+            if (rule is not null)
+            {
+                if (!matchRule(rule.Parent)) return false;
+                if (rule.Patterns.Length > 0)
+                {
+                    length = TryMatchPatterns(length, rule, span);
+                    if (length <= 0) return false;
+                }
+            }
+            return true;
+        }
+        if (!matchRule(rule.Parent)) return null;
+
+        return TryMatchRuleClass(length, rule, span);
+    }
     private ParserRuleInstance? TryMatchRuleClass(int length, ParserRuleClass rule, TokenSpan span)
     {
         //MATCH PATTERN
@@ -194,7 +211,10 @@ public partial class ParserProcess
             return inst;
 
         //MATCH PATTERN
-        length = TryMatchPatterns(length, rule, span);
+        if (rule.Patterns.Length > 0)
+        {
+            length = TryMatchPatterns(length, rule, span);
+        }
         if (length <= 0) return null;
 
         //INSTANTIATE

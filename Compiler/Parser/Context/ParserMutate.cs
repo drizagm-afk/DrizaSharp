@@ -2,7 +2,7 @@ using DrzSharp.Compiler.Core;
 
 namespace DrzSharp.Compiler.Parser;
 
-public interface ParserMutateContext : ParserContext
+public interface ParserMutateContext : ParserContext, ParserPassContext
 {
     void Update(SchemeTASTArgs args);
     void Rewrite(RewriteToken[] tokens, int[] children, params RuleId[] rules);
@@ -11,9 +11,8 @@ public interface ParserMutateContext : ParserContext
 public partial class ParserProcess : ParserMutateContext
 {
     //REWRITE
-    private int _reNodeId = -1;
     public void Update(SchemeTASTArgs args)
-    => TAST.Update(_reNodeId, args);
+    => TAST.Update(RuleInst!.NodeId, args);
     public void Rewrite(RewriteToken[] tokens, int[] fillNodes, params RuleId[] rules)
     {
         _reWrite = true;
@@ -37,10 +36,10 @@ public partial class ParserProcess : ParserMutateContext
             if (token.IsNull) TAST.NewNullToken();
             else TAST.NewToken(token.Type, token.Content);
         }
-        TAST.Rewrite(_reNodeId, new(start, TAST.TokenCount - start), _reFillNodes);
+        TAST.Rewrite(RuleInst!.NodeId, new(start, TAST.TokenCount - start), _reFillNodes);
 
         //EVAL REWRITE
-        EvalMatch(_reNodeId, _reRules);
+        EvalMatch(RuleInst.NodeId, _reRules);
 
         ResetRewrite();
     }
