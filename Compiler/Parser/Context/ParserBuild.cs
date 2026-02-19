@@ -28,7 +28,7 @@ public partial class ParserProcess : ParserBuildContext
         {
             if (rem <= 0)
             {
-                if (start < 0) (start, rem) = (rem, node.Length);
+                if (start < 0) (start, rem) = (i, node.Length);
                 else break;
             }
 

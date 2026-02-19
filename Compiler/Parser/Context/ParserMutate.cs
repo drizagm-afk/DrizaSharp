@@ -37,7 +37,7 @@ public partial class ParserProcess : ParserMutateContext
             if (token.IsNull) TAST.NewNullToken();
             else TAST.NewToken(token.Type, token.Content);
         }
-        TAST.Rewrite(_reNodeId, new(start, start - TAST.TokenCount), _reFillNodes);
+        TAST.Rewrite(_reNodeId, new(start, TAST.TokenCount - start), _reFillNodes);
 
         //EVAL REWRITE
         EvalMatch(_reNodeId, _reRules);

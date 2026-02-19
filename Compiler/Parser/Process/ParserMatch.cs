@@ -108,7 +108,7 @@ public partial class ParserProcess
         {
             var parent = rule.Parent;
             if (parent is not null)
-                instRule(rule);
+                instRule(parent);
 
             rule.Instantiate(this, inst);
         }
