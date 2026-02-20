@@ -24,10 +24,14 @@ namespace DrzSharp.Compiler
 
 namespace DrzSharp.Compiler.Lexer
 {
+    public delegate void Rule(Context ctx, ReadOnlySpan<char> content);
     internal static class LexerManager
     {
+        //TOKEN TYPES
+        public static byte typeCount = 0;
+
         //RULES
-        public static readonly List<LexerRule> _rules = [];
+        public static readonly List<Rule> _rules = [];
 
         //PROCESSES
         public static LexerProcess NewProcess() => new();

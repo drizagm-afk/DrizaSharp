@@ -52,7 +52,7 @@ public partial class LexerProcess
             for (int r = LexerManager._rules.Count - 1; r >= 0; r--)
             {
                 var rule = LexerManager._rules[r];
-                rule.TryMatch(this, cont.AsSpan(iter));
+                rule(this, cont.AsSpan(iter));
 
                 if (count < TokenCount)
                 {

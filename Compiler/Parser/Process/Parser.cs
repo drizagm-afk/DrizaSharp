@@ -6,19 +6,19 @@ public partial class ParserProcess
 {
     //===== PARSING PROCESS =====
     private DzProject Project = null!;
-    private int phase = 0;
+    private int _phaseCode = 0;
 
     public void ParseProject(DzProject project)
     => ParseProject(project, 0);
-    public void ParseProject(DzProject project, byte phase)
+    public void ParseProject(DzProject project, byte phaseCode)
     {
         Project = project;
-        this.phase = phase;
+        _phaseCode = phaseCode;
 
         foreach (var file in Project.Files)
             RegisterFileSites(file);
-
-        ParseSites(this);
+        
+        ParserManager._phases[phaseCode].phase(this);
         _sites.Clear();
     }
 
@@ -39,7 +39,7 @@ public partial class ParserProcess
         Nodes.Push(root.Id);
 
         //FLAT ROOT
-        if (root.IsFlat() && IsNodeSite(root, phase))
+        if (root.IsFlat() && IsNodeSite(root, _phaseCode))
         {
             action(root.Id);
             return;
@@ -53,7 +53,7 @@ public partial class ParserProcess
                 ref readonly var child = ref TAST.NodeAt(i);
                 if (child.IsFlat())
                 {
-                    if (IsNodeSite(child, phase))
+                    if (IsNodeSite(child, _phaseCode))
                         action(i);
                 }
                 else Nodes.Push(i);
@@ -61,19 +61,7 @@ public partial class ParserProcess
         }
     }
     private static bool IsNodeSite(in TASTNode node, int phase)
-    => node.Args.OutPhase == phase;
-
-    //PARSE SITES
-    private ParserSite Site = null!;
-    private TAST TAST => Project.Files[Site.FileId].TAST;
-
-    //YOU CAN CREATE YOUR OWN PARSE PHASES, THIS WILL CHANGE ACCORDINGLY TO WHAT YOU GIVE IT
-    internal void ParseSites(ParserProcess process)
-    {
-        foreach (var site in process.Sites)
-            process.EvalMatch(site);
-        //foreach (var site in _sites) EvalValidate(project, phaseCode, site);
-    }
+    => node.Args.OutCode == phase;
 }
 
 public partial class ParserSite(int siteId, int fileId, int rootId)

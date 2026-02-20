@@ -3,18 +3,18 @@ using DrzSharp.Compiler.Core;
 
 namespace DrzSharp.Compiler.Parser;
 
-public interface ParserBuildContext : ParserContext, ParserPassContext
+public interface BuildContext : Context, PassContext
 {
     public int NestSpan(TokenSpan span, SchemeTASTArgs args = new());
     public bool TryNestSpan(TokenSpan span, out int nestId, SchemeTASTArgs args = new());
     public int[] NestSpans(TokenSpan[] spans, SchemeTASTArgs args = new());
 
-    public void NestRule(ParserRuleInstance inst, SchemeTASTArgs args = new());
-    public bool TryNestRule(ParserRuleInstance? inst, SchemeTASTArgs args = new());
-    public void NestRules(ParserRuleInstance[] insts, SchemeTASTArgs args = new());
+    public void NestRule(RuleInstance inst, SchemeTASTArgs args = new());
+    public bool TryNestRule(RuleInstance? inst, SchemeTASTArgs args = new());
+    public void NestRules(RuleInstance[] insts, SchemeTASTArgs args = new());
 }
 
-public partial class ParserProcess : ParserBuildContext
+public partial class ParserProcess : BuildContext
 {
     private int Nest(TokenSpan span, SchemeTASTArgs args)
     {
@@ -69,7 +69,7 @@ public partial class ParserProcess : ParserBuildContext
         return res;
     }
 
-    public void NestRule(ParserRuleInstance inst, SchemeTASTArgs args = new())
+    public void NestRule(RuleInstance inst, SchemeTASTArgs args = new())
     {
         var caller = RuleInst;
 
@@ -85,14 +85,14 @@ public partial class ParserProcess : ParserBuildContext
         }
         inst.Parent = RuleInst = caller;
     }
-    public bool TryNestRule(ParserRuleInstance? inst, SchemeTASTArgs args = new())
+    public bool TryNestRule(RuleInstance? inst, SchemeTASTArgs args = new())
     {
         if (inst is null) return false;
 
         NestRule(inst, args);
         return true;
     }
-    public void NestRules(ParserRuleInstance[] insts, SchemeTASTArgs args = new())
+    public void NestRules(RuleInstance[] insts, SchemeTASTArgs args = new())
     {
         for (int i = 0; i < insts.Length; i++)
             NestRule(insts[i], args);

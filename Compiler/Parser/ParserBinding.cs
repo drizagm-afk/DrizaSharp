@@ -1,10 +1,19 @@
-using DrzSharp.Compiler.Default.Parser;
+using DrzSharp.Compiler.Core;
 
 namespace DrzSharp.Compiler.Parser;
 
-public static class ParserBinding
+public static class Binding
 {
-    public static R BindRule<R>() where R : ParserRule, new()
+    //PHASES
+    public static void SetPhases(params ParserPhase[] phases)
+    => ParserManager._phases = phases;
+
+    //REALMS
+    public static RealmId AddRealm(int phaseCode)
+    => new(phaseCode, ParserManager._phases[phaseCode].realmCount++);
+
+    //RULES
+    public static R BindRule<R>() where R : Rule, new()
     {
         var rule = new R { Id = new(false, ParserManager._rules.Count) };
         ParserManager._rules.Add(rule);
@@ -12,7 +21,7 @@ public static class ParserBinding
 
         return rule;
     }
-    public static R BindRule<P, R>() where P : ParserRuleClass where R : ParserRule, new()
+    public static R BindRule<P, R>() where P : RuleClass where R : Rule, new()
     {
         var rule = BindRule<R>();
         rule.Parent = ParserManager.GetRuleClass<P>();
@@ -20,7 +29,7 @@ public static class ParserBinding
         return rule;
     }
 
-    public static C BindRuleClass<C>() where C : ParserRuleClass, new()
+    public static C BindRuleClass<C>() where C : RuleClass, new()
     {
         var rule = new C { Id = new(true, ParserManager._ruleClasses.Count) };
         ParserManager._ruleClasses.Add(rule);
@@ -28,7 +37,7 @@ public static class ParserBinding
 
         return rule;
     }
-    public static C BindRuleClass<P, C>() where P : ParserRuleClass where C : ParserRuleClass, new()
+    public static C BindRuleClass<P, C>() where P : RuleClass where C : RuleClass, new()
     {
         var rule = BindRuleClass<C>();
         rule.Parent = ParserManager.GetRuleClass<P>();

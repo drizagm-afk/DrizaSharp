@@ -34,3 +34,12 @@ public readonly struct Span(int start, int length)
     public readonly int Start = start;
     public readonly int Length = length;
 }
+
+public readonly struct RealmId(int phaseCode, int realmCode)
+{
+    public readonly int PhaseCode = phaseCode;
+    public readonly int RealmCode = realmCode;
+
+    public bool Equals(RealmId other)
+    => PhaseCode == other.PhaseCode && RealmCode == other.RealmCode;
+}

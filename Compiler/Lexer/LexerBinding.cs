@@ -1,7 +1,10 @@
 namespace DrzSharp.Compiler.Lexer;
 
-public static class LexerBinding
+public static class Binding
 {
-    public static void BindRule<T>() where T : LexerRule, new()
-    => LexerManager._rules.Add(new T());
+    public static byte AddTokenType()
+    => LexerManager.typeCount++;
+
+    public static void BindRule(Rule rule)
+    => LexerManager._rules.Add(rule);
 }

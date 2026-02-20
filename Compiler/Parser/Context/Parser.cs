@@ -2,19 +2,19 @@ using DrzSharp.Compiler.Core;
 
 namespace DrzSharp.Compiler.Parser;
 
-public interface ParserContext
+public interface Context
 {
     public int PhaseCode { get; }
 
-    public R GetRule<R>() where R : ParserRule;
-    public RuleId GetRuleId<R>() where R : ParserRule;
-    public R GetRule<R>(RuleId id) where R : ParserRule;
-    public ParserRule GetRule(RuleId id);
+    public R GetRule<R>() where R : Rule;
+    public RuleId GetRuleId<R>() where R : Rule;
+    public R GetRule<R>(RuleId id) where R : Rule;
+    public Rule GetRule(RuleId id);
 
-    public C GetRuleClass<C>() where C : ParserRuleClass;
-    public RuleId GetRuleClassId<C>() where C : ParserRuleClass;
-    public C GetRuleClass<C>(RuleId id) where C : ParserRuleClass;
-    public ParserRuleClass GetRuleClass(RuleId id);
+    public C GetRuleClass<C>() where C : RuleClass;
+    public RuleId GetRuleClassId<C>() where C : RuleClass;
+    public C GetRuleClass<C>(RuleId id) where C : RuleClass;
+    public RuleClass GetRuleClass(RuleId id);
 
     //TAST DEFAULT CONTEXT
     public TASTNode NodeAt(int nodeId);
@@ -29,27 +29,27 @@ public interface ParserContext
 
     public ReadOnlySpan<char> Stringify(int tokenId);
 }
-public partial class ParserProcess : ParserContext
+public partial class ParserProcess : Context
 {
     //**PARSING PROCESS**
-    public int PhaseCode => phase;
+    public int PhaseCode => _phaseCode;
 
-    public R GetRule<R>() where R : ParserRule
+    public R GetRule<R>() where R : Rule
     => ParserManager.GetRule<R>();
-    public RuleId GetRuleId<R>() where R : ParserRule
+    public RuleId GetRuleId<R>() where R : Rule
     => ParserManager.GetRuleId<R>();
-    public R GetRule<R>(RuleId id) where R : ParserRule
+    public R GetRule<R>(RuleId id) where R : Rule
     => ParserManager.GetRule<R>(id);
-    public ParserRule GetRule(RuleId id)
+    public Rule GetRule(RuleId id)
     => ParserManager.GetRule(id);
 
-    public C GetRuleClass<C>() where C : ParserRuleClass
+    public C GetRuleClass<C>() where C : RuleClass
     => ParserManager.GetRuleClass<C>();
-    public C GetRuleClass<C>(RuleId id) where C : ParserRuleClass
+    public C GetRuleClass<C>(RuleId id) where C : RuleClass
     => ParserManager.GetRuleClass<C>(id);
-    public ParserRuleClass GetRuleClass(RuleId id)
+    public RuleClass GetRuleClass(RuleId id)
     => ParserManager.GetRuleClass(id);
-    public RuleId GetRuleClassId<C>() where C : ParserRuleClass
+    public RuleId GetRuleClassId<C>() where C : RuleClass
     => ParserManager.GetRuleClassId<C>();
 
     //**TAST**

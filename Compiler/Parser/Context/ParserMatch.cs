@@ -7,7 +7,7 @@ namespace DrzSharp.Compiler.Parser;
 /*=========================
        MATCH CONTEXT
 =========================*/
-public interface ParserMatchContext : ParserMatchView
+public interface MatchContext : MatchView
 {
     //VAR HASHES
     public int Hash { get; }
@@ -23,20 +23,20 @@ public interface ParserMatchContext : ParserMatchView
     public void StoreVar(string captureTag, TokenSpan var);
 
     //STORE RULEVAR
-    public void StoreRuleVar(string captureTag, ParserRuleInstance var);
+    public void StoreRuleVar(string captureTag, RuleInstance var);
 
     //EVAL RULE
-    public ParserRuleInstance? EvalRule<R>(TokenSpan span) where R : ParserRule;
-    public ParserRuleInstance? EvalRuleClass<C>(TokenSpan span) where C : ParserRuleClass;
+    public RuleInstance? EvalRule<R>(TokenSpan span) where R : Rule;
+    public RuleInstance? EvalRuleClass<C>(TokenSpan span) where C : RuleClass;
 }
 
-public partial class ParserProcess : ParserMatchContext
+public partial class ParserProcess : MatchContext
 {
     //===== INTERNAL STORAGE =====
     //VAR MANAGEMENT
     private readonly List<VarEntry> _matchVars = [];
     private readonly Dictionary<VarKey, int> _matchVarDict = [];
-    private readonly Dictionary<RuleVarKey, ParserRuleInstance> _matchRuleVarDict = [];
+    private readonly Dictionary<RuleVarKey, RuleInstance> _matchRuleVarDict = [];
 
     private void ClearVarStorage()
     {
@@ -125,16 +125,16 @@ public partial class ParserProcess : ParserMatchContext
     }
 
     //STORE RULEVAR
-    public void StoreRuleVar(string tag, ParserRuleInstance inst)
+    public void StoreRuleVar(string tag, RuleInstance inst)
     {
         StoreVar(tag, inst.Span);
         _matchRuleVarDict[new(_hash, inst.Span.Start, inst.Span.Length)] = inst;
     }
 
     //RULE EVAL
-    public ParserRuleInstance? EvalRule<R>(TokenSpan span) where R : ParserRule
+    public RuleInstance? EvalRule<R>(TokenSpan span) where R : Rule
     => EvalRuleMatch(GetRule<R>(), span);
-    public ParserRuleInstance? EvalRuleClass<C>(TokenSpan span) where C : ParserRuleClass
+    public RuleInstance? EvalRuleClass<C>(TokenSpan span) where C : RuleClass
     => EvalRuleMatch(GetRuleClass<C>(), span);
 
     private bool EvalVarsFromNode(int entryId, TokenPattern pattern)
@@ -178,7 +178,7 @@ internal readonly record struct RuleVarKey
 /*=========================
         MATCH VIEW
 =========================*/
-public interface ParserMatchView : ParserContext
+public interface MatchView : Context
 {
     //LOAD VAR
     public TokenSpan LoadVar(string varName);
@@ -188,14 +188,14 @@ public interface ParserMatchView : ParserContext
     public TokenSpan[] LoadVars(string varName);
 
     //LOAD RULEVAR
-    public R LoadRuleVar<R>(string varName) where R : ParserRuleInstance;
+    public R LoadRuleVar<R>(string varName) where R : RuleInstance;
     public bool TryLoadRuleVar<R>(string varName, [NotNullWhen(true)] out R? ruleVar)
-    where R : ParserRuleInstance;
+    where R : RuleInstance;
     public bool HasRuleVar(string varName);
-    public R[] LoadRuleVars<R>(string varName) where R : ParserRuleInstance;
+    public R[] LoadRuleVars<R>(string varName) where R : RuleInstance;
 }
 
-public partial class ParserProcess : ParserMatchView
+public partial class ParserProcess : MatchView
 {
     private bool TryGetEntry(int hash, string varName, out VarEntry entry)
     {
@@ -272,7 +272,7 @@ public partial class ParserProcess : ParserMatchView
     //LOADING RULEVARS
     private bool TryGetRuleInst<R>
     (TokenSpan span, [NotNullWhen(true)] out R? inst, string varNameLog)
-    where R : ParserRuleInstance
+    where R : RuleInstance
     {
         inst = null;
         if (!_matchRuleVarDict.TryGetValue(new(_hash, span.Start, span.Length), out var val))
@@ -284,7 +284,7 @@ public partial class ParserProcess : ParserMatchView
     }
     private bool HasRuleInst(TokenSpan span) => _matchRuleVarDict.ContainsKey(new(_hash, span.Start, span.Length));
 
-    public R LoadRuleVar<R>(string varName) where R : ParserRuleInstance
+    public R LoadRuleVar<R>(string varName) where R : RuleInstance
     {
         var span = LoadVar(varName);
         if (!TryGetRuleInst<R>(span, out var inst, varName))
@@ -294,7 +294,7 @@ public partial class ParserProcess : ParserMatchView
     }
 
     public bool TryLoadRuleVar<R>(string varName, [NotNullWhen(true)] out R? inst)
-    where R : ParserRuleInstance
+    where R : RuleInstance
     {
         inst = null;
         if (!TryLoadVar(varName, out var span))
@@ -311,7 +311,7 @@ public partial class ParserProcess : ParserMatchView
         return HasRuleInst(span);
     }
 
-    public R[] LoadRuleVars<R>(string varName) where R : ParserRuleInstance
+    public R[] LoadRuleVars<R>(string varName) where R : RuleInstance
     {
         if (!_matchVarDict.TryGetValue(new(_hash, varName), out var entryId)) return [];
         var ary = new R[CountVars(varName)];

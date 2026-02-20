@@ -1,4 +1,13 @@
+using DrzSharp.Compiler.Core;
+
 namespace DrzSharp.Compiler.Parser;
+
+public partial class ParserProcess
+{
+    //PARSE SITES
+    private ParserSite Site = null!;
+    private TAST TAST => Project.Files[Site.FileId].TAST;
+}
 
 public partial class ParserSite
 {

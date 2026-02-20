@@ -394,54 +394,54 @@ public readonly struct TASTNode(
     public bool IsFlat() => FirstChildId < 0;
 }
 public readonly struct TASTArgs(
-    byte realm, bool isScoped, byte outPhase
+    byte outCode, byte realmCode, bool isScoped
 )
 {
-    public readonly byte Realm = realm;
-    public readonly byte OutPhase = outPhase;
+    public readonly byte OutCode = outCode;
+    public readonly byte RealmCode = realmCode;
     public readonly bool IsScoped = isScoped;
 
-    public TASTArgs With(byte? realm = null, bool? isScoped = null, byte? outPhase = 0)
-    => new(realm ?? Realm, isScoped ?? IsScoped, outPhase ?? OutPhase);
+    public TASTArgs With(byte? outCode = 0, byte? realmCode = null, bool? isScoped = null)
+    => new(outCode ?? OutCode, realmCode ?? RealmCode, isScoped ?? IsScoped);
     public TASTArgs With(SchemeTASTArgs scheme) => scheme.Merge(this);
+
+    public RealmId RealmId => new(OutCode, RealmCode);
 }
 public readonly struct SchemeTASTArgs
 {
+    private const byte OutArg = 0b10;
     private const byte RealmArg = 0b1;
-    private const byte OutPhaseArg = 0b10;
     private const byte IsScopedArg = 0b100;
 
-    public readonly byte Realm;
-    public readonly byte OutPhase;
+    public readonly byte OutCode;
+    public readonly byte RealmCode;
     public readonly bool IsScoped;
     public readonly byte Args;
 
-    public SchemeTASTArgs(byte? realm = null, bool? isScoped = null, byte? outPhase = null)
+    public SchemeTASTArgs(byte? outCode = null, byte? realmCode = null, bool? isScoped = null)
     {
-        if (realm is byte _realm)
+        if (outCode is byte _out)
         {
-            Realm = _realm;
+            OutCode = _out;
+            Args += OutArg;
+        }
+        if (realmCode is byte _realm)
+        {
+            RealmCode = _realm;
             Args += RealmArg;
         }
-
         if (isScoped is bool _isScoped)
         {
             IsScoped = _isScoped;
             Args += IsScopedArg;
-        }
-
-        if (outPhase is byte _outPhase)
-        {
-            OutPhase = _outPhase;
-            Args += OutPhaseArg;
         }
     }
     private bool HasArg(byte arg)
     => (Args & arg) == arg;
     public TASTArgs Merge(TASTArgs args)
     => new(
-        HasArg(RealmArg) ? Realm : args.Realm,
-        HasArg(IsScopedArg) ? IsScoped : args.IsScoped,
-        HasArg(OutPhaseArg) ? OutPhase : args.OutPhase
+        HasArg(OutArg) ? OutCode : args.OutCode,
+        HasArg(RealmArg) ? RealmCode : args.RealmCode,
+        HasArg(IsScopedArg) ? IsScoped : args.IsScoped
     );
 }

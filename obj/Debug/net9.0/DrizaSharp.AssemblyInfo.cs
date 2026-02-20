@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DrizaSharp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+25cca552d3d0441a86e79f4cd7e0930432adcdcc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+55ba4c8faccac79137a1fc0e01c5c67617b3a7d3")]
 [assembly: System.Reflection.AssemblyProductAttribute("DrizaSharp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DrizaSharp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -12,18 +12,18 @@ public class TokenPattern
     { _varName = varName; }
 
     //PATTERN LIST
-    private List<Func<ParserMatchContext, TokenSpan, int>> _patterns = [];
+    private List<Func<MatchContext, TokenSpan, int>> _patterns = [];
 
     public int PatternCount => _patterns.Count;
     public int CurPatternId => _patternId;
     private int _patternId;
-    public void NewPattern(Func<ParserMatchContext, TokenSpan, int> pattern)
+    public void NewPattern(Func<MatchContext, TokenSpan, int> pattern)
     => _patterns.Add(pattern);
-    public int EvalPattern(int patternId, ParserMatchContext ctx, TokenSpan span)
+    public int EvalPattern(int patternId, MatchContext ctx, TokenSpan span)
     => _patterns[patternId].Invoke(ctx, span);
 
     //MATCH ENTRY
-    internal int Matches(ParserMatchContext ctx, TokenSpan span)
+    internal int Matches(MatchContext ctx, TokenSpan span)
     {
         //MATCH LOOP
         int i = 0;
@@ -68,7 +68,7 @@ public class TokenPattern
         return this;
     }
 
-    public TokenPattern Rule<R>(string? captureTag = null) where R : ParserRule
+    public TokenPattern Rule<R>(string? captureTag = null) where R : Rule
     {
         NewPattern((ctx, span) =>
         {
@@ -91,7 +91,7 @@ public class TokenPattern
         });
         return this;
     }
-    public TokenPattern RuleClass<C>(string? captureTag = null) where C : ParserRuleClass
+    public TokenPattern RuleClass<C>(string? captureTag = null) where C : RuleClass
     {
         NewPattern((ctx, span) =>
         {

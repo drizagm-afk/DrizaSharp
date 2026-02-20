@@ -26,7 +26,7 @@ public partial class ParserProcess
                 var rule = ParserManager._rules[r];
 
                 if (rule.IsAbstract) continue;
-                if (!rule.Evals(this, node.Args)) continue;
+                if (!rule.Evals(new(_phaseCode, node.Args.RealmCode))) continue;
 
                 //TRY MATCH
                 InitMatch();
@@ -66,7 +66,7 @@ public partial class ParserProcess
     }
 
     //MATCH
-    private bool TryGetMemo(ParserRule rule, TokenSpan span, [NotNullWhen(true)] out ParserRuleInstance? inst)
+    private bool TryGetMemo(Rule rule, TokenSpan span, [NotNullWhen(true)] out RuleInstance? inst)
     {
         //SITE MEMOIZATION CHECK
         if (Site.TryGetRuleMemo(span.Start, rule.Id, out inst))
@@ -83,7 +83,7 @@ public partial class ParserProcess
 
         return false;
     }
-    private int TryMatchPatterns(int length, ParserRuleBase rule, TokenSpan span)
+    private int TryMatchPatterns(int length, RuleBase rule, TokenSpan span)
     {
         foreach (var pattern in rule.Patterns)
         {
@@ -97,14 +97,14 @@ public partial class ParserProcess
         }
         return length > 0 ? length : 0;
     }
-    private ParserRuleInstance? GetRuleInstance(ParserRule rule, TokenSpan span)
+    private RuleInstance? GetRuleInstance(Rule rule, TokenSpan span)
     {
         var inst = rule.NewInstance();
         inst.Span = span;
         Debug.Assert(IsNestValidAtSpan(inst.Span, out _, out _));
 
         //INSTANTIATE
-        void instRule(ParserRuleBase rule)
+        void instRule(RuleBase rule)
         {
             var parent = rule.Parent;
             if (parent is not null)
@@ -117,7 +117,7 @@ public partial class ParserProcess
     }
 
     //RULE MATCH
-    private ParserRuleInstance? EvalRuleMatch(ParserRule rule, TokenSpan span)
+    private RuleInstance? EvalRuleMatch(Rule rule, TokenSpan span)
     {
         //CHECK FOR MEMO
         if (TryGetMemo(rule, span, out var inst))
@@ -129,11 +129,11 @@ public partial class ParserProcess
 
         return inst;
     }
-    private ParserRuleInstance? TryMatchRule(ParserRule rule, TokenSpan span)
+    private RuleInstance? TryMatchRule(Rule rule, TokenSpan span)
     {
         //MATCH PATTERN
         var length = 0;
-        bool matchRule(ParserRuleBase rule)
+        bool matchRule(RuleBase rule)
         {
             var parent = rule.Parent;
             if (parent is not null)
@@ -155,10 +155,10 @@ public partial class ParserProcess
     }
 
     //RULE CLASS MATCH
-    private ParserRuleInstance? EvalRuleMatch(ParserRuleClass rule, TokenSpan span)
+    private RuleInstance? EvalRuleMatch(RuleClass rule, TokenSpan span)
     {
         int length = 0;
-        bool matchRule(ParserRuleBase? rule)
+        bool matchRule(RuleBase? rule)
         {
             if (rule is not null)
             {
@@ -175,7 +175,7 @@ public partial class ParserProcess
 
         return TryMatchRuleClass(length, rule, span);
     }
-    private ParserRuleInstance? TryMatchRuleClass(int length, ParserRuleClass rule, TokenSpan span)
+    private RuleInstance? TryMatchRuleClass(int length, RuleClass rule, TokenSpan span)
     {
         //MATCH PATTERN
         if (rule.Patterns.Length > 0)
@@ -190,7 +190,7 @@ public partial class ParserProcess
             var com = Commit();
 
             //TRY MATCH SUBRULE
-            ParserRuleInstance? inst;
+            RuleInstance? inst;
             if (subRule.IsClass)
                 inst = TryMatchRuleClass(length, GetRuleClass(subRule), span);
             else
@@ -204,7 +204,7 @@ public partial class ParserProcess
         }
         return null;
     }
-    private ParserRuleInstance? TryMatchRuleFromClass(int length, ParserRule rule, TokenSpan span)
+    private RuleInstance? TryMatchRuleFromClass(int length, Rule rule, TokenSpan span)
     {
         //CHECK FOR MEMO
         if (TryGetMemo(rule, span, out var inst))
@@ -224,13 +224,13 @@ public partial class ParserProcess
 
 public partial class ParserSite
 {
-    private readonly Dictionary<RuleMemoKey, ParserRuleInstance?> _ruleMemoization = [];
-    internal void SetRuleMemo(int start, RuleId ruleId, ParserRuleInstance? inst)
+    private readonly Dictionary<RuleMemoKey, RuleInstance?> _ruleMemoization = [];
+    internal void SetRuleMemo(int start, RuleId ruleId, RuleInstance? inst)
     {
         RuleMemoKey key = new(start, ruleId);
         _ruleMemoization[key] = inst;
     }
-    internal bool TryGetRuleMemo(int start, RuleId ruleId, [NotNullWhen(true)] out ParserRuleInstance? inst)
+    internal bool TryGetRuleMemo(int start, RuleId ruleId, [NotNullWhen(true)] out RuleInstance? inst)
     {
         inst = null;
         if (!_ruleMemoization.TryGetValue(new(start, ruleId), out var eval))

@@ -6,158 +6,47 @@ public static class Bindings
 {
     public static void Bind()
     {
-        LexerBinding.BindRule<OperatorRule>();
-        LexerBinding.BindRule<KeywordRule>();
-
-        LexerBinding.BindRule<OpenerRule>();
-        LexerBinding.BindRule<CloserRule>();
-
-        LexerBinding.BindRule<PrefixRule>();
-
-        LexerBinding.BindRule<BoolRule>();
-        LexerBinding.BindRule<NumberRule>();
-        LexerBinding.BindRule<StringRule>();
+        BindTypes();
+        BindRules();
     }
-}
 
-public class OperatorRule : LexerRule
-{
-    public void TryMatch(LexerContext ctx, ReadOnlySpan<char> content)
+    //TOKEN TYPES
+    private static void BindTypes()
     {
-        var i = 0;
-        while (i < content.Length)
-        {
-            var c = content[i];
-            if (c == ';') break;
-            if (c == '(' || c == '[' || c == '{') break;
-            if (c == ')' || c == ']' || c == '}') break;
-            if (char.IsSymbol(c) || char.IsPunctuation(c)) { i++; continue; }
+        TokenType.Newline = Binding.AddTokenType();
+        TokenType.Operator = Binding.AddTokenType();
+        TokenType.Keyword = Binding.AddTokenType();
 
-            break;
-        }
+        TokenType.OpParen = Binding.AddTokenType();
+        TokenType.OpBrack = Binding.AddTokenType();
+        TokenType.OpBrace = Binding.AddTokenType();
 
-        if (i > 0) ctx.NewToken(TokenType.Operator, i);
+        TokenType.ClParen = Binding.AddTokenType();
+        TokenType.ClBrack = Binding.AddTokenType();
+        TokenType.ClBrace = Binding.AddTokenType();
+
+        TokenType.AtsignPrefix = Binding.AddTokenType();
+        TokenType.HashPrefix = Binding.AddTokenType();
+        TokenType.DollarPrefix = Binding.AddTokenType();
+
+        TokenType.Bool = Binding.AddTokenType();
+        TokenType.Number = Binding.AddTokenType();
+        TokenType.String = Binding.AddTokenType();
     }
-}
 
-public class KeywordRule : LexerRule
-{
-    public void TryMatch(LexerContext ctx, ReadOnlySpan<char> content)
+    //RULES
+    private static void BindRules()
     {
-        var i = 0;
-        while (i < content.Length)
-        {
-            var c = content[i];
-            if (char.IsLetter(c) || c == '_') { i++; continue; }
-            else if (char.IsDigit(c) && i > 0) { i++; continue; }
+        Binding.BindRule(DefRules.OperatorRule);
+        Binding.BindRule(DefRules.KeywordRule);
 
-            break;
-        }
+        Binding.BindRule(DefRules.OpenerRule);
+        Binding.BindRule(DefRules.CloserRule);
 
-        if (i > 0) ctx.NewToken(TokenType.Keyword, i);
-    }
-}
+        Binding.BindRule(DefRules.PrefixRule);
 
-public class OpenerRule : LexerRule
-{
-    public void TryMatch(LexerContext ctx, ReadOnlySpan<char> content)
-    {
-        switch (content[0])
-        {
-            case '(': ctx.NewToken(TokenType.OpParen, 1); break;
-            case '[': ctx.NewToken(TokenType.OpBrack, 1); break;
-            case '{': ctx.NewToken(TokenType.OpBrace, 1); break;
-        }
-    }
-}
-public class CloserRule : LexerRule
-{
-    public void TryMatch(LexerContext ctx, ReadOnlySpan<char> content)
-    {
-        switch (content[0])
-        {
-            case ')': ctx.NewToken(TokenType.ClParen, 1); break;
-            case ']': ctx.NewToken(TokenType.ClBrack, 1); break;
-            case '}': ctx.NewToken(TokenType.ClBrace, 1); break;
-        }
-    }
-}
-
-public class PrefixRule : LexerRule
-{
-    public void TryMatch(LexerContext ctx, ReadOnlySpan<char> content)
-    {
-        var prefix = content[0];
-        byte prefixType = prefix switch
-        {
-            '@' => TokenType.AtsignPrefix,
-            '#' => TokenType.HashPrefix,
-            '$' => TokenType.DollarPrefix,
-            _ => 0
-        };
-
-        //PREFIX EVAL
-        if (prefixType == 0) return;
-
-        //KEYWORD EVAL
-        var i = 1;
-        while (i < content.Length)
-        {
-            var c = content[i];
-            if (char.IsLetter(c) || c == '_') { i++; continue; }
-            else if (char.IsDigit(c) && i > 1) { i++; continue; }
-
-            break;
-        }
-
-        if (i > 1) ctx.NewToken(prefixType, i);
-    }
-}
-
-public class BoolRule : LexerRule
-{
-    public void TryMatch(LexerContext ctx, ReadOnlySpan<char> content)
-    {
-        if (content.StartsWith("true", StringComparison.Ordinal))
-            ctx.NewToken(TokenType.Bool, 4);
-        else if (content.StartsWith("false", StringComparison.Ordinal))
-            ctx.NewToken(TokenType.Bool, 5);
-    }
-}
-public class NumberRule : LexerRule
-{
-    public void TryMatch(LexerContext ctx, ReadOnlySpan<char> content)
-    {
-        var i = 0;
-        while (i < content.Length)
-        {
-            var c = content[i];
-            if (char.IsDigit(c)) { i++; continue; }
-
-            break;
-        }
-
-        if (i > 0) ctx.NewToken(TokenType.Number, i);
-    }
-}
-public class StringRule : LexerRule
-{
-    public void TryMatch(LexerContext ctx, ReadOnlySpan<char> content)
-    {
-        var prefix = content[0];
-        if (prefix != '\"' && prefix != '\'') return;
-
-        var i = 1;
-        while (i < content.Length)
-        {
-            var c = content[i];
-            i++;
-
-            if (c == prefix && content[i - 1] != '\\')
-            {
-                ctx.NewToken(TokenType.String, i);
-                return;
-            }
-        }
+        Binding.BindRule(DefRules.BoolRule);
+        Binding.BindRule(DefRules.NumberRule);
+        Binding.BindRule(DefRules.StringRule);
     }
 }

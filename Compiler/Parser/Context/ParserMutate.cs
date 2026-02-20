@@ -2,13 +2,13 @@ using DrzSharp.Compiler.Core;
 
 namespace DrzSharp.Compiler.Parser;
 
-public interface ParserMutateContext : ParserContext, ParserPassContext
+public interface MutateContext : Context, PassContext
 {
     void Update(SchemeTASTArgs args);
     void Rewrite(RewriteToken[] tokens, int[] children, params RuleId[] rules);
 }
 
-public partial class ParserProcess : ParserMutateContext
+public partial class ParserProcess : MutateContext
 {
     //REWRITE
     public void Update(SchemeTASTArgs args)

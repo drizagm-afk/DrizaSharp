@@ -5,11 +5,11 @@ namespace DrzSharp.Compiler.Parser;
 public partial class ParserProcess
 {
     //MUTATE PROCESS
-    private void MutateRule(ParserRuleInstance inst)
+    private void MutateRule(RuleInstance inst)
     => MutateRule(TAST.NodeAt(inst.NodeId), inst);
     private void EndMutate() => RuleInst = null;
 
-    private void MutateRule(in TASTNode node, ParserRuleInstance inst)
+    private void MutateRule(in TASTNode node, RuleInstance inst)
     {
         RuleInst = inst;
 
@@ -59,7 +59,7 @@ public partial class ParserProcess
             if (r >= rules.Length) break;
 
             InitMatch();
-            ParserRuleInstance? inst;
+            RuleInstance? inst;
             
             var ruleId = rules[r];
             if (ruleId.IsClass)
