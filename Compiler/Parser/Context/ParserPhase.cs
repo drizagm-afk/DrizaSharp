@@ -12,7 +12,7 @@ public interface PassContext
     public bool TryResolveSVar(string varType, string var, out int nodeId);
     public int ResolveSVar(string varType, string var);
 
-    public bool TryResolveSVarInst<R>(string varType, string var, [NotNullWhen(true)] out R? inst) 
+    public bool TryResolveSVarInst<R>(string varType, string var, [NotNullWhen(true)] out R? inst)
     where R : RuleInstance;
     public R ResolveSVarInst<R>(string varType, string var)
     where R : RuleInstance;
@@ -42,12 +42,26 @@ public partial class ParserProcess : PassContext
         {
             if (nodeId != limit && TAST.TryNodeAt(nodeId, out var node))
             {
-                if (findVarInSibling(node.NextSiblingId, limit, out id) 
-                || hasScopeVar(nodeId, out id))
+                if (findVarInSibling(node.NextSiblingId, limit, out id)
+                || findVarInChildren(node, out id))
                     return true;
             }
             id = 0;
             return false;
+        }
+        bool findVarInChildren(in TASTNode node, out int id)
+        {
+            if (!node.Args.IsScoped)
+            {
+                var childId = node.FirstChildId;
+                while (TAST.TryNodeAt(childId, out var child))
+                {
+                    if (findVarInChildren(child, out id))
+                        return true;
+                    childId = child.NextSiblingId;
+                }
+            }
+            return hasScopeVar(node.Id, out id);
         }
         bool findVarInNode(in TASTNode node, out int id)
         {
@@ -55,13 +69,12 @@ public partial class ParserProcess : PassContext
                 return true;
             else if (node.Id != Site.RootId && TAST.TryNodeAt(node.ParentId, out var parent))
             {
-                if (findVarInSibling(parent.FirstChildId, node.Id, out id) 
+                if (findVarInSibling(parent.FirstChildId, node.Id, out id)
                 || findVarInNode(parent, out id))
                     return true;
             }
             return false;
         }
-
         return findVarInNode(TAST.NodeAt(RuleInst!.NodeId), out nodeId);
     }
     public int ResolveSVar(string varType, string var)
@@ -72,7 +85,7 @@ public partial class ParserProcess : PassContext
         return nodeId;
     }
 
-    public bool TryResolveSVarInst<R>(string varType, string var, [NotNullWhen(true)] out R? inst) 
+    public bool TryResolveSVarInst<R>(string varType, string var, [NotNullWhen(true)] out R? inst)
     where R : RuleInstance
     {
         inst = null;
@@ -83,7 +96,7 @@ public partial class ParserProcess : PassContext
         inst = (R)rinst;
         return true;
     }
-    public R ResolveSVarInst<R>(string varType, string var) 
+    public R ResolveSVarInst<R>(string varType, string var)
     where R : RuleInstance
     {
         if (!Site._ruleAppliance.TryGetValue(ResolveSVar(varType, var), out var inst))

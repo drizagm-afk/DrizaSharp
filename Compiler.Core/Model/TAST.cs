@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using DrzSharp.Compiler.Parser;
 
 namespace DrzSharp.Compiler.Core;
 
@@ -18,11 +17,7 @@ public sealed class TAST(StringSpan script)
     {
         var id = _tokenCount++;
         if (_tokens.Length <= _tokenCount)
-        {
-            var ary = _tokens;
-            _tokens = new Token?[ary.Length * 2];
-            Array.Copy(ary, _tokens, ary.Length);
-        }
+            Array.Resize(ref _tokens, _tokens.Length * 2);
 
         _tokens[id] = token;
         return id;
@@ -96,11 +91,7 @@ public sealed class TAST(StringSpan script)
     {
         var id = _nodeCount++;
         if (_nodes.Length <= _nodeCount)
-        {
-            var ary = _nodes;
-            _nodes = new TASTNode[ary.Length * 2];
-            Array.Copy(ary, _nodes, ary.Length);
-        }
+            Array.Resize(ref _nodes, _nodes.Length * 2);
 
         _nodes[id] = node;
         return id;
@@ -123,21 +114,18 @@ public sealed class TAST(StringSpan script)
 
     public ref readonly TASTNode NodeAt(int nodeId)
     {
-        Debug.Assert(nodeId >= 0 && nodeId < _nodeCount);
+        Debug.Assert(nodeId >= 0 || nodeId < _nodeCount, $"Node not found in TASI: node={nodeId}");
         return ref _nodes[nodeId];
-    }
-    public TASTNode? TryNodeAt(int nodeId)
-    {
-        if (nodeId >= 0 && nodeId < _nodeCount) return _nodes[nodeId];
-        return null;
     }
     public bool TryNodeAt(int nodeId, out TASTNode node)
     {
-        var nullNode = TryNodeAt(nodeId);
-        bool isNull = nullNode is null;
-
-        node = isNull ? default : nullNode!.Value;
-        return !isNull;
+        if (nodeId < 0 || nodeId >= _nodeCount)
+        {
+            node = default;
+            return false;
+        }
+        node = _nodes[nodeId];
+        return true;
     }
 
     public void Update(
@@ -243,14 +231,14 @@ public sealed class TAST(StringSpan script)
     //TOKEN AT NODE
     private bool FindTokenAtNode(int nodeId, int offset, int remOrder, out int tokenId)
     => FindTokenAtNode(NodeAt(nodeId), offset, ref remOrder, out tokenId);
-    private bool FindTokenAtNode(TASTNode node, int offset, ref int remOrder, out int tokenId)
+    private bool FindTokenAtNode(in TASTNode node, int offset, ref int remOrder, out int tokenId)
     {
         if (node.FirstChildId < 0)
             return FindTokenAtFlatNode(node, offset, ref remOrder, out tokenId);
         else
             return FindTokenAtDeepNode(node, offset, ref remOrder, out tokenId);
     }
-    private static bool FindTokenAtFlatNode(TASTNode node, int offset, ref int remOrder, out int tokenId)
+    private static bool FindTokenAtFlatNode(in TASTNode node, int offset, ref int remOrder, out int tokenId)
     {
         tokenId = default;
         if (node.Length < offset + remOrder)
@@ -262,7 +250,7 @@ public sealed class TAST(StringSpan script)
         tokenId = node.Start + offset + remOrder;
         return true;
     }
-    private bool FindTokenAtDeepNode(TASTNode node, int offset, ref int remOrder, out int tokenId)
+    private bool FindTokenAtDeepNode(in TASTNode node, int offset, ref int remOrder, out int tokenId)
     {
         tokenId = default;
         var i = SkipOffset(node, offset, out var childExists, out var child);
@@ -330,7 +318,7 @@ public sealed class TAST(StringSpan script)
     }
 }
 
-/*TOKENS*/
+//===== TOKENS =====
 public readonly struct Token(int id, byte type, int start, int length)
 {
     public readonly int Id = id;
@@ -375,13 +363,12 @@ public readonly struct TokenSpan
     public bool IsValid => Length != 0;
 }
 
-/*NODES*/
+//===== NODES =====
 public readonly struct TASTNode(
     int id, TASTArgs args, int relStart, int relLength, int start, int length,
     int firstChildId, int nextSiblingId, int parentId
 )
 {
-    public readonly int ParentId = parentId;
     public readonly int Id = id;
     public readonly TASTArgs Args = args;
     public readonly int RelStart = relStart;
@@ -390,12 +377,12 @@ public readonly struct TASTNode(
     public readonly int Length = length;
     public readonly int FirstChildId = firstChildId;
     public readonly int NextSiblingId = nextSiblingId;
+    public readonly int ParentId = parentId;
 
     public bool IsFlat() => FirstChildId < 0;
 }
-public readonly struct TASTArgs(
-    byte outCode, byte realmCode, bool isScoped
-)
+public readonly struct TASTArgs
+(byte outCode, byte realmCode, bool isScoped)
 {
     public readonly byte OutCode = outCode;
     public readonly byte RealmCode = realmCode;
@@ -444,4 +431,12 @@ public readonly struct SchemeTASTArgs
         HasArg(RealmArg) ? RealmCode : args.RealmCode,
         HasArg(IsScopedArg) ? IsScoped : args.IsScoped
     );
+}
+public readonly struct RealmId(int phaseCode, int realmCode)
+{
+    public readonly int PhaseCode = phaseCode;
+    public readonly int RealmCode = realmCode;
+
+    public bool Equals(RealmId other)
+    => PhaseCode == other.PhaseCode && RealmCode == other.RealmCode;
 }

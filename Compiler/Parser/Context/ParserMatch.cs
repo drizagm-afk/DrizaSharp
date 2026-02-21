@@ -56,7 +56,7 @@ public partial class ParserProcess : MatchContext
     => _hash = hash;
 
     //COMMITS
-    private bool[] _validCommits = [];
+    private bool[] _validCommits = new bool[16];
     private int _commitCode;
     private int _lastCommit;
 
@@ -65,11 +65,10 @@ public partial class ParserProcess : MatchContext
     {
         _commitCode = ++_lastCommit;
 
-        if (_validCommits.Length <= 0)
-            _validCommits = new bool[16];
-        else if (_validCommits.Length <= _commitCode)
-            Array.Resize(ref _validCommits, _validCommits.Length * 2);
-
+        var len = _validCommits.Length;
+        if (len <= _commitCode)
+            Array.Resize(ref _validCommits, len * 2);
+        
         _validCommits[_commitCode] = true;
         return _commitCode;
     }
