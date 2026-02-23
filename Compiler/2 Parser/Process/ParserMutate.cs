@@ -69,10 +69,10 @@ public partial class ParserProcess
             ClearVarStorage();
 
             //EVAL
+            Site.DropMemos();
             if (inst is not null)
             {
                 //FINALIZATION
-                Site.DropMemos();
                 i += FlatLength(inst.Span);
                 r++;
 

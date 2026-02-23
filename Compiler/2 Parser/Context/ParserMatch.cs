@@ -68,7 +68,7 @@ public partial class ParserProcess : MatchContext
         var len = _validCommits.Length;
         if (len <= _commitCode)
             Array.Resize(ref _validCommits, len * 2);
-        
+
         _validCommits[_commitCode] = true;
         return _commitCode;
     }
@@ -77,8 +77,9 @@ public partial class ParserProcess : MatchContext
         Debug.Assert(commitCode <= _commitCode, $"TRIED TO LOAD UNVALID COMMIT: commitCode={commitCode}");
         if (commitCode < _commitCode)
         {
-            var start = commitCode + 1;
-            Array.Fill(_validCommits, false, start, _commitCode - start);
+            int start = commitCode + 1;
+            int count = _commitCode - commitCode;
+            Array.Fill(_validCommits, false, start, count);
         }
 
         _commitCode = commitCode;
@@ -231,14 +232,14 @@ public partial class ParserProcess : MatchView
     {
         if (!TryGetVar(_hash, varName, out var var))
             throw new Exception($"VAR NOT FOUND: varName={varName}");
-        
+
         return var;
     }
 
     public bool TryLoadVar(string varName, out TokenSpan var)
     => TryGetVar(_hash, varName, out var);
 
-    public bool HasVar(string varName) 
+    public bool HasVar(string varName)
     => TryGetVar(_hash, varName, out _);
 
     public int CountVars(string varName)
