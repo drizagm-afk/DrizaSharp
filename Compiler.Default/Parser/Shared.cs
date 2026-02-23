@@ -1,4 +1,4 @@
-using DrzSharp.Compiler.Core;
+using DrzSharp.Compiler.Model;
 
 namespace DrzSharp.Compiler.Default.Parser;
 

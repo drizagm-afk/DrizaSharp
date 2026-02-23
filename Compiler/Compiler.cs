@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using DrzSharp.Compiler.Core;
+using DrzSharp.Compiler.Project;
 
 namespace DrzSharp.Compiler;
 
@@ -29,7 +29,7 @@ public static partial class Compiler
         ParseProject(proj);
         Toolkit.ProcessTime.Add(("PARSING", Toolkit.Stopwatch.Elapsed.TotalMilliseconds));
 
-        //4. LOWERING
+        //4. LOWERING (LOWERER)
         //Toolkit.ProcessTime.Add(("LOWERING", Toolkit.Stopwatch.Elapsed.TotalMilliseconds));
 
         Toolkit.Stopwatch.Stop();
