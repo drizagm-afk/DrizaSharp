@@ -133,9 +133,9 @@ public partial class ParserProcess : MatchContext
 
     //RULE EVAL
     public RuleInstance? EvalRule<R>(TokenSpan span) where R : Rule
-    => EvalRuleMatch(GetRule<R>(), span);
+    => MatchRule(GetRule<R>(), span);
     public RuleInstance? EvalRuleClass<C>(TokenSpan span) where C : RuleClass
-    => EvalRuleMatch(GetRuleClass<C>(), span);
+    => MatchRule(GetRuleClass<C>(), span);
 
     private bool EvalVarsFromNode(int entryId, TokenPattern pattern)
     {

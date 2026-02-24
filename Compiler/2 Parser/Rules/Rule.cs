@@ -5,6 +5,7 @@ namespace DrzSharp.Compiler.Parser;
 public abstract class RuleBase
 {
     internal RuleId Id;
+    internal string? RuleName;
     internal RuleClass? Parent;
 
     internal bool IsAbstract = false;
@@ -45,10 +46,10 @@ public abstract class RuleClass<T> : RuleClass where T : RuleInstance, new()
     private protected virtual void OnInstantiate(MatchView view, T instance) { }
 }
 
-public readonly struct RuleId(bool isClass, int id)
+public readonly struct RuleId(int id, bool isClass)
 {
-    public readonly bool IsClass = isClass;
     public readonly int Id = id;
+    public readonly bool IsClass = isClass;
     public bool Equals(RuleId other)
     => Id == other.Id && IsClass == other.IsClass;
 }

@@ -19,17 +19,18 @@ public static class Bindings
             new ParserPhase(LogicPhase)
         );
     }
-    private static void VirtualPhase(ParserProcess process)
+    private static void VirtualPhase(ParserProcess proc)
     {
-        foreach (var site in process.Sites)
-            process.EvalMatch(site);
-        //foreach (var site in _sites) EvalValidate(project, phaseCode, site);
+        proc.ForeachSite(proc.Match);
+        proc.ForeachSite(proc.Validate);
     }
-    private static void LogicPhase(ParserProcess process)
+    private static void LogicPhase(ParserProcess proc)
     {
-        foreach (var site in process.Sites)
-            process.EvalMatch(site);
-        //foreach (var site in _sites) EvalValidate(project, phaseCode, site);
+        proc.ForeachSite(s =>
+        {
+            proc.Match(s);
+            proc.Validate(s);
+        });
     }
 
     //REALMS
@@ -44,6 +45,6 @@ public static class Bindings
     //RULES
     private static void BindRules()
     {
-        
+
     }
 }

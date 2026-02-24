@@ -26,7 +26,8 @@ public interface Context
     public bool HasTokenAtSpan(TokenSpan span, int tokenOrder);
     public Token TokenAtSpan(TokenSpan span, int tokenOrder);
 
-    public ReadOnlySpan<char> Stringify(int tokenId);
+    public ReadOnlySpan<char> GetTextSpan(int tokenId);
+    public string GetText(int tokenId);
 }
 public partial class ParserProcess : Context
 {
@@ -83,5 +84,6 @@ public partial class ParserProcess : Context
     private static bool InBounds(TokenSpan span, int order)
     => (0 <= order) && (span.Length < 0 || order < span.Length);
 
-    public ReadOnlySpan<char> Stringify(int tokenId) => TAST.Stringify(tokenId);
+    public ReadOnlySpan<char> GetTextSpan(int tokenId) => TAST.GetTextSpan(tokenId);
+    public string GetText(int tokenId) => TAST.GetText(tokenId);
 }

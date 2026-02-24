@@ -123,12 +123,12 @@ public sealed class TASI
             node.Source
         );
     }
-    public int AddNode(int start, int length, SchemeTASIArgs args, Parser.RuleId source = new())
+    public int AddNode(int start, int length, TASIArgs args, Parser.RuleId source = new())
     => AddNode(0, 0, start, length, args, source);
-    public int AddNode(int parentId, int index, int start, int length, SchemeTASIArgs args, Parser.RuleId source = new())
+    public int AddNode(int parentId, int index, int start, int length, TASIArgs args, Parser.RuleId source = new())
     {
         ref readonly var parent = ref NodeAt(parentId);
-        int nestId = NewNode(parent.Args.With(args), index, start, length, source);
+        int nestId = NewNode(args, index, start, length, source);
 
         var childId = parent.FirstChildId;
         (int prevId, int nextId) = (-1, childId);
@@ -159,15 +159,6 @@ public readonly struct Instruction(byte typeId, int start, int length, Slice sou
     public readonly int Length = length;
     public readonly Slice Source = source;
 }
-public readonly struct InstructionId(byte phaseCode, byte realmCode, byte typeId)
-{
-    public readonly byte PhaseCode = phaseCode;
-    public readonly byte RealmCode = realmCode;
-    public readonly byte TypeId = typeId;
-
-    public bool Equals(InstructionId other)
-    => PhaseCode == other.PhaseCode && RealmCode == other.RealmCode && TypeId == other.TypeId;
-}
 
 //===== NODES =====
 public readonly struct TASINode(
@@ -189,38 +180,4 @@ public readonly struct TASIArgs
 {
     public readonly byte OutCode = outCode;
     public readonly byte RealmCode = realmCode;
-
-    public TASIArgs With(SchemeTASIArgs scheme) => scheme.Merge(this);
-    public SchemeTASIArgs AsScheme() => new(OutCode, RealmCode);
-    public RealmId RealmId => new(OutCode, RealmCode);
-}
-public readonly struct SchemeTASIArgs
-{
-    private const byte OutArg = 0b10;
-    private const byte RealmArg = 0b1;
-
-    public readonly byte OutCode;
-    public readonly byte RealmCode;
-    public readonly byte Args;
-
-    public SchemeTASIArgs(byte? outCode = null, byte? realmCode = null)
-    {
-        if (outCode is byte _out)
-        {
-            OutCode = _out;
-            Args += OutArg;
-        }
-        if (realmCode is byte _realm)
-        {
-            RealmCode = _realm;
-            Args += RealmArg;
-        }
-    }
-    private bool HasArg(byte arg)
-    => (Args & arg) == arg;
-    public TASIArgs Merge(TASIArgs args)
-    => new(
-        HasArg(OutArg) ? OutCode : args.OutCode,
-        HasArg(RealmArg) ? RealmCode : args.RealmCode
-    );
 }

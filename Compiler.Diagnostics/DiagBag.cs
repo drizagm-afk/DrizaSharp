@@ -19,14 +19,14 @@ public class GroupDiagnostics
 
     internal void ReportUnexpected(Slice span, string message)
     => _reports.Add(new(span, "SYSTEM", message, DiagnosticCode.Unexpected));
-    public void ReportInvalid(Slice span, string caller, string message)
+    public void ReportInvalid(Slice span, string? caller, string message)
     => _reports.Add(new(span, caller, message, DiagnosticCode.Invalid));
 }
 
-public readonly struct DiagnosticEntry(Slice span, string caller, string message, DiagnosticCode code)
+public readonly struct DiagnosticEntry(Slice span, string? caller, string message, DiagnosticCode code)
 {
     public readonly Slice Span = span;
-    public readonly string Caller = caller;
+    public readonly string? Caller = caller;
     public readonly string Message = message;
     public readonly DiagnosticCode Code = code;
 }

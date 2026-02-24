@@ -13,7 +13,6 @@ public static class Bindings
     //TOKEN TYPES
     private static void BindTypes()
     {
-        TokenType.Newline = Binding.AddTokenType();
         TokenType.Operator = Binding.AddTokenType();
         TokenType.Keyword = Binding.AddTokenType();
 

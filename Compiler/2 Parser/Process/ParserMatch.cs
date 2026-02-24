@@ -6,13 +6,31 @@ namespace DrzSharp.Compiler.Parser;
 
 public partial class ParserProcess
 {
+    //==== MATCHING MEMOIZATION =====
+    private readonly Dictionary<RuleMemoKey, RuleInstance?> _ruleMemoization = [];
+    internal void SetRuleMemo(int start, RuleId ruleId, RuleInstance? inst)
+    {
+        RuleMemoKey key = new(start, ruleId);
+        _ruleMemoization[key] = inst;
+    }
+    internal bool TryGetRuleMemo(int start, RuleId ruleId, [NotNullWhen(true)] out RuleInstance? inst)
+    {
+        inst = null;
+        if (!_ruleMemoization.TryGetValue(new(start, ruleId), out var eval))
+            return false;
+
+        inst = eval!;
+        return true;
+    }
+    internal void DropMemos() => _ruleMemoization.Clear();
+
     //===== EXECUTE MATCHING =====
-    public void EvalMatch(ParserSite site)
+    public void Match(ParserSite site)
     {
         Site = site;
-        EvalMatch(site.RootId);
+        Match(site.RootId);
     }
-    private void EvalMatch(int nodeId)
+    private void Match(int nodeId)
     {
         ref readonly var node = ref TAST.NodeAt(nodeId);
 
@@ -30,7 +48,7 @@ public partial class ParserProcess
 
                 //TRY MATCH
                 InitMatch();
-                var inst = EvalRuleMatch(rule, new(nodeId, i, 0, node.Length - i));
+                var inst = MatchRule(rule, new(nodeId, i, 0, node.Length - i));
 
                 //CLEAR
                 ClearVarStorage();
@@ -39,7 +57,7 @@ public partial class ParserProcess
                 if (inst is not null)
                 {
                     //FINALIZATION
-                    Site.DropMemos();
+                    DropMemos();
                     matched = inst.Span.Length;
 
                     //BUILD STRUCTURE
@@ -59,7 +77,7 @@ public partial class ParserProcess
             if (matched > 0) i += matched;
             else
             {
-                Site.DropMemos();
+                DropMemos();
                 i++;
             }
         }
@@ -69,7 +87,7 @@ public partial class ParserProcess
     private bool TryGetMemo(Rule rule, TokenSpan span, [NotNullWhen(true)] out RuleInstance? inst)
     {
         //SITE MEMOIZATION CHECK
-        if (Site.TryGetRuleMemo(span.Start, rule.Id, out inst))
+        if (TryGetRuleMemo(span.Start, rule.Id, out inst))
             return true;
 
         //NESTING MEMOIZATION CHECK (REWRITE ONLY)
@@ -117,7 +135,7 @@ public partial class ParserProcess
     }
 
     //RULE MATCH
-    private RuleInstance? EvalRuleMatch(Rule rule, TokenSpan span)
+    private RuleInstance? MatchRule(Rule rule, TokenSpan span)
     {
         //CHECK FOR MEMO
         if (TryGetMemo(rule, span, out var inst))
@@ -125,7 +143,7 @@ public partial class ParserProcess
 
         //MANUAL EVAL
         inst = TryMatchRule(rule, span);
-        Site.SetRuleMemo(span.Start, rule.Id, inst);
+        SetRuleMemo(span.Start, rule.Id, inst);
 
         return inst;
     }
@@ -155,7 +173,7 @@ public partial class ParserProcess
     }
 
     //RULE CLASS MATCH
-    private RuleInstance? EvalRuleMatch(RuleClass rule, TokenSpan span)
+    private RuleInstance? MatchRule(RuleClass rule, TokenSpan span)
     {
         int length = 0;
         bool matchRule(RuleBase? rule)
@@ -221,26 +239,5 @@ public partial class ParserProcess
         return GetRuleInstance(rule, span.With(length: length));
     }
 }
-
-public partial class ParserSite
-{
-    private readonly Dictionary<RuleMemoKey, RuleInstance?> _ruleMemoization = [];
-    internal void SetRuleMemo(int start, RuleId ruleId, RuleInstance? inst)
-    {
-        RuleMemoKey key = new(start, ruleId);
-        _ruleMemoization[key] = inst;
-    }
-    internal bool TryGetRuleMemo(int start, RuleId ruleId, [NotNullWhen(true)] out RuleInstance? inst)
-    {
-        inst = null;
-        if (!_ruleMemoization.TryGetValue(new(start, ruleId), out var eval))
-            return false;
-
-        inst = eval!;
-        return true;
-    }
-    internal void DropMemos() => _ruleMemoization.Clear();
-}
-
 internal readonly record struct RuleMemoKey
 (int Start, RuleId RuleId);

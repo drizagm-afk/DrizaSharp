@@ -6,15 +6,18 @@ namespace DrzSharp.Compiler.Model;
 //TAST: Abstract Stratified Token Tree
 public sealed class TAST(SourceSpan source)
 {
+    private readonly SourceSpan _source = source;
     public void BuildFlatTAST()
     {
         if (_nodeCount <= 0) NewNode(default, 0, _tokenCount, 0);
     }
 
     //**TOKENS**
-    private Token?[] _tokens = new Token?[128];
+    private Token[] _tokens = new Token[128];
     private int _tokenCount = 0;
-    private int AddTokenItem(Token? token)
+    public int TokenCount => _tokenCount;
+
+    private int AddTokenItem(Token token)
     {
         var id = _tokenCount++;
         if (_tokens.Length <= _tokenCount)
@@ -23,16 +26,11 @@ public sealed class TAST(SourceSpan source)
         _tokens[id] = token;
         return id;
     }
-
-    private readonly SourceSpan _source = source;
-    private readonly Dictionary<int, string> _tokenRephases = [];
-
-    public int NewNullToken() => AddTokenItem(null);
     public int NewToken(byte type, int start, int length)
     => AddTokenItem(new(_tokenCount, type, start, length));
-    public int NewToken(byte type, string rephrase)
+    public int NewToken(byte type, int start, int length, string rephrase)
     {
-        var id = NewToken(type, -1, -1);
+        var id = NewToken(type, start, length);
         _tokenRephases[id] = rephrase;
 
         return id;
@@ -44,34 +42,42 @@ public sealed class TAST(SourceSpan source)
         if (tokenId < 0 || tokenId >= _tokenCount)
             return false;
 
-        var nullToken = _tokens[tokenId];
-        if (nullToken is null)
-            return false;
-
-        token = nullToken.Value;
+        token = _tokens[tokenId];
         return true;
     }
     public bool HasTokenAt(int tokenId) => TryTokenAt(tokenId, out _);
     public Token TokenAt(int tokenId)
     {
         if (!TryTokenAt(tokenId, out var token))
-            throw new Exception($"NOT-NULL TOKEN NOT FOUND: ID={tokenId}");
+            throw new Exception($"TOKEN NOT FOUND: ID={tokenId}");
 
         return token;
     }
-    
-    public int TokenCount => _tokenCount;
 
+    private readonly Dictionary<int, string> _tokenRephases = [];
     public void Rephrase(int tokenId, string rephrase)
     => _tokenRephases[tokenId] = rephrase;
-
-    public ReadOnlySpan<char> Stringify(int tokenId)
+    public ReadOnlySpan<char> GetTextSpan(int tokenId)
     {
+        var token = TokenAt(tokenId);
+        if (token.IsNull)
+            throw new Exception("YOU CANNOT CONVERT A NULL TOKEN INTO A CHAR SPAN");
+
         if (_tokenRephases.TryGetValue(tokenId, out var val))
             return val.AsSpan();
 
-        var token = TokenAt(tokenId);
         return _source.AsSpan(token.Start, token.Length);
+    }
+    public string GetText(int tokenId)
+    {
+        var token = TokenAt(tokenId);
+        if (token.IsNull)
+            throw new Exception("YOU CANNOT CONVERT A NULL TOKEN INTO A STRING");
+
+        if (_tokenRephases.TryGetValue(tokenId, out var val))
+            return val;
+
+        return _source.Slice(token.Start, token.Length);
     }
 
     //**NODES**
@@ -229,6 +235,21 @@ public sealed class TAST(SourceSpan source)
         }
     }
 
+    //NODE SOURCE COVERAGE
+    public Slice NodeSourceSlice(int nodeId)
+    => NodeSourceSlice(NodeAt(nodeId));
+    public Slice NodeSourceSlice(in TASTNode node)
+    {
+        if (node.Length <= 0)
+            return default;
+
+        var start = TokenAt(node.Start);
+        var end = TokenAt(node.Start + node.Length - 1);
+        return new(
+            start.Start, end.Start + end.Length - start.Start
+        );
+    }
+
     //TOKEN AT NODE
     private bool FindTokenAtNode(int nodeId, int offset, int remOrder, out int tokenId)
     => FindTokenAtNode(NodeAt(nodeId), offset, ref remOrder, out tokenId);
@@ -315,10 +336,15 @@ public sealed class TAST(SourceSpan source)
 //===== TOKENS =====
 public readonly struct Token(int id, byte type, int start, int length)
 {
+    public const byte NULL = 0;
+    public const byte NEWLINE = 1;
+
     public readonly int Id = id;
     public readonly byte Type = type;
     public readonly int Start = start;
     public readonly int Length = length;
+
+    public bool IsNull => Type == NULL;
 }
 
 public readonly struct TokenSpan

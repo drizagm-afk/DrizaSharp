@@ -28,7 +28,7 @@ namespace DrzSharp.Compiler.Lexer
     internal static class LexerManager
     {
         //TOKEN TYPES
-        public static byte typeCount = 0;
+        public static byte typeCount = 2;
 
         //RULES
         public static readonly List<Rule> _rules = [];

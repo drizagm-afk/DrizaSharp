@@ -20,7 +20,8 @@ public interface Context
     public Token LastToken();
 
     //TOKEN EVALUATION
-    public ReadOnlySpan<char> Stringify(int tokenId);
+    public ReadOnlySpan<char> GetTextSpan(int tokenId);
+    public string GetText(int tokenId);
 }
 
 public partial class LexerProcess : Context
@@ -46,5 +47,6 @@ public partial class LexerProcess : Context
     public int TokenCount => TAST.TokenCount;
     public Token LastToken() => TokenAt(TAST.TokenCount - 1);
 
-    public ReadOnlySpan<char> Stringify(int tokenId) => TAST.Stringify(tokenId);
+    public ReadOnlySpan<char> GetTextSpan(int tokenId) => TAST.GetTextSpan(tokenId);
+    public string GetText(int tokenId) => TAST.GetText(tokenId);
 }

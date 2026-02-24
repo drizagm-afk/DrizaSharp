@@ -18,13 +18,12 @@ public partial class ParserProcess
 
         foreach (var file in Project.Files)
             RegisterFileSites(file);
-        
+
         ParserManager._phases[phaseCode].phase(this);
         _sites.Clear();
     }
 
     //FIND SITES
-    public List<ParserSite> Sites => _sites;
     private readonly List<ParserSite> _sites = [];
 
     private void RegisterFileSites(DzFile file)
@@ -63,6 +62,12 @@ public partial class ParserProcess
     }
     private static bool IsNodeSite(in TASTNode node, int phase)
     => node.Args.OutCode == phase;
+
+    public void ForeachSite(Action<ParserSite> action)
+    {
+        foreach (var site in _sites)
+            action(site);
+    }
 }
 
 public partial class ParserSite(int siteId, int fileId, int rootId)

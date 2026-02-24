@@ -56,7 +56,7 @@ public class TokenPattern
             var token = ctx.TokenAtSpan(span, 0);
             if (token.Type != type)
                 return 0;
-            if (val is not null && ctx.Stringify(token.Id) != val)
+            if (val is not null && ctx.GetTextSpan(token.Id) != val)
                 return 0;
 
             //VAR

@@ -1,8 +1,10 @@
+using DrzSharp.Compiler.Model;
+
 namespace DrzSharp.Compiler.Default.Lexer;
 
 public static class TokenType
 {
-    public static byte Newline { get; internal set; }
+    public static byte Newline => Token.NEWLINE;
     public static byte Operator { get; internal set; }
     public static byte Keyword { get; internal set; }
 

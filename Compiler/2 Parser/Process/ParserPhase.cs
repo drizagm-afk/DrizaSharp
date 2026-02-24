@@ -1,4 +1,6 @@
+using DrzSharp.Compiler.Diagnostics;
 using DrzSharp.Compiler.Model;
+using DrzSharp.Compiler.Project;
 
 namespace DrzSharp.Compiler.Parser;
 
@@ -6,34 +8,21 @@ public partial class ParserProcess
 {
     //PARSE SITES
     private ParserSite Site = null!;
-    private TAST TAST => Project.Files[Site.FileId].TAST;
-}
+    private DzFile File => Project.Files[Site.FileId];
 
-public partial class ParserSite
-{
-    /*
-    private readonly HashSet<ScopeKey> _scope = [];
-    public bool StoreScopeVar(int nodeId, string varType, string var)
-    => _scope.Add(new(nodeId, varType, var));
-    public bool HasScopeVar(int nodeId, string varType, string var)
-    => _scope.Contains(new(nodeId, varType, var));
-    */
-    //ATTRIBUTES
-    private readonly HashSet<AttrKey> _attributes = [];
-    public bool StoreAttr(int nodeId, string attr)
-    => _attributes.Add(new(nodeId, attr));
-    public bool HasAttr(int nodeId, string attr)
-    => _attributes.Contains(new(nodeId, attr));
+    private GroupDiagnostics Diagnostics => File.Diagnostics.Parser;
+    private TAST TAST => File.TAST;
+    private TASI TASI => File.TASI;
 
-    //TAGS
+    //SCOPED TAGS
     private readonly Dictionary<TagKey, Stack<int>> _scope = [];
     private readonly Stack<List<TagKey>> _scopeFrames = [];
-    internal void EnterScope()
+    private void EnterScope()
     => _scopeFrames.Push([]);
-    internal void ExitScope()
+    private void ExitScope()
     {
         var frame = _scopeFrames.Pop();
-        foreach(var key in frame)
+        foreach (var key in frame)
         {
             var stack = _scope[key];
             stack.Pop();
@@ -41,9 +30,8 @@ public partial class ParserSite
             if (stack.Count == 0)
                 _scope.Remove(key);
         }
-    }    
-
-    internal void StoreTag(int nodeId, string tagType, string tag)
+    }
+    private void StoreScopedTag(int nodeId, string tagType, string tag)
     {
         TagKey key = new(tagType, tag);
 
@@ -55,7 +43,7 @@ public partial class ParserSite
         stack.Push(nodeId);
         _scopeFrames.Peek().Add(key);
     }
-    internal bool TryFindTag(string tagType, string tag, out int nodeId)
+    private bool TryFindScopedTag(string tagType, string tag, out int nodeId)
     {
         TagKey key = new(tagType, tag);
 
@@ -67,8 +55,66 @@ public partial class ParserSite
         nodeId = -1;
         return false;
     }
+
+    //SCOPED ATTRIBUTES
+    private bool TryFindScopedAttr(string attr, out int nodeId)
+    {
+        bool hasScopeVar(int nodeId, out int id)
+        {
+            id = nodeId;
+            return Site.HasAttr(nodeId, attr);
+        }
+        bool findVarInSibling(int nodeId, int limit, out int id)
+        {
+            if (nodeId != limit && TAST.TryNodeAt(nodeId, out var node))
+            {
+                if (findVarInSibling(node.NextSiblingId, limit, out id)
+                || findVarInChildren(node, out id))
+                    return true;
+            }
+            id = 0;
+            return false;
+        }
+        bool findVarInChildren(in TASTNode node, out int id)
+        {
+            if (!node.Args.IsScoped)
+            {
+                var childId = node.FirstChildId;
+                while (TAST.TryNodeAt(childId, out var child))
+                {
+                    if (findVarInChildren(child, out id))
+                        return true;
+                    childId = child.NextSiblingId;
+                }
+            }
+            return hasScopeVar(node.Id, out id);
+        }
+        bool findVarInNode(in TASTNode node, out int id)
+        {
+            if (hasScopeVar(node.Id, out id))
+                return true;
+            else if (node.Id != Site.RootId && TAST.TryNodeAt(node.ParentId, out var parent))
+            {
+                if (findVarInSibling(parent.FirstChildId, node.Id, out id)
+                || findVarInNode(parent, out id))
+                    return true;
+            }
+            return false;
+        }
+        return findVarInNode(TAST.NodeAt(RuleInst!.NodeId), out nodeId);
+    }
+}
+internal readonly record struct TagKey
+(string TagType, string Tag);
+
+public partial class ParserSite
+{
+    //ATTRIBUTES
+    private readonly HashSet<AttrKey> _attributes = [];
+    public bool StoreAttr(int nodeId, string attr)
+    => _attributes.Add(new(nodeId, attr));
+    public bool HasAttr(int nodeId, string attr)
+    => _attributes.Contains(new(nodeId, attr));
 }
 internal readonly record struct AttrKey
 (int NodeId, string Attr);
-internal readonly record struct TagKey
-(string TagType, string Tag);

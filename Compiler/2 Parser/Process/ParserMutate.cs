@@ -20,9 +20,9 @@ public partial class ParserProcess
     }
     private void MutateNode(in TASTNode node)
     {
-        if (node.IsFlat())
+        if (node.Args.OutCode == _phaseCode && node.IsFlat())
         {
-            EvalMatch(node.Id);
+            Match(node.Id);
             return;
         }
 
@@ -45,7 +45,7 @@ public partial class ParserProcess
     }
 
     //REWRITING EVAL
-    private void EvalMatch(int nodeId, RuleId[] rules)
+    private void Match(int nodeId, RuleId[] rules)
     {
         ref readonly var node = ref TAST.NodeAt(nodeId);
 
@@ -61,15 +61,15 @@ public partial class ParserProcess
 
             var ruleId = rules[r];
             if (ruleId.IsClass)
-                inst = EvalRuleMatch(GetRuleClass(ruleId), new(nodeId, i, 0, -1));
+                inst = MatchRule(GetRuleClass(ruleId), new(nodeId, i, 0, -1));
             else
-                inst = EvalRuleMatch(GetRule(ruleId), new(nodeId, i, 0, -1));
+                inst = MatchRule(GetRule(ruleId), new(nodeId, i, 0, -1));
 
             //CLEAR
             ClearVarStorage();
 
             //EVAL
-            Site.DropMemos();
+            DropMemos();
             if (inst is not null)
             {
                 //FINALIZATION

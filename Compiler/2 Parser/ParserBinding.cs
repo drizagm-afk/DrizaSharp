@@ -15,7 +15,7 @@ public static class Binding
     //RULES
     public static R BindRule<R>() where R : Rule, new()
     {
-        var rule = new R { Id = new(false, ParserManager._rules.Count) };
+        var rule = new R { Id = new(ParserManager._rules.Count, true) };
         ParserManager._rules.Add(rule);
         ParserManager._rulesByType[typeof(R)] = rule.Id;
 
@@ -31,7 +31,7 @@ public static class Binding
 
     public static C BindRuleClass<C>() where C : RuleClass, new()
     {
-        var rule = new C { Id = new(true, ParserManager._ruleClasses.Count) };
+        var rule = new C { Id = new(ParserManager._ruleClasses.Count, true) };
         ParserManager._ruleClasses.Add(rule);
         ParserManager._ruleClassesByType[typeof(C)] = rule.Id;
 

@@ -5,8 +5,6 @@ namespace DrzSharp.Compiler.Lexer;
 
 public partial class LexerProcess
 {
-    private const byte NEWLINE = 0;
-
     //LEX PROJECT
     public void LexProject(DzProject project)
     {
@@ -23,7 +21,7 @@ public partial class LexerProcess
         var cont = file.Content;
 
         //STARTING NEWLINE
-        NewToken(NEWLINE, -1, -1);
+        NewToken(Token.NEWLINE, -1, -1);
 
         //LOOP
         iter = 0;
@@ -34,8 +32,8 @@ public partial class LexerProcess
             //NEWLINE RULE
             if (c == '\n' || c == ';')
             {
-                if (LastToken().Type != NEWLINE)
-                    NewToken(NEWLINE, iter, 1);
+                if (LastToken().Type != Token.NEWLINE)
+                    NewToken(Token.NEWLINE, iter, 1);
 
                 iter++;
                 continue;
@@ -73,8 +71,8 @@ public partial class LexerProcess
         }
 
         //ENDING NEWLINE
-        if (LastToken().Type != NEWLINE)
-            NewToken(NEWLINE, -1, -1);
+        if (LastToken().Type != Token.NEWLINE)
+            NewToken(Token.NEWLINE, -1, -1);
 
         //BUILD FLAT-TAST
         file.TAST.BuildFlatTAST();

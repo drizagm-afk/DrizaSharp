@@ -5,40 +5,42 @@ namespace DrzSharp.Compiler;
 
 public static partial class Compiler
 {
-    public static CompilerToolkit Toolkit = new();
-
     public static void Bind()
     {
-        Toolkit.Stopwatch = Stopwatch.StartNew();
-
+        Stopwatch sw = Stopwatch.StartNew();
         Default.Bindings.Bind();
-        Toolkit.ProcessTime.Add(("BINDINGS", Toolkit.Stopwatch.Elapsed.TotalMilliseconds));
-    }
+        sw.Stop();
 
+        Console.WriteLine("BINDING TIME: " + sw.Elapsed.TotalMilliseconds);
+    }
     public static void Compile(string root, string target)
     {
-        //1. PROJECT EVALUATION
-        var proj = Toolkit.Project = EvalProject(root, target);
-        Toolkit.ProcessTime.Add(("EVALUATION", Toolkit.Stopwatch.Elapsed.TotalMilliseconds));
+        Stopwatch sw = Stopwatch.StartNew();
+        List<(string, double)> procTime = [];
 
-        //2. TOKENIZATION (LEXER)
+        //0. PROJECT EVALUATION
+        var proj = EvalProject(root, target);
+        procTime.Add(("~EVALUATION", sw.Elapsed.TotalMilliseconds));
+
+        //1. TOKENIZATION (LEXER)
         LexProject(proj);
-        Toolkit.ProcessTime.Add(("LEXING", Toolkit.Stopwatch.Elapsed.TotalMilliseconds));
+        procTime.Add(("~LEXING", sw.Elapsed.TotalMilliseconds));
 
-        //3. PARSING (PARSER)
+        //2. PARSING (PARSER)
         ParseProject(proj);
-        Toolkit.ProcessTime.Add(("PARSING", Toolkit.Stopwatch.Elapsed.TotalMilliseconds));
+        procTime.Add(("~PARSING", sw.Elapsed.TotalMilliseconds));
 
-        //4. LOWERING (LOWERER)
+        //3. LOWERING (LOWERER)
         //Toolkit.ProcessTime.Add(("LOWERING", Toolkit.Stopwatch.Elapsed.TotalMilliseconds));
 
-        Toolkit.Stopwatch.Stop();
+        sw.Stop();
+        ShowProcessTime(procTime);
     }
 
-    public static void Debug()
+    public static void ShowProcessTime(List<(string, double)> procTime)
     {
         double total = 0;
-        foreach ((var name, var time) in Toolkit.ProcessTime)
+        foreach (var (name, time) in procTime)
         {
             Console.WriteLine(name + " TIME: " + (time - total));
             total = time;
@@ -46,13 +48,4 @@ public static partial class Compiler
 
         Console.WriteLine("COMPILING TIME: " + total);
     }
-}
-
-public class CompilerToolkit
-{
-    internal Stopwatch Stopwatch = null!;
-    internal readonly List<(string, double)> ProcessTime = [];
-
-    public DzProject Project = null!;
-    public DzFile File { get; internal set; } = null!;
 }
