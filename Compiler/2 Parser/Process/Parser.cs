@@ -7,7 +7,7 @@ public partial class ParserProcess
 {
     //===== PARSING PROCESS =====
     private DzProject Project = null!;
-    private int _phaseCode = 0;
+    private byte _phaseCode = 0;
 
     public void ParseProject(DzProject project)
     => ParseProject(project, 0);

@@ -28,6 +28,7 @@ public partial class ParserProcess
 
         if (Site._ruleAppliance.TryGetValue(node.Id, out var inst))
         {
+            RuleInst = inst;
             try { inst.Validate(this); }
             catch (Exception ex)
             {

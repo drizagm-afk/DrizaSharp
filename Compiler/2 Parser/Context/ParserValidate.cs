@@ -15,5 +15,9 @@ public partial class ParserProcess : ValidateContext
     public void Validate(RuleInstance inst)
     => Validate(inst.NodeId);
     public void Validate(int nodeId)
-    => Validate(TAST.NodeAt(nodeId));
+    {
+        var caller = RuleInst;
+        Validate(TAST.NodeAt(nodeId));
+        RuleInst = caller;
+    }
 }

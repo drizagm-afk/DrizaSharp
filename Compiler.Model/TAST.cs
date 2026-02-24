@@ -81,6 +81,8 @@ public sealed class TAST(SourceSpan source)
     }
 
     //**NODES**
+    internal Dictionary<int, EmitId> _outNodes = [];
+
     private TASTNode[] _nodes = new TASTNode[128];
     private int _nodeCount = 0;
 
@@ -453,10 +455,10 @@ public readonly struct SchemeTASTArgs
         HasArg(IsScopedArg) ? IsScoped : args.IsScoped
     );
 }
-public readonly struct RealmId(int phaseCode, int realmCode)
+public readonly struct RealmId(byte phaseCode, byte realmCode)
 {
-    public readonly int PhaseCode = phaseCode;
-    public readonly int RealmCode = realmCode;
+    public readonly byte PhaseCode = phaseCode;
+    public readonly byte RealmCode = realmCode;
 
     public bool Equals(RealmId other)
     => PhaseCode == other.PhaseCode && RealmCode == other.RealmCode;

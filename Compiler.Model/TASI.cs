@@ -48,8 +48,7 @@ public sealed class TASI
             Array.Resize(ref _refTable, _refTable.Length * 2);
         _refTable[off] = val;
 
-        WriteInt(off);
-        return off;
+        return WriteInt(off);
     }
     public int WriteString(string val) => WriteObject(val);
 
@@ -67,6 +66,7 @@ public sealed class TASI
     //**INSTRUCTIONS**
     private Instruction[] _instructions = new Instruction[128];
     private int _instCount = 0;
+    public int InstructionCount => _instCount;
     public int NewInstruction(byte typeId, int start, int length, Slice source = new())
     {
         var off = _instCount++;
@@ -91,7 +91,7 @@ public sealed class TASI
     private int NewNode(TASIArgs args, int relIndex, int start, int length, Parser.RuleId source = new())
     {
         var id = _nodeCount++;
-        if (_nodes.Length <= _nodeCount)
+        if (_nodeCount >= _nodes.Length)
             Array.Resize(ref _nodes, _nodes.Length * 2);
 
         _nodes[id] = new(id, args, relIndex, start, length, -1, -1, source);
@@ -100,7 +100,7 @@ public sealed class TASI
 
     public ref readonly TASINode NodeAt(int nodeId)
     {
-        Debug.Assert(nodeId >= 0 || nodeId < _nodeCount, $"Node not found in TASI: node={nodeId}");
+        Debug.Assert(nodeId >= 0 && nodeId < _nodeCount, $"Node not found in TASI: node={nodeId}");
         return ref _nodes[nodeId];
     }
     public bool TryNodeAt(int nodeId, out TASINode node)
@@ -180,4 +180,10 @@ public readonly struct TASIArgs
 {
     public readonly byte OutCode = outCode;
     public readonly byte RealmCode = realmCode;
+}
+public readonly struct EmitId(int parentId, int index)
+{
+    public readonly int ParentId = parentId;
+    public readonly int Index = index;
+    public readonly bool IsValid = true;
 }

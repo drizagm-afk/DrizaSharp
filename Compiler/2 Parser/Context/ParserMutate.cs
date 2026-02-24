@@ -1,14 +1,20 @@
+using System.Data.SqlTypes;
 using DrzSharp.Compiler.Model;
 
 namespace DrzSharp.Compiler.Parser;
 
 public interface MutateContext : Context
 {
-    void Rewrite(RewriteToken[] tokens, int[] children, params RuleId[] rules);
+    public void SetScoped();
+    public void Rewrite(RewriteToken[] tokens, int[] children, params RuleId[] rules);
 }
 
 public partial class ParserProcess : MutateContext
 {
+    //UPDATE
+    public void SetScoped()
+    => TAST.Update(RuleInst!.NodeId, new(isScoped: true));
+
     //REWRITE
     public void Rewrite(RewriteToken[] tokens, int[] fillNodes, params RuleId[] rules)
     {

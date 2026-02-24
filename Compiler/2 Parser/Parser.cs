@@ -21,7 +21,10 @@ namespace DrzSharp.Compiler.Parser
     internal static class ParserManager
     {
         //PHASES
-        public static ParserPhase[] _phases = [];
+        public static ParserPhase[] _phases = [
+            new(Phases.VirtualPhase),
+            new(Phases.LogicPhase)
+        ];
 
         //RULES
         public static readonly List<Rule> _rules = [];
@@ -57,10 +60,35 @@ namespace DrzSharp.Compiler.Parser
         public static ParserProcess NewProcess() => new();
         public static void EndProcess(this ParserProcess process) { }
     }
+    public static class Phases
+    {
+        public const byte VIRTUAL = 0;
+        public const byte LOGIC = 1;
 
+        //PHASE IMPLEMENTATIONS
+        internal static void VirtualPhase(ParserProcess proc)
+        {
+            proc.ForeachSite(proc.Match);
+            proc.ForeachSite(s =>
+            {
+                proc.Validate(s);
+                proc.Emit(s);
+            });
+        }
+
+        internal static void LogicPhase(ParserProcess proc)
+        {
+            proc.ForeachSite(s =>
+            {
+                proc.Match(s);
+                proc.Validate(s);
+                proc.Emit(s);
+            });
+        }
+    }
     public class ParserPhase(Action<ParserProcess> phase)
     {
         internal readonly Action<ParserProcess> phase = phase;
-        internal int realmCount = 0;
+        internal byte realmCount = 0;
     }
 }

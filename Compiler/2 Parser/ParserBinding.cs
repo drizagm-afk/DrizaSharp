@@ -4,12 +4,8 @@ namespace DrzSharp.Compiler.Parser;
 
 public static class Binding
 {
-    //PHASES
-    public static void SetPhases(params ParserPhase[] phases)
-    => ParserManager._phases = phases;
-
     //REALMS
-    public static RealmId AddRealm(int phaseCode)
+    public static RealmId AddRealm(byte phaseCode)
     => new(phaseCode, ParserManager._phases[phaseCode].realmCount++);
 
     //RULES
