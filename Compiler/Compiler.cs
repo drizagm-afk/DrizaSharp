@@ -31,7 +31,8 @@ public static partial class Compiler
         procTime.Add(("~PARSING", sw.Elapsed.TotalMilliseconds));
 
         //3. LOWERING (LOWERER)
-        //Toolkit.ProcessTime.Add(("LOWERING", Toolkit.Stopwatch.Elapsed.TotalMilliseconds));
+        LowerProject(proj);
+        procTime.Add(("~LOWERING", sw.Elapsed.TotalMilliseconds));
 
         sw.Stop();
         ShowProcessTime(procTime);

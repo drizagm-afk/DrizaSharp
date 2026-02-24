@@ -1,3 +1,4 @@
+using DrzSharp.Compiler.Diagnostics;
 using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Project;
 
@@ -10,15 +11,27 @@ public partial class LexerProcess
     {
         foreach (var file in project.Files) LexFile(file);
     }
+    public void LexFile(DzFile file)
+    {
+        File = file;
+        Lex();
+
+        Reset();
+    }
+    public void Reset()
+    {
+        File = null!;
+    }
 
     //LEX FILE
     private DzFile File = null!;
     private TAST TAST => File.TAST;
+    private GroupDiagnostics Diagnostics => File.Diagnostics.Lexer;
+
     private int iter;
-    public void LexFile(DzFile file)
+    private void Lex()
     {
-        File = file;
-        var cont = file.Content;
+        var cont = File.Content;
 
         //STARTING NEWLINE
         NewToken(Token.NEWLINE, -1, -1);
@@ -65,7 +78,7 @@ public partial class LexerProcess
 
             if (!match)
             {
-                //ADD AN ERROR TO THE PIPELINE OR SMTH
+                Diagnostics.ReportUnexpected(new(iter, 1));
                 iter++;
             }
         }
@@ -75,6 +88,6 @@ public partial class LexerProcess
             NewToken(Token.NEWLINE, -1, -1);
 
         //BUILD FLAT-TAST
-        file.TAST.BuildFlatTAST();
+        TAST.BuildFlatTAST();
     }
 }

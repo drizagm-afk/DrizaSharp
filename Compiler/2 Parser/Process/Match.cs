@@ -78,6 +78,13 @@ public partial class ParserProcess
             else
             {
                 DropMemos();
+                
+                //REPORT
+                var token = TAST.TokenAt(node.Start + i);
+                if (token.Type != Token.NEWLINE)
+                    Diagnostics.ReportUnexpected(new(token.Start, token.Length));
+
+                //SKIP
                 i++;
             }
         }

@@ -67,13 +67,13 @@ public sealed class TASI
     private Instruction[] _instructions = new Instruction[128];
     private int _instCount = 0;
     public int InstructionCount => _instCount;
-    public int NewInstruction(byte typeId, int start, int length, Slice source = new())
+    public int NewInstruction(Lowerer.RuleId ruleId, int start, int length, Slice source = new())
     {
         var off = _instCount++;
         if (_instructions.Length <= _instCount)
             Array.Resize(ref _instructions, _instructions.Length * 2);
 
-        _instructions[off] = new(typeId, start, length, source);
+        _instructions[off] = new(ruleId, start, length, source);
         return off;
     }
     public Instruction InstructionAt(int instructionId)
@@ -86,15 +86,15 @@ public sealed class TASI
     //ROOT
     public const byte RootId = 0;
     public ref readonly TASINode Root => ref _nodes[RootId];
-    public TASI() => NewNode(default, -1, 0, 0);
+    public TASI() => NewNode(-1, 0, 0);
 
-    private int NewNode(TASIArgs args, int relIndex, int start, int length, Parser.RuleId source = new())
+    private int NewNode(int relIndex, int start, int length, Parser.RuleId source = new())
     {
         var id = _nodeCount++;
         if (_nodeCount >= _nodes.Length)
             Array.Resize(ref _nodes, _nodes.Length * 2);
 
-        _nodes[id] = new(id, args, relIndex, start, length, -1, -1, source);
+        _nodes[id] = new(id, relIndex, start, length, -1, -1, source);
         return id;
     }
 
@@ -118,17 +118,17 @@ public sealed class TASI
     {
         ref readonly var node = ref NodeAt(nodeId);
         _nodes[node.Id] = new TASINode(
-            node.Id, node.Args, node.RelIndex, node.Start, node.Length,
+            node.Id, node.RelIndex, node.Start, node.Length,
             firstChildId ?? node.FirstChildId, nextSiblingId ?? node.NextSiblingId, 
             node.Source
         );
     }
-    public int AddNode(int start, int length, TASIArgs args, Parser.RuleId source = new())
-    => AddNode(0, 0, start, length, args, source);
-    public int AddNode(int parentId, int index, int start, int length, TASIArgs args, Parser.RuleId source = new())
+    public int AddNode(int start, int length, Parser.RuleId source = new())
+    => AddNode(0, 0, start, length, source);
+    public int AddNode(int parentId, int index, int start, int length, Parser.RuleId source = new())
     {
         ref readonly var parent = ref NodeAt(parentId);
-        int nestId = NewNode(args, index, start, length, source);
+        int nestId = NewNode(index, start, length, source);
 
         var childId = parent.FirstChildId;
         (int prevId, int nextId) = (-1, childId);
@@ -152,9 +152,9 @@ public sealed class TASI
 }
 
 //===== INSTRUCTIONS =====
-public readonly struct Instruction(byte typeId, int start, int length, Slice source)
+public readonly struct Instruction(Lowerer.RuleId ruleId, int start, int length, Slice source)
 {
-    public readonly byte TypeId = typeId;
+    public readonly Lowerer.RuleId RuleId = ruleId;
     public readonly int Start = start;
     public readonly int Length = length;
     public readonly Slice Source = source;
@@ -162,24 +162,17 @@ public readonly struct Instruction(byte typeId, int start, int length, Slice sou
 
 //===== NODES =====
 public readonly struct TASINode(
-    int id, TASIArgs args, int relIndex, int start, int length,
+    int id, int relIndex, int start, int length,
     int firstChildId, int nextSiblingId, Parser.RuleId source
 )
 {
     public readonly int Id = id;
-    public readonly TASIArgs Args = args;
     public readonly int RelIndex = relIndex;
     public readonly int Start = start;
     public readonly int Length = length;
     public readonly int FirstChildId = firstChildId;
     public readonly int NextSiblingId = nextSiblingId;
     public readonly Parser.RuleId Source = source;
-}
-public readonly struct TASIArgs
-(byte outCode, byte realmCode)
-{
-    public readonly byte OutCode = outCode;
-    public readonly byte RealmCode = realmCode;
 }
 public readonly struct EmitId(int parentId, int index)
 {

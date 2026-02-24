@@ -80,7 +80,16 @@ public partial class ParserProcess
                 StartBuild(inst);
                 EndBuild();
             }
-            else i++;
+            else
+            {
+                //REPORT
+                var token = TAST.TokenAt(node.Start + i);
+                if (token.Type != Token.NEWLINE)
+                    Diagnostics.ReportUnexpected(new(token.Start, token.Length));
+
+                //SKIP
+                i++;
+            }
         }
     }
     private int FlatLength(TokenSpan span)

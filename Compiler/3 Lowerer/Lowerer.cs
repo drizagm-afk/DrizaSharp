@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using DrzSharp.Compiler.Lowerer;
 using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Project;
@@ -14,18 +15,13 @@ namespace DrzSharp.Compiler
             low.LowerProject(project);
             low.EndProcess();
         }
-        public static void LowerFile(DzFile file)
-        {
-            var low = NewLowerer();
-            low.LowerFile(file);
-            low.EndProcess();
-        }
     }
 }
 
 namespace DrzSharp.Compiler.Lowerer
 {
     public delegate void Rule(Context ctx, Instruction instruction);
+
     public readonly struct RuleId(int id)
     {
         public readonly int Id = id;
@@ -37,6 +33,15 @@ namespace DrzSharp.Compiler.Lowerer
     {
         //RULES
         public static readonly List<Rule> _rules = [];
+        public static bool TryGetRule(RuleId ruleId, [NotNullWhen(true)] out Rule? rule)
+        {
+            rule = null;
+            if (ruleId.Id < 0 || ruleId.Id >= _rules.Count)
+                return false;
+            
+            rule = _rules[ruleId.Id];
+            return true;
+        }
 
         //PROCESSES
         public static LowererProcess NewProcess() => new();

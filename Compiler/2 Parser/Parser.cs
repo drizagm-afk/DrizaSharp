@@ -26,6 +26,15 @@ namespace DrzSharp.Compiler.Parser
             new(Phases.LogicPhase)
         ];
 
+        //RULE NAME
+        public static string? GetRuleName(RuleId id)
+        {
+            if (id.IsClass)
+                return GetRuleClass(id).RuleName;
+            else
+                return GetRule(id).RuleName;
+        }
+
         //RULES
         public static readonly List<Rule> _rules = [];
         public static readonly Dictionary<Type, RuleId> _rulesByType = [];

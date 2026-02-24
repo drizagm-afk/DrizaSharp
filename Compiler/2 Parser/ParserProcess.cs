@@ -10,7 +10,10 @@ public partial class ParserProcess
     private byte _phaseCode = 0;
 
     public void ParseProject(DzProject project)
-    => ParseProject(project, 0);
+    {
+        for (byte i = 0; i < ParserManager._phases.Length; i++)
+            ParseProject(project, i);
+    }
     public void ParseProject(DzProject project, byte phaseCode)
     {
         Project = project;
@@ -20,6 +23,13 @@ public partial class ParserProcess
             RegisterFileSites(file);
 
         ParserManager._phases[phaseCode].phase(this);
+
+        Reset();
+    }
+
+    public void Reset()
+    {
+        Site = null!;
         _sites.Clear();
     }
 
