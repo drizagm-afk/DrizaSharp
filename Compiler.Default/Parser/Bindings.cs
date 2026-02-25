@@ -26,5 +26,6 @@ public static class Bindings
 
         Binding.BindRule<ASMPrintRule>();
         Binding.BindRule<ASMLoadStrRule>();
+        Binding.BindRule<ASMReturnRule>();
     }
 }

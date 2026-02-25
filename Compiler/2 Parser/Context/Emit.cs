@@ -2,7 +2,7 @@ using DrzSharp.Compiler.Model;
 
 namespace DrzSharp.Compiler.Parser;
 
-public interface EmitContext
+public interface EmitContext : Context
 {
     public void Emit(EmitId emitId = new(), params EmitNode[] emitNodes);
 

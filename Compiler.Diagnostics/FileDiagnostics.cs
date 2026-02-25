@@ -18,7 +18,7 @@ public class GroupDiagnostics
     public IReadOnlyList<DiagnosticEntry> Reports => _reports;
 
     internal void ReportUnexpected(Slice span, string? caller = null)
-    => _reports.Add(new(span, null, null, DiagnosticCode.Unexpected));
+    => _reports.Add(new(span, caller, null, DiagnosticCode.Unexpected));
     public void ReportInvalid(Slice span, string? caller, string message)
     => _reports.Add(new(span, caller, message, DiagnosticCode.Invalid));
 }
