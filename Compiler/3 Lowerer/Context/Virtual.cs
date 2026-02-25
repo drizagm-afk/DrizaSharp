@@ -1,14 +1,19 @@
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace DrzSharp.Compiler.Lowerer;
 
 public interface VirtualContext
 {
-    public ModuleDefinition Module { get; }
+    public void EnterLogic(ILProcessor iLProcessor);
 }
 public partial class LowererProcess : VirtualContext
 {
-    public ModuleDefinition Module { get; private set; } = null!;
+    public void EnterLogic(ILProcessor iLProcessor)
+    {
+        ILProcessor = iLProcessor;
+        ResetLogic();
+    }
 
     //RESET
     internal void ResetVirtual()

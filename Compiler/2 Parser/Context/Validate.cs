@@ -1,6 +1,6 @@
 namespace DrzSharp.Compiler.Parser;
 
-public interface ValidateContext : INodeAttrs, INodeTags
+public interface ValidateContext : Context, INodeAttrs, INodeTags
 {
     public void Abort(string message = "TEXT SPAN IS INVALID");
 

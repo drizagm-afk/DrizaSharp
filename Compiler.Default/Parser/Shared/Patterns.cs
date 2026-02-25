@@ -12,19 +12,19 @@ public static class TokenPatterns
     public static TokenPattern TKeyword(this TokenPattern inst, string? val = null, string? captureTag = null)
     => inst.Token(TokenType.Keyword, val, captureTag);
 
-    public static TokenPattern TOpParen(this TokenPattern inst, string? val = null, string? captureTag = null)
-    => inst.Token(TokenType.OpParen, val, captureTag);
-    public static TokenPattern TOpBrack(this TokenPattern inst, string? val = null, string? captureTag = null)
-    => inst.Token(TokenType.OpBrack, val, captureTag);
-    public static TokenPattern TOpBrace(this TokenPattern inst, string? val = null, string? captureTag = null)
-    => inst.Token(TokenType.OpBrace, val, captureTag);
+    public static TokenPattern TOpParen(this TokenPattern inst, string? captureTag = null)
+    => inst.Token(TokenType.OpParen, null, captureTag);
+    public static TokenPattern TOpBrack(this TokenPattern inst, string? captureTag = null)
+    => inst.Token(TokenType.OpBrack, null, captureTag);
+    public static TokenPattern TOpBrace(this TokenPattern inst, string? captureTag = null)
+    => inst.Token(TokenType.OpBrace, null, captureTag);
 
-    public static TokenPattern TClParen(this TokenPattern inst, string? val = null, string? captureTag = null)
-    => inst.Token(TokenType.ClParen, val, captureTag);
-    public static TokenPattern TClBrack(this TokenPattern inst, string? val = null, string? captureTag = null)
-    => inst.Token(TokenType.ClBrack, val, captureTag);
-    public static TokenPattern TClBrace(this TokenPattern inst, string? val = null, string? captureTag = null)
-    => inst.Token(TokenType.ClBrace, val, captureTag);
+    public static TokenPattern TClParen(this TokenPattern inst, string? captureTag = null)
+    => inst.Token(TokenType.ClParen, null, captureTag);
+    public static TokenPattern TClBrack(this TokenPattern inst, string? captureTag = null)
+    => inst.Token(TokenType.ClBrack, null, captureTag);
+    public static TokenPattern TClBrace(this TokenPattern inst, string? captureTag = null)
+    => inst.Token(TokenType.ClBrace, null, captureTag);
 
     public static TokenPattern TAtsignPrefix(this TokenPattern inst, string? val = null, string? captureTag = null)
     => inst.Token(TokenType.AtsignPrefix, val, captureTag);

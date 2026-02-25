@@ -7,7 +7,7 @@ public static class Bindings
     public static void Bind()
     {
         BindRealms();
-        BindRealms();
+        BindRules();
     }
 
     //REALMS
@@ -22,6 +22,9 @@ public static class Bindings
     //RULES
     private static void BindRules()
     {
+        Binding.BindRule<EntryPointRule>();
 
+        Binding.BindRule<ASMPrintRule>();
+        Binding.BindRule<ASMLoadStrRule>();
     }
 }

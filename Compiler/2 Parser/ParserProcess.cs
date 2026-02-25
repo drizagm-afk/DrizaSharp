@@ -1,3 +1,4 @@
+using DrzSharp.Compiler.Diagnostics;
 using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Project;
 
@@ -78,6 +79,14 @@ public partial class ParserProcess
         foreach (var site in _sites)
             action(site);
     }
+
+    //===== PARSER PHASE =====
+    private ParserSite Site = null!;
+    private DzFile File => Project.Files[Site.FileId];
+
+    private GroupDiagnostics Diagnostics => File.Diagnostics.Parser;
+    private TAST TAST => File.TAST;
+    private TASI TASI => File.TASI;
 }
 
 public partial class ParserSite(int siteId, int fileId, int rootId)

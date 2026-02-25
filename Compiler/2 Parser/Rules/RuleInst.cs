@@ -13,16 +13,16 @@ public abstract class RuleInstance
     internal bool IsRewritten = false;
 
     internal void Build(BuildContext ctx) => OnBuild(ctx);
-    private protected virtual void OnBuild(BuildContext ctx) { }
+    protected abstract void OnBuild(BuildContext ctx);
     internal void Mutate(MutateContext ctx) => OnMutate(ctx);
-    private protected virtual void OnMutate(MutateContext ctx) { }
+    protected virtual void OnMutate(MutateContext ctx) { }
 
     //VALIDATE
     internal void Validate(ValidateContext ctx) => OnValidate(ctx);
-    private protected virtual void OnValidate(ValidateContext ctx) { }
+    protected abstract void OnValidate(ValidateContext ctx);
 
     //EMIT
     internal EmitId EmitId;
     internal void Emit(EmitContext ctx) => OnEmit(ctx);
-    private protected virtual void OnEmit(EmitContext ctx) { }
+    protected abstract void OnEmit(EmitContext ctx);
 }

@@ -37,7 +37,7 @@ public partial class ParserProcess : MutateContext
 
         //BASE
         RuleInst!.IsRewritten = true;
-        var slice = TAST.NodeSourceSlice(RuleInst.NodeId);
+        var slice = TAST.SourceSlice(RuleInst.NodeId);
 
         //REWRITE
         var start = TAST.TokenCount;

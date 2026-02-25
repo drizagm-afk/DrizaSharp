@@ -2,9 +2,11 @@ namespace DrzSharp.Compiler.Lowerer;
 
 public static class Binding
 {
-    public static void BindRule(Rule rule, out RuleId ruleId)
+    public static RuleId BindRule(Rule rule)
     {
-        ruleId = new(LowererManager._rules.Count);
+        RuleId ruleId = new(LowererManager._rules.Count);
         LowererManager._rules.Add(rule);
+
+        return ruleId;
     }
 }

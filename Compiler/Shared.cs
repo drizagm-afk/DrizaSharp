@@ -14,28 +14,28 @@ namespace DrzSharp.Compiler.Text
 {
     public readonly struct SourceSpan
     {
-        public SourceSpan(string str) : this(str, 0) { }
-        public SourceSpan(string str, int start) : this(str, start, str.Length - start) { }
-        public SourceSpan(string str, int start, int length)
+        public SourceSpan(string source) : this(source, 0) { }
+        public SourceSpan(string source, int start) : this(source, start, source.Length - start) { }
+        public SourceSpan(string source, int start, int length)
         {
-            String = str;
+            Source = source;
             Start = start;
             Length = length;
 
-            Debug.Assert(Start >= 0 && Length >= 0 && Start + Length <= String.Length);
+            Debug.Assert(Start >= 0 && Length >= 0 && Start + Length <= Source.Length);
         }
 
-        public readonly string String;
+        public readonly string Source;
         public readonly int Start;
         public readonly int Length;
 
-        public char this[int i] { get => String[Start + i]; }
+        public char this[int i] { get => Source[Start + i]; }
         public ReadOnlySpan<char> AsSpan() => AsSpan(0, Length);
         public ReadOnlySpan<char> AsSpan(int start) => AsSpan(start, Length - start);
         public ReadOnlySpan<char> AsSpan(int start, int length)
         {
             Debug.Assert(start >= 0 && length >= 0 && start + length <= Length);
-            return String.AsSpan(Start + start, length);
+            return Source.AsSpan(Start + start, length);
         }
         public ReadOnlySpan<char> AsSpan(Slice range)
         => AsSpan(range.Start, range.Length);
@@ -45,7 +45,7 @@ namespace DrzSharp.Compiler.Text
         public string Slice(int start, int length)
         {
             Debug.Assert(start >= 0 && length >= 0 && start + length <= Length);
-            return String.Substring(Start + start, length);
+            return Source.Substring(Start + start, length);
         }
         public string Slice(Slice range)
         => Slice(range.Start, range.Length);

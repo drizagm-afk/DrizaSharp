@@ -1,3 +1,4 @@
+using System.Text;
 using DrzSharp.Compiler.Lexer;
 
 namespace DrzSharp.Compiler.Default.Lexer;
@@ -108,6 +109,8 @@ public static class DefRules
         var prefix = content[0];
         if (prefix != '\"' && prefix != '\'') return;
 
+        StringBuilder str = new();
+
         var i = 1;
         while (i < content.Length)
         {
@@ -116,9 +119,32 @@ public static class DefRules
 
             if (c == prefix && content[i - 1] != '\\')
             {
-                ctx.NewToken(TokenType.String, i);
+                ctx.NewToken(TokenType.String, i, str.ToString());
                 return;
             }
+            str.Append(c);
+        }
+    }
+
+    const char KEYWORD_PX = '`';
+    public static void StringKeywordRule(Context ctx, ReadOnlySpan<char> content)
+    {
+        if (content[0] != KEYWORD_PX) return;
+
+        StringBuilder kw = new();
+
+        var i = 1;
+        while (i < content.Length)
+        {
+            var c = content[i];
+            i++;
+
+            if (c == KEYWORD_PX)
+            {
+                ctx.NewToken(TokenType.Keyword, i, kw.ToString());
+                return;
+            }
+            kw.Append(c);
         }
     }
 }

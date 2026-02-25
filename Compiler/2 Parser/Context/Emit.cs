@@ -7,16 +7,15 @@ public interface EmitContext
     public void Emit(EmitId emitId = new(), params EmitNode[] emitNodes);
 
     //INSTRUCTIONS
-    public const int BYTE_SIZE = TASI.BYTE_SIZE;
-    public const int INT_SIZE = TASI.INT_SIZE;
-    public const int REF_SIZE = TASI.REF_SIZE;
+    public int DataCount { get; }
 
     public int WriteByte(byte value);
     public int WriteInt(int value);
     public int WriteObject(object value);
     public int WriteString(string value);
 
-    public void AddInstruction(Lowerer.RuleId ruleId, int start, int length, Slice source = default);
+    public void AddInstruction(Lowerer.RuleId ruleId, Slice data, Slice source);
+    public void AddInstruction(Lowerer.RuleId ruleId, Slice data, int source);
 }
 
 public partial class ParserProcess : EmitContext
@@ -48,13 +47,16 @@ public partial class ParserProcess : EmitContext
     }
 
     //INSTRUCTIONS
+    public int DataCount => TASI.DataCount;
     public int WriteByte(byte value) => TASI.WriteByte(value);
     public int WriteInt(int value) => TASI.WriteInt(value);
     public int WriteObject(object value) => TASI.WriteObject(value);
     public int WriteString(string value) => TASI.WriteString(value);
 
-    public void AddInstruction(Lowerer.RuleId ruleId, int start, int length, Slice source = default)
-    => TASI.NewInstruction(ruleId, start, length, source);
+    public void AddInstruction(Lowerer.RuleId ruleId, Slice data, Slice source)
+    => TASI.NewInstruction(ruleId, data.Start, data.Length, source);
+    public void AddInstruction(Lowerer.RuleId ruleId, Slice data, int source)
+    => AddInstruction(ruleId, data, TAST.SourceSlice(source));
 }
 
 public readonly struct EmitNode(int emitId, int nodeId)

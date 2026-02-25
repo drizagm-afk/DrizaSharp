@@ -1,19 +1,9 @@
-using DrzSharp.Compiler.Diagnostics;
 using DrzSharp.Compiler.Model;
-using DrzSharp.Compiler.Project;
 
 namespace DrzSharp.Compiler.Parser;
 
 public partial class ParserProcess
 {
-    //PARSE SITES
-    private ParserSite Site = null!;
-    private DzFile File => Project.Files[Site.FileId];
-
-    private GroupDiagnostics Diagnostics => File.Diagnostics.Parser;
-    private TAST TAST => File.TAST;
-    private TASI TASI => File.TASI;
-
     //SCOPED TAGS
     private readonly Dictionary<TagKey, Stack<int>> _scope = [];
     private readonly Stack<List<TagKey>> _scopeFrames = [];

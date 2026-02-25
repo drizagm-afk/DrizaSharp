@@ -238,9 +238,9 @@ public sealed class TAST(SourceSpan source)
     }
 
     //NODE SOURCE COVERAGE
-    public Slice NodeSourceSlice(int nodeId)
-    => NodeSourceSlice(NodeAt(nodeId));
-    public Slice NodeSourceSlice(in TASTNode node)
+    public Slice SourceSlice(int nodeId)
+    => SourceSlice(NodeAt(nodeId));
+    public Slice SourceSlice(in TASTNode node)
     {
         if (node.Length <= 0)
             return default;

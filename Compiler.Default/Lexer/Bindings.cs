@@ -47,5 +47,7 @@ public static class Bindings
         Binding.BindRule(DefRules.BoolRule);
         Binding.BindRule(DefRules.NumberRule);
         Binding.BindRule(DefRules.StringRule);
+
+        Binding.BindRule(DefRules.StringKeywordRule);
     }
 }

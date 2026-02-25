@@ -6,5 +6,6 @@ public static class Bindings
     {
         Lexer.Bindings.Bind();
         Parser.Bindings.Bind();
+        Lowerer.Bindings.Bind();
     }
 }

@@ -9,6 +9,8 @@ public sealed class TASI
     //**DATA**
     private byte[] _dataTable = new byte[128];
     private int _dataCount = 0;
+    public int DataCount => _dataCount;
+
     private object[] _refTable = new object[128];
     private int _refCount = 0;
 

@@ -16,15 +16,14 @@ public interface Context
     public C GetRuleClass<C>(RuleId id) where C : RuleClass;
     public RuleClass GetRuleClass(RuleId id);
 
-    //TAST DEFAULT CONTEXT
+    //**TAST NODES**
     public TASTNode NodeAt(int nodeId);
 
     public void Children(Action<int> action);
     public void Children(int nodeId, Action<int> action);
 
-    public bool TryTokenAtSpan(TokenSpan span, int tokenOrder, out Token token);
-    public bool HasTokenAtSpan(TokenSpan span, int tokenOrder);
-    public Token TokenAtSpan(TokenSpan span, int tokenOrder);
+    //**TAST TOKENS**
+    public Token TokenAt(int tokenId);
 
     public ReadOnlySpan<char> GetTextSpan(int tokenId);
     public string GetText(int tokenId);
@@ -52,37 +51,14 @@ public partial class ParserProcess : Context
     public RuleId GetRuleClassId<C>() where C : RuleClass
     => ParserManager.GetRuleClassId<C>();
 
-    //**TAST**
-    //CHILDREN
-    public void Children(Action<int> action) => TAST.Children(action);
-
-    public void Children(int nodeId, Action<int> action) => TAST.Children(nodeId, action);
-
-    //NODES
+    //**TAST NODES**
     public TASTNode NodeAt(int nodeId) => TAST.NodeAt(nodeId);
 
-    //TOKENS
-    public bool TryTokenAtSpan(TokenSpan span, int order, out Token token)
-    {
-        if (!InBounds(span, order))
-        {
-            token = default;
-            return false;
-        }
+    public void Children(Action<int> action) => TAST.Children(action);
+    public void Children(int nodeId, Action<int> action) => TAST.Children(nodeId, action);
 
-        return TAST.TryTokenAtNode(span.NodeId, span.Offset, span.Start + order, out token);
-    }
-    public bool HasTokenAtSpan(TokenSpan span, int order)
-    => InBounds(span, order) && TAST.HasTokenAtNode(span.NodeId, span.Offset, span.Start + order);
-    public Token TokenAtSpan(TokenSpan span, int tokenOrder)
-    {
-        if (!InBounds(span, tokenOrder))
-            throw new Exception($"TOKEN ORDER OUT OF BOUNDS: LENGTH={span.Length}, ORDER={tokenOrder}");
-
-        return TAST.TokenAtNode(span.NodeId, span.Offset, span.Start + tokenOrder);
-    }
-    private static bool InBounds(TokenSpan span, int order)
-    => (0 <= order) && (span.Length < 0 || order < span.Length);
+    //**TAST TOKENS**
+    public Token TokenAt(int tokenId) => TAST.TokenAt(tokenId);
 
     public ReadOnlySpan<char> GetTextSpan(int tokenId) => TAST.GetTextSpan(tokenId);
     public string GetText(int tokenId) => TAST.GetText(tokenId);

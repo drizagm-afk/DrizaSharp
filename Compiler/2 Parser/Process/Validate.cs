@@ -33,7 +33,7 @@ public partial class ParserProcess
             catch (Exception ex)
             {
                 Diagnostics.ReportInvalid(
-                    TAST.NodeSourceSlice(node), 
+                    TAST.SourceSlice(node), 
                     ParserManager.GetRule(inst.RuleId).RuleName, 
                     ex.Message
                 );
