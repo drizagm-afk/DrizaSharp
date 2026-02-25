@@ -4,7 +4,7 @@ namespace DrzSharp.Compiler.Parser;
 
 public interface EmitContext : Context
 {
-    public void Emit(EmitId emitId = new(), params EmitNode[] emitNodes);
+    public void Emit(TASTEmit emitId = new(), params EmitNode[] emitNodes);
 
     //INSTRUCTIONS
     public int DataCount { get; }
@@ -14,14 +14,14 @@ public interface EmitContext : Context
     public int WriteObject(object value);
     public int WriteString(string value);
 
-    public void AddInstruction(Lowerer.RuleId ruleId, Slice data, Slice source);
-    public void AddInstruction(Lowerer.RuleId ruleId, Slice data, int source);
+    public void AddInstruction(int ruleId, Slice data, Slice source);
+    public void AddInstruction(int ruleId, Slice data, int source);
 }
 
 public partial class ParserProcess : EmitContext
 {
     private int _instructCount = 0;
-    public void Emit(EmitId emitId = new(), params EmitNode[] emitNodes)
+    public void Emit(TASTEmit emitId = new(), params EmitNode[] emitNodes)
     {
         if (!emitId.IsValid) emitId = RuleInst!.EmitId;
 
@@ -34,7 +34,7 @@ public partial class ParserProcess : EmitContext
         var emitNodeId = TASI.AddNode(
             emitId.ParentId, emitId.Index,
             _instructCount, count - _instructCount,
-            RuleInst.RuleId
+            new(RuleInst.RuleId)
         );
         _instructCount = count;
 
@@ -53,9 +53,9 @@ public partial class ParserProcess : EmitContext
     public int WriteObject(object value) => TASI.WriteObject(value);
     public int WriteString(string value) => TASI.WriteString(value);
 
-    public void AddInstruction(Lowerer.RuleId ruleId, Slice data, Slice source)
+    public void AddInstruction(int ruleId, Slice data, Slice source)
     => TASI.NewInstruction(ruleId, data.Start, data.Length, source);
-    public void AddInstruction(Lowerer.RuleId ruleId, Slice data, int source)
+    public void AddInstruction(int ruleId, Slice data, int source)
     => AddInstruction(ruleId, data, TAST.SourceSlice(source));
 }
 

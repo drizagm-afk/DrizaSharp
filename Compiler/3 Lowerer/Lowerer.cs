@@ -22,29 +22,22 @@ namespace DrzSharp.Compiler.Lowerer
 {
     public delegate void Rule(Context ctx, Instruction instruction);
 
-    public readonly struct RuleId(int id)
-    {
-        public readonly int Id = id;
-        public bool Equals(RuleId other)
-        => Id == other.Id;
-    }
-
     internal static class LowererManager
     {
-        //RULES
-        public static readonly List<Rule> _rules = [];
-        public static bool TryGetRule(RuleId ruleId, [NotNullWhen(true)] out Rule? rule)
-        {
-            rule = null;
-            if (ruleId.Id < 0 || ruleId.Id >= _rules.Count)
-                return false;
-            
-            rule = _rules[ruleId.Id];
-            return true;
-        }
-
         //PROCESSES
         public static LowererProcess NewProcess() => new();
         public static void EndProcess(this LowererProcess process) { }
+
+        //===== RULES =====
+        public static readonly List<Rule> _rules = [];
+        public static bool TryGetRule(int id, [NotNullWhen(true)] out Rule? rule)
+        {
+            rule = null;
+            if (id < 0 || id >= _rules.Count)
+                return false;
+
+            rule = _rules[id];
+            return true;
+        }
     }
 }

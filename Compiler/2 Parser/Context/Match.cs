@@ -28,6 +28,13 @@ public interface MatchContext : MatchView
     //EVAL RULE
     public RuleInstance? EvalRule<R>(TokenSpan span) where R : Rule;
     public RuleInstance? EvalRuleClass<C>(TokenSpan span) where C : RuleClass;
+
+    //PATTERN MATCHING
+    public bool TryTokenAtSpan(TokenSpan span, out Token token)
+    => TryTokenAtSpan(span, 0, out token);
+    public bool TryTokenAtSpan(TokenSpan span, int tokenOrder, out Token token);
+    public bool HasTokenAtSpan(TokenSpan span, int tokenOrder = 0);
+    public Token TokenAtSpan(TokenSpan span, int tokenOrder = 0);
 }
 
 public partial class ParserProcess : MatchContext
@@ -158,6 +165,29 @@ public partial class ParserProcess : MatchContext
         CountVars(varName);
         return EvalVarsFromNode(entryId, pattern);
     }
+
+    //===== PATTERN MATCHING =====
+    public bool TryTokenAtSpan(TokenSpan span, int order, out Token token)
+    {
+        if (!InBounds(span, order))
+        {
+            token = default;
+            return false;
+        }
+
+        return TAST.TryTokenAtNode(span.NodeId, span.Offset, span.Start + order, out token);
+    }
+    public bool HasTokenAtSpan(TokenSpan span, int order)
+    => InBounds(span, order) && TAST.HasTokenAtNode(span.NodeId, span.Offset, span.Start + order);
+    public Token TokenAtSpan(TokenSpan span, int tokenOrder)
+    {
+        if (!InBounds(span, tokenOrder))
+            throw new Exception($"TOKEN ORDER OUT OF BOUNDS: LENGTH={span.Length}, ORDER={tokenOrder}");
+
+        return TAST.TokenAtNode(span.NodeId, span.Offset, span.Start + tokenOrder);
+    }
+    private static bool InBounds(TokenSpan span, int order)
+    => (0 <= order) && (span.Length < 0 || order < span.Length);
 }
 
 internal readonly record struct VarKey
@@ -180,6 +210,8 @@ internal readonly record struct RuleVarKey
 =========================*/
 public interface MatchView : Context
 {
+    //LOAD TOKEN VAR
+
     //LOAD VAR
     public TokenSpan LoadVar(string varName);
     public bool TryLoadVar(string varName, out TokenSpan var);
@@ -187,20 +219,18 @@ public interface MatchView : Context
     public int CountVars(string varName);
     public TokenSpan[] LoadVars(string varName);
 
+    //LOAD TOKENVAR
+    public Token LoadTokenVar(string varName);
+    public bool TryLoadTokenVar(string varName, out Token var);
+    public bool HasTokenVar(string varName);
+    public Token[] LoadTokenVars(string varName);
+
     //LOAD RULEVAR
     public R LoadRuleVar<R>(string varName) where R : RuleInstance;
     public bool TryLoadRuleVar<R>(string varName, [NotNullWhen(true)] out R? ruleVar)
     where R : RuleInstance;
     public bool HasRuleVar(string varName);
     public R[] LoadRuleVars<R>(string varName) where R : RuleInstance;
-
-
-    //PATTERN MATCHING
-    public bool TryTokenAtSpan(TokenSpan span, out Token token)
-    => TryTokenAtSpan(span, 0, out token);
-    public bool TryTokenAtSpan(TokenSpan span, int tokenOrder, out Token token);
-    public bool HasTokenAtSpan(TokenSpan span, int tokenOrder = 0);
-    public Token TokenAtSpan(TokenSpan span, int tokenOrder = 0);
 }
 
 public partial class ParserProcess : MatchView
@@ -277,6 +307,60 @@ public partial class ParserProcess : MatchView
         return ary;
     }
 
+    //LOADING TOKENVARS
+    private bool TryGetTk(TokenSpan span, out Token token)
+    {
+        token = default;
+        if (span.Length <= 0)
+            return false;
+
+        token = TokenAtSpan(span, 0);
+        return true;
+    }
+    private bool HasTk(TokenSpan span)
+    => span.Length <= 0 && HasTokenAtSpan(span, 0);
+
+    public Token LoadTokenVar(string varName)
+    {
+        var span = LoadVar(varName);
+        if (!TryGetTk(span, out var token))
+            throw new Exception($"VAR NAME DOESN'T REFER TO A TOKEN VAR: varName={varName}");
+
+        return token;
+    }
+    public bool TryLoadTokenVar(string varName, out Token var)
+    {
+        var = default;
+        if (!TryLoadVar(varName, out var span))
+            return false;
+
+        return TryGetTk(span, out var);
+    }
+    public bool HasTokenVar(string varName)
+    {
+        if (!TryLoadVar(varName, out var span))
+            return false;
+
+        return HasTk(span);
+    }
+    public Token[] LoadTokenVars(string varName)
+    {
+        if (!_matchVarDict.TryGetValue(new(_hash, varName), out var entryId)) return [];
+        var ary = new Token[CountVars(varName)];
+
+        int i = 0;
+        do
+        {
+            var entry = _matchVars[entryId];
+
+            if (!TryGetTk(entry.Span, out ary[^(++i)]))
+                throw new Exception($"VAR NAME DOESN'T REFER TO A TOKEN VAR: varName={varName}");
+            entryId = entry.SiblingId;
+        }
+        while (entryId >= 0);
+        return ary;
+    }
+
     //LOADING RULEVARS
     private bool TryGetRuleInst<R>
     (TokenSpan span, [NotNullWhen(true)] out R? inst, string varNameLog)
@@ -336,27 +420,4 @@ public partial class ParserProcess : MatchView
         while (entryId >= 0);
         return ary;
     }
-
-    //===== PATTERN MATCHING =====
-    public bool TryTokenAtSpan(TokenSpan span, int order, out Token token)
-    {
-        if (!InBounds(span, order))
-        {
-            token = default;
-            return false;
-        }
-
-        return TAST.TryTokenAtNode(span.NodeId, span.Offset, span.Start + order, out token);
-    }
-    public bool HasTokenAtSpan(TokenSpan span, int order)
-    => InBounds(span, order) && TAST.HasTokenAtNode(span.NodeId, span.Offset, span.Start + order);
-    public Token TokenAtSpan(TokenSpan span, int tokenOrder)
-    {
-        if (!InBounds(span, tokenOrder))
-            throw new Exception($"TOKEN ORDER OUT OF BOUNDS: LENGTH={span.Length}, ORDER={tokenOrder}");
-
-        return TAST.TokenAtNode(span.NodeId, span.Offset, span.Start + tokenOrder);
-    }
-    private static bool InBounds(TokenSpan span, int order)
-    => (0 <= order) && (span.Length < 0 || order < span.Length);
 }

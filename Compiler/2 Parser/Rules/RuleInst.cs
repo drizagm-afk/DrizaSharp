@@ -4,7 +4,7 @@ namespace DrzSharp.Compiler.Parser;
 
 public abstract class RuleInstance
 {
-    internal RuleId RuleId;
+    internal int RuleId;
     public int NodeId = -1;
 
     //MATCH
@@ -22,7 +22,7 @@ public abstract class RuleInstance
     protected abstract void OnValidate(ValidateContext ctx);
 
     //EMIT
-    internal EmitId EmitId;
+    internal TASTEmit EmitId;
     internal void Emit(EmitContext ctx) => OnEmit(ctx);
     protected abstract void OnEmit(EmitContext ctx);
 }

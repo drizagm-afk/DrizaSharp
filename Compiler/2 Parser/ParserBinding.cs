@@ -9,35 +9,33 @@ public static class Binding
     => new(phaseCode, ParserManager._phases[phaseCode].realmCount++);
 
     //RULES
-    public static R BindRule<R>() where R : Rule, new()
+    public static void BindRule<R>() where R : Rule, new()
     {
-        var rule = new R { Id = new(ParserManager._rules.Count, true) };
-        ParserManager._rules.Add(rule);
-        ParserManager._rulesByType[typeof(R)] = rule.Id;
+        var ruleId = ParserManager._rules.Count;
+        var id = ParserManager.AddRuleInfo<R>(ruleId, false);
 
-        return rule;
+        ParserManager._rules.Add(new R { Id = id });
     }
-    public static R BindRule<P, R>() where P : RuleClass where R : Rule, new()
+    public static void BindRule<P, R>() where P : RuleClass where R : Rule, new()
     {
-        var rule = BindRule<R>();
-        rule.Parent = ParserManager.GetRuleClass<P>();
+        var ruleId = ParserManager._rules.Count;
+        var id = ParserManager.AddRuleInfo<R>(ruleId, false);
 
-        return rule;
+        ParserManager._rules.Add(new R { Id = id, Parent = ParserManager.GetRuleClass<P>() });
     }
 
-    public static C BindRuleClass<C>() where C : RuleClass, new()
+    public static void BindRuleClass<C>() where C : RuleClass, new()
     {
-        var rule = new C { Id = new(ParserManager._ruleClasses.Count, true) };
-        ParserManager._ruleClasses.Add(rule);
-        ParserManager._ruleClassesByType[typeof(C)] = rule.Id;
+        var ruleId = ParserManager._ruleClasses.Count;
+        var id = ParserManager.AddRuleInfo<C>(ruleId, true);
 
-        return rule;
+        ParserManager._ruleClasses.Add(new C { Id = id });
     }
-    public static C BindRuleClass<P, C>() where P : RuleClass where C : RuleClass, new()
+    public static void BindRuleClass<P, C>() where P : RuleClass where C : RuleClass, new()
     {
-        var rule = BindRuleClass<C>();
-        rule.Parent = ParserManager.GetRuleClass<P>();
+        var ruleId = ParserManager._ruleClasses.Count;
+        var id = ParserManager.AddRuleInfo<C>(ruleId, true);
 
-        return rule;
+        ParserManager._ruleClasses.Add(new C { Id = id, Parent = ParserManager.GetRuleClass<P>() });
     }
 }

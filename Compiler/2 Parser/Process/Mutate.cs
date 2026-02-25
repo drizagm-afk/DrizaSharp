@@ -20,7 +20,7 @@ public partial class ParserProcess
     }
     private void MutateNode(in TASTNode node)
     {
-        if (node.Args.OutCode == _phaseCode && node.IsFlat())
+        if (TAST.ArgsAt(node.Id).OutCode == _phaseCode && node.IsFlat())
         {
             Match(node.Id);
             return;
@@ -45,7 +45,7 @@ public partial class ParserProcess
     }
 
     //REWRITING EVAL
-    private void Match(int nodeId, RuleId[] rules)
+    private void Match(int nodeId, int[] rules)
     {
         ref readonly var node = ref TAST.NodeAt(nodeId);
 
@@ -59,11 +59,11 @@ public partial class ParserProcess
             InitMatch();
             RuleInstance? inst;
 
-            var ruleId = rules[r];
-            if (ruleId.IsClass)
-                inst = MatchRule(GetRuleClass(ruleId), new(nodeId, i, 0, -1));
+            var rinfo = ParserManager.GetRuleInfo(rules[r]);
+            if (rinfo.IsClass)
+                inst = MatchRule(ParserManager.GetRuleClass(rinfo), new(nodeId, i, 0, -1));
             else
-                inst = MatchRule(GetRule(ruleId), new(nodeId, i, 0, -1));
+                inst = MatchRule(ParserManager.GetRule(rinfo), new(nodeId, i, 0, -1));
 
             //CLEAR
             ClearVarStorage();

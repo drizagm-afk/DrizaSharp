@@ -4,8 +4,7 @@ namespace DrzSharp.Compiler.Parser;
 
 public abstract class RuleBase
 {
-    internal RuleId Id;
-    internal string? RuleName;
+    internal int Id;
     internal RuleClass? Parent;
 
     internal bool IsAbstract = false;
@@ -39,19 +38,11 @@ public abstract class Rule<T> : Rule where T : RuleInstance, new()
 //RULE CLASS
 public abstract class RuleClass : RuleBase
 {
-    internal readonly List<RuleId> SubRules = [];
+    internal readonly List<int> SubRules = [];
 }
 public abstract class RuleClass<T> : RuleClass where T : RuleInstance, new()
 {
     internal sealed override void Instantiate(MatchView view, RuleInstance instance)
     => OnInstantiate(view, (T)instance);
     protected abstract void OnInstantiate(MatchView view, T instance);
-}
-
-public readonly struct RuleId(int id, bool isClass)
-{
-    public readonly int Id = id;
-    public readonly bool IsClass = isClass;
-    public bool Equals(RuleId other)
-    => Id == other.Id && IsClass == other.IsClass;
 }

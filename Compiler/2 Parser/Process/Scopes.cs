@@ -67,7 +67,7 @@ public partial class ParserProcess
         }
         bool findVarInChildren(in TASTNode node, out int id)
         {
-            if (!node.Args.IsScoped)
+            if (!TAST.ArgsAt(node.Id).IsScoped)
             {
                 var childId = node.FirstChildId;
                 while (TAST.TryNodeAt(childId, out var child))

@@ -7,14 +7,14 @@ public interface Context
     public byte PhaseCode { get; }
 
     public R GetRule<R>() where R : Rule;
-    public RuleId GetRuleId<R>() where R : Rule;
-    public R GetRule<R>(RuleId id) where R : Rule;
-    public Rule GetRule(RuleId id);
+    public int GetRuleId<R>() where R : Rule;
+    public R GetRule<R>(int id) where R : Rule;
+    public Rule GetRule(int id);
 
     public C GetRuleClass<C>() where C : RuleClass;
-    public RuleId GetRuleClassId<C>() where C : RuleClass;
-    public C GetRuleClass<C>(RuleId id) where C : RuleClass;
-    public RuleClass GetRuleClass(RuleId id);
+    public int GetRuleClassId<C>() where C : RuleClass;
+    public C GetRuleClass<C>(int id) where C : RuleClass;
+    public RuleClass GetRuleClass(int id);
 
     //**TAST NODES**
     public TASTNode NodeAt(int nodeId);
@@ -35,20 +35,20 @@ public partial class ParserProcess : Context
 
     public R GetRule<R>() where R : Rule
     => ParserManager.GetRule<R>();
-    public RuleId GetRuleId<R>() where R : Rule
+    public int GetRuleId<R>() where R : Rule
     => ParserManager.GetRuleId<R>();
-    public R GetRule<R>(RuleId id) where R : Rule
+    public R GetRule<R>(int id) where R : Rule
     => ParserManager.GetRule<R>(id);
-    public Rule GetRule(RuleId id)
+    public Rule GetRule(int id)
     => ParserManager.GetRule(id);
 
     public C GetRuleClass<C>() where C : RuleClass
     => ParserManager.GetRuleClass<C>();
-    public C GetRuleClass<C>(RuleId id) where C : RuleClass
+    public C GetRuleClass<C>(int id) where C : RuleClass
     => ParserManager.GetRuleClass<C>(id);
-    public RuleClass GetRuleClass(RuleId id)
+    public RuleClass GetRuleClass(int id)
     => ParserManager.GetRuleClass(id);
-    public RuleId GetRuleClassId<C>() where C : RuleClass
+    public int GetRuleClassId<C>() where C : RuleClass
     => ParserManager.GetRuleClassId<C>();
 
     //**TAST NODES**

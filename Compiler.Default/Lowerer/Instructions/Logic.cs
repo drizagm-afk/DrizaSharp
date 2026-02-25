@@ -1,71 +1,43 @@
-using Mono.Cecil.Cil;
-
-using DrzSharp.Compiler.Lowerer;
 using DrzSharp.Compiler.Model;
-using Instr = DrzSharp.Compiler.Model.Instruction;
-using EmitCtx = DrzSharp.Compiler.Parser.EmitContext;
+using DrzSharp.Compiler.Parser;
 
 namespace DrzSharp.Compiler.Default.Lowerer;
 
 public static partial class Logic
 {
-    public static class Load
+    public static class Ldstr
     {
-        public static class CStr
+        public static int Id { get; internal set; }
+        private static Slice Add(EmitContext ctx, string content)
         {
-            public static RuleId Id { get; internal set; }
-            public static void Rule(Context ctx, Instr i)
-            {
-                var il = ctx.Logic.ILProcessor;
-                il.Append(il.Create(OpCodes.Ldstr, ctx.ReadString(i.Start)));
-            }
-
-            private static Slice Add(EmitCtx ctx, string content)
-            {
-                var srt = ctx.WriteString(content);
-                return new(srt, TASI.REF_SIZE);
-            }
-            public static void New(EmitCtx ctx, int source, string content)
-            => ctx.AddInstruction(Id, Add(ctx, content), source);
-            public static void New(EmitCtx ctx, Slice source, string content)
-            => ctx.AddInstruction(Id, Add(ctx, content), source);
+            var srt = ctx.WriteString(content);
+            return new(srt, TASI.REF_SIZE);
         }
+        public static void New(EmitContext ctx, int source, string content)
+        => ctx.AddInstruction(Id, Add(ctx, content), source);
+        public static void New(EmitContext ctx, Slice source, string content)
+        => ctx.AddInstruction(Id, Add(ctx, content), source);
     }
 
     public static class Print
     {
-        public static RuleId Id { get; internal set; }
-        public static void Rule(Context ctx, Instr _)
-        {
-            var il = ctx.Logic.ILProcessor;
-            var writeLineRef = ctx.Module.ImportReference(
-                typeof(Console).GetMethod("WriteLine", [typeof(string)])
-            );
-            il.Append(il.Create(OpCodes.Call, writeLineRef));
-        }
-
-        private static Slice Add(EmitCtx ctx)
+        public static int Id { get; internal set; }
+        private static Slice Add(EmitContext ctx)
         => new(ctx.DataCount, 0);
-        public static void New(EmitCtx ctx, int source)
+        public static void New(EmitContext ctx, int source)
         => ctx.AddInstruction(Id, Add(ctx), source);
-        public static void New(EmitCtx ctx, Slice source)
+        public static void New(EmitContext ctx, Slice source)
         => ctx.AddInstruction(Id, Add(ctx), source);
     }
 
-    public static class Return
+    public static class Ret
     {
-        public static RuleId Id { get; internal set; }
-        public static void Rule(Context ctx, Instr _)
-        {
-            var il = ctx.Logic.ILProcessor;
-            il.Append(il.Create(OpCodes.Ret));
-        }
-
-        private static Slice Add(EmitCtx ctx)
+        public static int Id { get; internal set; }
+        private static Slice Add(EmitContext ctx)
         => new(ctx.DataCount, 0);
-        public static void New(EmitCtx ctx, int source)
+        public static void New(EmitContext ctx, int source)
         => ctx.AddInstruction(Id, Add(ctx), source);
-        public static void New(EmitCtx ctx, Slice source)
+        public static void New(EmitContext ctx, Slice source)
         => ctx.AddInstruction(Id, Add(ctx), source);
     }
 }

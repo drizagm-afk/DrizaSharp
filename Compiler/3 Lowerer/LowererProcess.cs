@@ -69,7 +69,7 @@ public partial class LowererProcess
         //LOWERING
         for (int i = 0; i < node.Length; i++)
         {
-            LowerInst(TASI.InstructionAt(node.Start + i), node.Source);
+            LowerInst(TASI.InstructionAt(node.Start + i), TASI.InfoAt(node.Id).SourceId);
 
             while (children.TryPeek(out var next) && next.RelIndex == i)
             {
@@ -84,11 +84,11 @@ public partial class LowererProcess
         public readonly int RelIndex = relIndex;
     }
 
-    private void LowerInst(Instruction inst, Parser.RuleId sourceRuleId)
+    private void LowerInst(Instruction inst, int sourceId)
     {
         if (LowererManager.TryGetRule(inst.RuleId, out var rule))
             rule(this, inst);
         else
-            Diagnostics.ReportUnexpected(inst.Source, ParserManager.GetRuleName(sourceRuleId));
+            Diagnostics.ReportUnexpected(inst.Source, ParserManager.GetRuleName(sourceId));
     }
 }

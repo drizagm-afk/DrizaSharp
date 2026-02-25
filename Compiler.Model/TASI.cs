@@ -1,5 +1,4 @@
 using System.Buffers.Binary;
-using System.Diagnostics;
 
 namespace DrzSharp.Compiler.Model;
 
@@ -69,7 +68,7 @@ public sealed class TASI
     private Instruction[] _instructions = new Instruction[128];
     private int _instCount = 0;
     public int InstructionCount => _instCount;
-    public int NewInstruction(Lowerer.RuleId ruleId, int start, int length, Slice source = new())
+    public int NewInstruction(int ruleId, int start, int length, Slice source = new())
     {
         var off = _instCount++;
         if (_instructions.Length <= _instCount)
@@ -83,28 +82,30 @@ public sealed class TASI
 
     //**NODES**
     private TASINode[] _nodes = new TASINode[128];
+    private TASIInfo[] _nodeInfos = new TASIInfo[128];
     private int _nodeCount = 0;
 
     //ROOT
     public const byte RootId = 0;
     public ref readonly TASINode Root => ref _nodes[RootId];
-    public TASI() => NewNode(-1, 0, 0);
+    public TASI() => NewNode(-1, 0, 0, default);
 
-    private int NewNode(int relIndex, int start, int length, Parser.RuleId source = new())
+    private int NewNode(int relIndex, int start, int length, TASIInfo info)
     {
         var id = _nodeCount++;
         if (_nodeCount >= _nodes.Length)
+        {
             Array.Resize(ref _nodes, _nodes.Length * 2);
+            Array.Resize(ref _nodeInfos, _nodeInfos.Length * 2);
+        }
 
-        _nodes[id] = new(id, relIndex, start, length, -1, -1, source);
+        _nodes[id] = new(id, relIndex, start, length, -1, -1);
+        _nodeInfos[id] = info;
         return id;
     }
 
-    public ref readonly TASINode NodeAt(int nodeId)
-    {
-        Debug.Assert(nodeId >= 0 && nodeId < _nodeCount, $"Node not found in TASI: node={nodeId}");
-        return ref _nodes[nodeId];
-    }
+    public bool HasNodeAt(int nodeId)
+    => nodeId < 0 || nodeId >= _nodeCount;
     public bool TryNodeAt(int nodeId, out TASINode node)
     {
         if (nodeId < 0 || nodeId >= _nodeCount)
@@ -115,22 +116,28 @@ public sealed class TASI
         node = _nodes[nodeId];
         return true;
     }
+    public ref readonly TASINode NodeAt(int nodeId)
+    {
+        if (nodeId < 0 || nodeId >= _nodeCount)
+            throw new Exception($"Node not found in TASI: node={nodeId}");
+
+        return ref _nodes[nodeId];
+    }
 
     private void Update(int nodeId, int? firstChildId = null, int? nextSiblingId = null)
     {
         ref readonly var node = ref NodeAt(nodeId);
         _nodes[node.Id] = new TASINode(
             node.Id, node.RelIndex, node.Start, node.Length,
-            firstChildId ?? node.FirstChildId, nextSiblingId ?? node.NextSiblingId, 
-            node.Source
+            firstChildId ?? node.FirstChildId, nextSiblingId ?? node.NextSiblingId
         );
     }
-    public int AddNode(int start, int length, Parser.RuleId source = new())
-    => AddNode(0, 0, start, length, source);
-    public int AddNode(int parentId, int index, int start, int length, Parser.RuleId source = new())
+    public int AddNode(int start, int length, TASIInfo info)
+    => AddNode(0, 0, start, length, info);
+    public int AddNode(int parentId, int index, int start, int length, TASIInfo info)
     {
         ref readonly var parent = ref NodeAt(parentId);
-        int nestId = NewNode(index, start, length, source);
+        int nestId = NewNode(index, start, length, info);
 
         var childId = parent.FirstChildId;
         (int prevId, int nextId) = (-1, childId);
@@ -142,6 +149,15 @@ public sealed class TASI
         }
         return NewChild(parentId, nestId, prevId, nextId);
     }
+
+    public ref readonly TASIInfo InfoAt(int nodeId)
+    {
+        if (nodeId < 0 || nodeId >= _nodeCount)
+            throw new Exception($"Node Info not found in TASI: node={nodeId}");
+
+        return ref _nodeInfos[nodeId];
+    }
+
     private int NewChild
     (int parentId, int nestId, int prevId, int nextId)
     {
@@ -154,9 +170,9 @@ public sealed class TASI
 }
 
 //===== INSTRUCTIONS =====
-public readonly struct Instruction(Lowerer.RuleId ruleId, int start, int length, Slice source)
+public readonly struct Instruction(int ruleId, int start, int length, Slice source)
 {
-    public readonly Lowerer.RuleId RuleId = ruleId;
+    public readonly int RuleId = ruleId;
     public readonly int Start = start;
     public readonly int Length = length;
     public readonly Slice Source = source;
@@ -165,7 +181,7 @@ public readonly struct Instruction(Lowerer.RuleId ruleId, int start, int length,
 //===== NODES =====
 public readonly struct TASINode(
     int id, int relIndex, int start, int length,
-    int firstChildId, int nextSiblingId, Parser.RuleId source
+    int firstChildId, int nextSiblingId
 )
 {
     public readonly int Id = id;
@@ -174,11 +190,11 @@ public readonly struct TASINode(
     public readonly int Length = length;
     public readonly int FirstChildId = firstChildId;
     public readonly int NextSiblingId = nextSiblingId;
-    public readonly Parser.RuleId Source = source;
 }
-public readonly struct EmitId(int parentId, int index)
+
+//===== NODE INFO =====
+public readonly struct TASIInfo
+(int sourceId)
 {
-    public readonly int ParentId = parentId;
-    public readonly int Index = index;
-    public readonly bool IsValid = true;
+    public readonly int SourceId = sourceId;
 }

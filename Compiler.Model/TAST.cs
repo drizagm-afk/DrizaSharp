@@ -9,7 +9,7 @@ public sealed class TAST(SourceSpan source)
     private readonly SourceSpan _source = source;
     public void BuildFlatTAST()
     {
-        if (_nodeCount <= 0) NewNode(default, 0, _tokenCount, 0);
+        if (_nodeCount <= 0) NewNode(0, _tokenCount, 0);
     }
 
     //**TOKENS**
@@ -81,9 +81,8 @@ public sealed class TAST(SourceSpan source)
     }
 
     //**NODES**
-    internal Dictionary<int, EmitId> _outNodes = [];
-
     private TASTNode[] _nodes = new TASTNode[128];
+    private TASTInfo[] _nodeInfos = new TASTInfo[128];
     private int _nodeCount = 0;
 
     public const int RootId = 0;
@@ -96,36 +95,36 @@ public sealed class TAST(SourceSpan source)
         }
     }
 
-    private int AddNodeItem(TASTNode node)
+    private int AddNodeItem(TASTNode node, TASTInfo info)
     {
         var id = _nodeCount++;
         if (_nodes.Length <= _nodeCount)
+        {
             Array.Resize(ref _nodes, _nodes.Length * 2);
+            Array.Resize(ref _nodeInfos, _nodeInfos.Length * 2);
+        }
 
         _nodes[id] = node;
+        _nodeInfos[id] = info;
         return id;
     }
     private int NewNode(
-        TASTArgs args, int relStart, int relLength, int start, int? length = null,
-        int firstChildId = -1, int nextSiblingId = -1, int parentId = -1
+        int relStart, int relLength, int start, int? length = null,
+        int firstChildId = -1, int nextSiblingId = -1, int parentId = -1, TASTInfo info = default
     )
     {
         var count = _nodeCount;
         TASTNode node = new(
-            count, args,
-            relStart, relLength, start, length ?? relLength,
+            count, relStart, relLength, start, length ?? relLength,
             firstChildId, nextSiblingId, parentId
         );
-        AddNodeItem(node);
+        AddNodeItem(node, info);
 
         return count;
     }
 
-    public ref readonly TASTNode NodeAt(int nodeId)
-    {
-        Debug.Assert(nodeId >= 0 || nodeId < _nodeCount, $"Node not found in TASI: node={nodeId}");
-        return ref _nodes[nodeId];
-    }
+    public bool HasNodeAt(int nodeId)
+    => nodeId < 0 || nodeId >= _nodeCount;
     public bool TryNodeAt(int nodeId, out TASTNode node)
     {
         if (nodeId < 0 || nodeId >= _nodeCount)
@@ -136,32 +135,56 @@ public sealed class TAST(SourceSpan source)
         node = _nodes[nodeId];
         return true;
     }
+    public ref readonly TASTNode NodeAt(int nodeId)
+    {
+        if (nodeId < 0 || nodeId >= _nodeCount)
+            throw new Exception($"Node not found in TAST: node={nodeId}");
+
+        return ref _nodes[nodeId];
+    }
 
     public void Update(
-        int nodeId, SchemeTASTArgs args = new(),
-        int? relStart = null, int? relLength = null, int? start = null, int? length = null,
+        int nodeId, int? relStart = null, int? relLength = null, int? start = null, int? length = null,
         int? firstChildId = null, int? nextSiblingId = null, int? parentId = null
     )
-    => Update(NodeAt(nodeId), args, relStart, relLength, start, length, firstChildId, nextSiblingId, parentId);
+    => Update(NodeAt(nodeId), relStart, relLength, start, length, firstChildId, nextSiblingId, parentId);
     private void Update(
-        in TASTNode node, SchemeTASTArgs args = new(),
-        int? relStart = null, int? relLength = null, int? start = null, int? length = null,
+        in TASTNode node, int? relStart = null, int? relLength = null, int? start = null, int? length = null,
         int? firstChildId = null, int? nextSiblingId = null, int? parentId = null
     )
     {
         _nodes[node.Id] = new(
-            node.Id, args.Merge(node.Args),
-            relStart ?? node.RelStart, relLength ?? node.RelLength, start ?? node.Start, length ?? node.Length,
+            node.Id, relStart ?? node.RelStart, relLength ?? node.RelLength, start ?? node.Start, length ?? node.Length,
             firstChildId ?? node.FirstChildId, nextSiblingId ?? node.NextSiblingId, parentId ?? node.ParentId
         );
     }
 
-    public int Nest(int nodeId, int start, int length, SchemeTASTArgs args)
+    public ref readonly TASTInfo InfoAt(int nodeId)
+    {
+        if (nodeId < 0 || nodeId >= _nodeCount)
+            throw new Exception($"Node Info not found in TAST: node={nodeId}");
+
+        return ref _nodeInfos[nodeId];
+    }
+    public TASTArgs ArgsAt(int nodeId)
+    {
+        if (nodeId < 0 || nodeId >= _nodeCount)
+            throw new Exception($"Node Args not found in TAST: node={nodeId}");
+        
+        return _nodeInfos[nodeId].Args;
+    }
+    public void UpdateInfo(int nodeId, TASTArgs? args = null, TASTEmit? emitId = null, int? ruleId = null)
+    {
+        ref readonly var info = ref InfoAt(nodeId);
+        _nodeInfos[nodeId] = new(args ?? info.Args, emitId ?? info.EmitId, ruleId ?? info.RuleId);
+    }
+
+    public int Nest(int nodeId, int start, int length, TASTInfo info)
     {
         ref readonly var node = ref NodeAt(nodeId);
         Debug.Assert(0 <= start && start + length <= node.Length);
 
-        int nestId = NewNode(args.Merge(node.Args), start, length, node.Start + start, parentId: nodeId);
+        int nestId = NewNode(start, length, node.Start + start, parentId: nodeId, info: info);
         int prevId = -1;
         int nextId = -1;
         int firstCId = -1;
@@ -387,12 +410,11 @@ public readonly struct TokenSpan
 
 //===== NODES =====
 public readonly struct TASTNode(
-    int id, TASTArgs args, int relStart, int relLength, int start, int length,
+    int id, int relStart, int relLength, int start, int length,
     int firstChildId, int nextSiblingId, int parentId
 )
 {
     public readonly int Id = id;
-    public readonly TASTArgs Args = args;
     public readonly int RelStart = relStart;
     public readonly int RelLength = relLength;
     public readonly int Start = start;
@@ -403,6 +425,16 @@ public readonly struct TASTNode(
 
     public bool IsFlat() => FirstChildId < 0;
 }
+
+//===== NODE INFO =====
+public readonly struct TASTInfo
+(TASTArgs args, TASTEmit emitId = new(), int ruleId = -1)
+{
+    public readonly TASTArgs Args = args;
+    public readonly TASTEmit EmitId = emitId;
+    public readonly int RuleId = ruleId;
+}
+
 public readonly struct TASTArgs
 (byte outCode, byte realmCode, bool isScoped)
 {
@@ -412,48 +444,7 @@ public readonly struct TASTArgs
 
     public TASTArgs With(byte? outCode = 0, byte? realmCode = null, bool? isScoped = null)
     => new(outCode ?? OutCode, realmCode ?? RealmCode, isScoped ?? IsScoped);
-    public TASTArgs With(SchemeTASTArgs scheme) => scheme.Merge(this);
-    public SchemeTASTArgs AsScheme() => new(OutCode, RealmCode, IsScoped);
-
     public RealmId RealmId => new(OutCode, RealmCode);
-}
-public readonly struct SchemeTASTArgs
-{
-    private const byte OutArg = 0b10;
-    private const byte RealmArg = 0b1;
-    private const byte IsScopedArg = 0b100;
-
-    public readonly byte OutCode;
-    public readonly byte RealmCode;
-    public readonly bool IsScoped;
-    public readonly byte Args;
-
-    public SchemeTASTArgs(byte? outCode = null, byte? realmCode = null, bool? isScoped = null)
-    {
-        if (outCode is byte _out)
-        {
-            OutCode = _out;
-            Args += OutArg;
-        }
-        if (realmCode is byte _realm)
-        {
-            RealmCode = _realm;
-            Args += RealmArg;
-        }
-        if (isScoped is bool _isScoped)
-        {
-            IsScoped = _isScoped;
-            Args += IsScopedArg;
-        }
-    }
-    private bool HasArg(byte arg)
-    => (Args & arg) == arg;
-    public TASTArgs Merge(TASTArgs args)
-    => new(
-        HasArg(OutArg) ? OutCode : args.OutCode,
-        HasArg(RealmArg) ? RealmCode : args.RealmCode,
-        HasArg(IsScopedArg) ? IsScoped : args.IsScoped
-    );
 }
 public readonly struct RealmId(byte phaseCode, byte realmCode)
 {
@@ -462,4 +453,11 @@ public readonly struct RealmId(byte phaseCode, byte realmCode)
 
     public bool Equals(RealmId other)
     => PhaseCode == other.PhaseCode && RealmCode == other.RealmCode;
+}
+
+public readonly struct TASTEmit(int parentId, int index)
+{
+    public readonly int ParentId = parentId;
+    public readonly int Index = index;
+    public readonly bool IsValid = true;
 }

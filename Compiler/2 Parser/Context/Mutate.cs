@@ -6,17 +6,20 @@ namespace DrzSharp.Compiler.Parser;
 public interface MutateContext : Context
 {
     public void SetScoped();
-    public void Rewrite(RewriteToken[] tokens, int[] children, params RuleId[] rules);
+    public void Rewrite(RewriteToken[] tokens, int[] children, params int[] rules);
 }
 
 public partial class ParserProcess : MutateContext
 {
     //UPDATE
     public void SetScoped()
-    => TAST.Update(RuleInst!.NodeId, new(isScoped: true));
+    {
+        var id = RuleInst!.NodeId;
+        TAST.UpdateInfo(id, args: TAST.ArgsAt(id).With(isScoped: true));
+    }
 
     //REWRITE
-    public void Rewrite(RewriteToken[] tokens, int[] fillNodes, params RuleId[] rules)
+    public void Rewrite(RewriteToken[] tokens, int[] fillNodes, params int[] rules)
     {
         if (tokens.Length <= 0)
             throw new Exception("CANNOT REWRITE INTO AN EMPTY EXPRESSION");
@@ -30,7 +33,7 @@ public partial class ParserProcess : MutateContext
     private bool _reWrite = false;
     private RewriteToken[] _reTokens = null!;
     private int[] _reFillNodes = null!;
-    private RuleId[] _reRules = null!;
+    private int[] _reRules = null!;
     private void ApplyRewrite()
     {
         if (!_reWrite) return;

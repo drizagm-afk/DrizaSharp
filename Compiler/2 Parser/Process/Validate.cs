@@ -21,10 +21,10 @@ public partial class ParserProcess
     }
     private void Validate(in TASTNode node)
     {
-        if (node.Args.OutCode != _phaseCode || IsValidated(node.Id)) return;
+        if (TAST.ArgsAt(node.Id).OutCode != _phaseCode || IsValidated(node.Id)) return;
 
         //VALIDATE
-        if (node.Args.IsScoped) EnterScope();
+        if (TAST.ArgsAt(node.Id).IsScoped) EnterScope();
 
         if (Site._ruleAppliance.TryGetValue(node.Id, out var inst))
         {
@@ -34,7 +34,7 @@ public partial class ParserProcess
             {
                 Diagnostics.ReportInvalid(
                     TAST.SourceSlice(node), 
-                    ParserManager.GetRule(inst.RuleId).RuleName, 
+                    ParserManager.GetRuleName(inst.RuleId), 
                     ex.Message
                 );
             }
@@ -47,6 +47,6 @@ public partial class ParserProcess
             childExists = TAST.TryNodeAt(child.NextSiblingId, out child);
         }
 
-        if (node.Args.IsScoped) ExitScope();
+        if (TAST.ArgsAt(node.Id).IsScoped) ExitScope();
     }
 }

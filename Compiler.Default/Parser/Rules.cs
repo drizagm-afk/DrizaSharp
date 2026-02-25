@@ -59,7 +59,7 @@ public class ASMLoadStrRule : Rule<ASMLoadStr>
     }
     protected override void OnInstantiate(MatchView view, ASMLoadStr instance)
     {
-        instance.cont = view.TokenAtSpan(view.LoadVar(CONTENT));
+        instance.cont = view.LoadTokenVar(CONTENT);
     }
 }
 public class ASMLoadStr : RuleInstance
@@ -70,7 +70,7 @@ public class ASMLoadStr : RuleInstance
     protected override void OnValidate(ValidateContext ctx) { }
     protected override void OnEmit(EmitContext ctx)
     {
-        Logic.Load.CStr.New(ctx, NodeId, ctx.GetText(cont.Id));
+        Logic.Ldstr.New(ctx, NodeId, ctx.GetText(cont.Id));
         ctx.Emit();
     }
 }
@@ -116,7 +116,7 @@ public class ASMReturn : RuleInstance
     protected override void OnValidate(ValidateContext ctx) { }
     protected override void OnEmit(EmitContext ctx)
     {
-        Logic.Return.New(ctx, NodeId);
+        Logic.Ret.New(ctx, NodeId);
         ctx.Emit();
     }
 }

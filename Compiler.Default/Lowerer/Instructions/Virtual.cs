@@ -11,7 +11,7 @@ public static partial class Virtual
 {
     public static class EntryPoint
     {
-        public static RuleId Id { get; internal set; }
+        public static int Id { get; internal set; }
         public static void Rule(Context ctx, Instr _)
         {
             //ADD PROGRAM TYPE

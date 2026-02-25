@@ -9,18 +9,18 @@ public partial class ParserProcess
     {
         Site = site;
 
-        if (TAST._outNodes.TryGetValue(site.RootId, out var emitId))
-            Emit(site.RootId, emitId);
-        else
+        if (site.RootId == TAST.RootId)
             Emit(site.RootId, new());
+        else
+            Emit(site.RootId, TAST.InfoAt(site.RootId).EmitId);
     }
-    private void Emit(int nodeId, EmitId emitId)
+    private void Emit(int nodeId, TASTEmit emitId)
     => Emit(TAST.NodeAt(nodeId), emitId);
-    private void Emit(in TASTNode node, EmitId emitId)
+    private void Emit(in TASTNode node, TASTEmit emitId)
     {
-        if (node.Args.OutCode != PhaseCode)
+        if (TAST.ArgsAt(node.Id).OutCode != PhaseCode)
         {
-            TAST._outNodes[node.Id] = emitId;
+            TAST.UpdateInfo(node.Id, emitId: emitId);
             return;
         }
 

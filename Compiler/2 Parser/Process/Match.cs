@@ -8,12 +8,12 @@ public partial class ParserProcess
 {
     //==== MATCHING MEMOIZATION =====
     private readonly Dictionary<RuleMemoKey, RuleInstance?> _ruleMemoization = [];
-    internal void SetRuleMemo(int start, RuleId ruleId, RuleInstance? inst)
+    internal void SetRuleMemo(int start, int ruleId, RuleInstance? inst)
     {
         RuleMemoKey key = new(start, ruleId);
         _ruleMemoization[key] = inst;
     }
-    internal bool TryGetRuleMemo(int start, RuleId ruleId, [NotNullWhen(true)] out RuleInstance? inst)
+    internal bool TryGetRuleMemo(int start, int ruleId, [NotNullWhen(true)] out RuleInstance? inst)
     {
         inst = null;
         if (!_ruleMemoization.TryGetValue(new(start, ruleId), out var eval))
@@ -44,7 +44,7 @@ public partial class ParserProcess
                 var rule = ParserManager._rules[r];
 
                 if (rule.IsAbstract) continue;
-                if (!rule.Evals(new(_phaseCode, node.Args.RealmCode))) continue;
+                if (!rule.Evals(TAST.ArgsAt(node.Id).RealmId)) continue;
 
                 //TRY MATCH
                 InitMatch();
@@ -216,10 +216,11 @@ public partial class ParserProcess
 
             //TRY MATCH SUBRULE
             RuleInstance? inst;
-            if (subRule.IsClass)
-                inst = TryMatchRuleClass(length, GetRuleClass(subRule), span);
+            var rinfo = ParserManager.GetRuleInfo(subRule);
+            if (rinfo.IsClass)
+                inst = TryMatchRuleClass(length, ParserManager.GetRuleClass(rinfo), span);
             else
-                inst = TryMatchRuleFromClass(length, GetRule(subRule), span);
+                inst = TryMatchRuleFromClass(length, ParserManager.GetRule(rinfo), span);
 
             if (inst is not null)
                 return inst;
@@ -247,4 +248,4 @@ public partial class ParserProcess
     }
 }
 internal readonly record struct RuleMemoKey
-(int Start, RuleId RuleId);
+(int Start, int RuleId);
