@@ -13,24 +13,24 @@ public static class Bindings
     //TOKEN TYPES
     private static void BindTypes()
     {
-        TokenType.Operator = Binding.AddTokenType();
-        TokenType.Keyword = Binding.AddTokenType();
+        TokenType.Operator = Binding.AddTokenType("Operator");
+        TokenType.Keyword = Binding.AddTokenType("Keyword");
 
-        TokenType.OpParen = Binding.AddTokenType();
-        TokenType.OpBrack = Binding.AddTokenType();
-        TokenType.OpBrace = Binding.AddTokenType();
+        TokenType.OpParen = Binding.AddTokenType("Parentheses Opener");
+        TokenType.OpBrack = Binding.AddTokenType("Brackets Opener");
+        TokenType.OpBrace = Binding.AddTokenType("Braces Opener");
 
-        TokenType.ClParen = Binding.AddTokenType();
-        TokenType.ClBrack = Binding.AddTokenType();
-        TokenType.ClBrace = Binding.AddTokenType();
+        TokenType.ClParen = Binding.AddTokenType("Parentheses Closer");
+        TokenType.ClBrack = Binding.AddTokenType("Brackets Closer");
+        TokenType.ClBrace = Binding.AddTokenType("Braces Closer");
 
-        TokenType.AtsignPrefix = Binding.AddTokenType();
-        TokenType.HashPrefix = Binding.AddTokenType();
-        TokenType.DollarPrefix = Binding.AddTokenType();
+        TokenType.AtsignPrefix = Binding.AddTokenType("Atsign Prefix");
+        TokenType.HashPrefix = Binding.AddTokenType("Hash Prefix");
+        TokenType.DollarPrefix = Binding.AddTokenType("Dollar Prefix");
 
-        TokenType.Bool = Binding.AddTokenType();
-        TokenType.Number = Binding.AddTokenType();
-        TokenType.String = Binding.AddTokenType();
+        TokenType.Bool = Binding.AddTokenType("Bool");
+        TokenType.Number = Binding.AddTokenType("Number");
+        TokenType.String = Binding.AddTokenType("String");
     }
 
     //RULES

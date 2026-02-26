@@ -41,6 +41,8 @@ public class TokenPattern
 
             i += Math.Max(res, 0);
 
+            Console.WriteLine(_patternId + " : " + res);
+
             //COUNTER
             _patternId++;
         }
@@ -56,8 +58,14 @@ public class TokenPattern
             var token = ctx.TokenAtSpan(span, 0);
             if (token.Type != type)
                 return 0;
-            if (val is not null && ctx.GetTextSpan(token.Id) != val)
-                return 0;
+            if (val is not null)
+            {
+                var txt = ctx.GetTextSpan(token.Id);
+                if (txt.Length != val.Length)
+                    return 0;
+                if (!txt.StartsWith(val))
+                    return 0;
+            }
 
             //VAR
             if (captureTag is not null)
@@ -85,7 +93,7 @@ public class TokenPattern
             //RETURN
             if (captureTag != null)
                 ctx.StoreRuleVar(captureTag, inst);
-            
+
             ctx.LoadHash(hash);
             return inst.Span.Length;
         });
@@ -108,7 +116,7 @@ public class TokenPattern
             //RETURN
             if (captureTag != null)
                 ctx.StoreRuleVar(captureTag, inst);
-            
+
             ctx.LoadHash(hash);
             return inst.Span.Length;
         });

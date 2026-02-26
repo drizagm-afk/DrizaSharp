@@ -38,13 +38,15 @@ public partial class ParserProcess
         int i = 0;
         while (i < node.Length)
         {
-            int matched = 0;
+            bool matched = false;
             for (int r = ParserManager._rules.Count - 1; r >= 0; r--)
             {
                 var rule = ParserManager._rules[r];
 
                 if (rule.IsAbstract) continue;
                 if (!rule.Evals(TAST.ArgsAt(node.Id).RealmId)) continue;
+
+                Console.WriteLine(ParserManager.GetRuleName(rule.Id));
 
                 //TRY MATCH
                 InitMatch();
@@ -58,7 +60,6 @@ public partial class ParserProcess
                 {
                     //FINALIZATION
                     DropMemos();
-                    matched = inst.Span.Length;
 
                     //BUILD STRUCTURE
                     StartBuild(inst);
@@ -69,20 +70,21 @@ public partial class ParserProcess
                     EndMutate();
 
                     //END
+                    i += inst.Span.Length;
+                    matched = true;
                     break;
                 }
                 else continue;
             }
 
-            if (matched > 0) i += matched;
-            else
+            if (!matched)
             {
                 DropMemos();
-                
+
                 //REPORT
                 var token = TAST.TokenAt(node.Start + i);
                 if (token.Type != Token.NEWLINE)
-                    Diagnostics.ReportUnexpected(new(token.Start, token.Length));
+                    Diagnostics.ReportUnexpected(new(token.Start, token.Length), null, "Unexpected Tokens");
 
                 //SKIP
                 i++;

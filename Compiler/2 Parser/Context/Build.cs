@@ -28,7 +28,7 @@ public partial class ParserProcess : BuildContext
         {
             if (rem <= 0)
             {
-                if (start < 0) (start, rem) = (i, node.Length);
+                if (start < 0) (start, rem) = (i, span.Length);
                 else break;
             }
 
@@ -36,13 +36,13 @@ public partial class ParserProcess : BuildContext
             {
                 i += child.RelLength;
                 rem -= child.Length;
+                childExists = TAST.TryNodeAt(child.NextSiblingId, out child);
                 continue;
             }
 
             i++;
             rem--;
         }
-
         return TAST.Nest(span.NodeId, start, i - start, new(args, default, ruleId));
     }
 

@@ -36,6 +36,8 @@ public static partial class Compiler
 
         sw.Stop();
         ShowProcessTime(procTime);
+
+        Debug(proj);
     }
 
     public static void ShowProcessTime(List<(string, double)> procTime)

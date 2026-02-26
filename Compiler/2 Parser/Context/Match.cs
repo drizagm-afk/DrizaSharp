@@ -187,7 +187,7 @@ public partial class ParserProcess : MatchContext
         return TAST.TokenAtNode(span.NodeId, span.Offset, span.Start + tokenOrder);
     }
     private static bool InBounds(TokenSpan span, int order)
-    => (0 <= order) && (span.Length < 0 || order < span.Length);
+    => 0 <= order && (span.Length < 0 || order < span.Length);
 }
 
 internal readonly record struct VarKey

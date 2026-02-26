@@ -32,7 +32,7 @@ namespace DrzSharp.Compiler.Lexer
         public static void EndProcess(this LexerProcess process) { }
 
         //===== RULES =====
-        public static byte typeCount = 2;
+        public static readonly List<string> TokenTypes = ["NULL", "Newline"];
         public static readonly List<Rule> _rules = [];
     }
 }

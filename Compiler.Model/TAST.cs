@@ -15,6 +15,8 @@ public sealed class TAST(SourceSpan source)
     //**TOKENS**
     private Token[] _tokens = new Token[128];
     private int _tokenCount = 0;
+
+    public Span<Token> Tokens => _tokens;
     public int TokenCount => _tokenCount;
 
     private int AddTokenItem(Token token)
@@ -326,12 +328,12 @@ public sealed class TAST(SourceSpan source)
     public int SkipOffset(in TASTNode node, int offset, out bool childExists, out TASTNode child)
     {
         childExists = TryNodeAt(node.FirstChildId, out child);
+
         while (childExists && child.RelStart < offset)
         {
             Debug.Assert(child.RelStart + child.RelLength <= offset);
             childExists = TryNodeAt(child.NextSiblingId, out child);
         }
-
         return offset;
     }
 

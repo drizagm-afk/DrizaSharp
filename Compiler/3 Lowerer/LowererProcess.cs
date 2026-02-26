@@ -89,6 +89,6 @@ public partial class LowererProcess
         if (LowererManager.TryGetRule(inst.RuleId, out var rule))
             rule(this, inst);
         else
-            Diagnostics.ReportUnexpected(inst.Source, ParserManager.GetRuleName(sourceId));
+            Diagnostics.ReportUnexpected(inst.Source, ParserManager.GetRuleName(sourceId), "Unexpected Instruction");
     }
 }

@@ -78,7 +78,7 @@ public partial class LexerProcess
 
             if (!match)
             {
-                Diagnostics.ReportUnexpected(new(iter, 1));
+                Diagnostics.ReportUnexpected(new(iter, 1), null, "Unexpected Characters");
                 iter++;
             }
         }

@@ -85,7 +85,7 @@ public partial class ParserProcess
                 //REPORT
                 var token = TAST.TokenAt(node.Start + i);
                 if (token.Type != Token.NEWLINE)
-                    Diagnostics.ReportUnexpected(new(token.Start, token.Length));
+                    Diagnostics.ReportUnexpected(new(token.Start, token.Length), null, "Unexpected Tokens");
 
                 //SKIP
                 i++;

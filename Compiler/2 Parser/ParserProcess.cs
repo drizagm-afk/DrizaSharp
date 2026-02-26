@@ -50,7 +50,7 @@ public partial class ParserProcess
         Nodes.Push(root.Id);
 
         //FLAT ROOT
-        if (root.IsFlat() && IsNodeSite(root.Id, _phaseCode))
+        if (root.IsFlat() && IsNodeSite(TAST, root.Id, _phaseCode))
         {
             action(root.Id);
             return;
@@ -64,14 +64,14 @@ public partial class ParserProcess
                 ref readonly var child = ref TAST.NodeAt(i);
                 if (child.IsFlat())
                 {
-                    if (IsNodeSite(child.Id, _phaseCode))
+                    if (IsNodeSite(TAST, child.Id, _phaseCode))
                         action(i);
                 }
                 else Nodes.Push(i);
             });
         }
     }
-    private bool IsNodeSite(int nodeId, int phase)
+    private static bool IsNodeSite(TAST TAST, int nodeId, int phase)
     => TAST.ArgsAt(nodeId).OutCode == phase;
 
     public void ForeachSite(Action<ParserSite> action)
