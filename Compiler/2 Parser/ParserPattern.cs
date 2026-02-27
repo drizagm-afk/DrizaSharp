@@ -12,39 +12,35 @@ public class TokenPattern
     { _varName = varName; }
 
     //PATTERN LIST
-    private List<Func<MatchContext, TokenSpan, int>> _patterns = [];
-
+    private List<Func<int, MatchContext, TokenSpan, int>> _patterns = [];
     public int PatternCount => _patterns.Count;
-    public int CurPatternId => _patternId;
-    private int _patternId;
-    public void NewPattern(Func<MatchContext, TokenSpan, int> pattern)
+
+    public void NewPattern(Func<int, MatchContext, TokenSpan, int> pattern)
     => _patterns.Add(pattern);
     public int EvalPattern(int patternId, MatchContext ctx, TokenSpan span)
-    => _patterns[patternId].Invoke(ctx, span);
+    => _patterns[patternId].Invoke(patternId, ctx, span);
 
     //MATCH ENTRY
     internal int Matches(MatchContext ctx, TokenSpan span)
     {
         //MATCH LOOP
         int i = 0;
-
-        _patternId = 0;
-        while (_patternId < _patterns.Count)
+        int pattId = 0;
+        while (pattId < _patterns.Count)
         {
             //VERIFYING TOKEN
-            if (!ctx.HasTokenAtSpan(span, i)) return 0;
+            var evalSpan = span.Skip(i);
+            if (!ctx.HasTokenAtSpan(evalSpan)) return 0;
 
             //VERIFYING CHECK
-            var _pattern = _patterns[_patternId];
-            int res = _pattern.Invoke(ctx, span.Skip(i));
+            var _pattern = _patterns[pattId];
+            int res = _pattern.Invoke(pattId, ctx, evalSpan);
             if (res == 0) return 0;
 
             i += Math.Max(res, 0);
 
-            Console.WriteLine(_patternId + " : " + res);
-
             //COUNTER
-            _patternId++;
+            pattId++;
         }
         return i;
     }
@@ -52,10 +48,10 @@ public class TokenPattern
     //DEFAULT PATTERNS
     public TokenPattern Token(byte type, string? val = null, string? captureTag = null)
     {
-        NewPattern((ctx, span) =>
+        NewPattern((_, ctx, span) =>
         {
             //MATCH
-            var token = ctx.TokenAtSpan(span, 0);
+            var token = ctx.TokenAtSpan(span);
             if (token.Type != type)
                 return 0;
             if (val is not null)
@@ -78,7 +74,7 @@ public class TokenPattern
 
     public TokenPattern Rule<R>(string? captureTag = null) where R : Rule
     {
-        NewPattern((ctx, span) =>
+        NewPattern((_, ctx, span) =>
         {
             var hash = ctx.Hash;
             ctx.NewHash();
@@ -101,7 +97,7 @@ public class TokenPattern
     }
     public TokenPattern RuleClass<C>(string? captureTag = null) where C : RuleClass
     {
-        NewPattern((ctx, span) =>
+        NewPattern((_, ctx, span) =>
         {
             var hash = ctx.Hash;
             ctx.NewHash();

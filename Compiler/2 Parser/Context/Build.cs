@@ -16,47 +16,20 @@ public interface BuildContext : Context, INodeAttrs
 
 public partial class ParserProcess : BuildContext
 {
-    private int Nest(TokenSpan span, TASTArgs args, int ruleId = -1)
+    private int Nest(TokenSpan span, RealmId? realmId = null, bool? isScoped = null, int ruleId = -1)
     {
-        ref readonly var node = ref TAST.NodeAt(span.NodeId);
-        int start = -1;
+        var slice = TAST.ToFlatSlice(span);
+        var args = TAST.ArgsAt(span.NodeId).With(realmId?.PhaseCode, realmId?.RealmCode, isScoped);
 
-        //EVAL
-        int i = TAST.SkipOffset(node, span.Offset, out var childExists, out var child);
-        int rem = span.Start;
-        while (i < node.Length)
-        {
-            if (rem <= 0)
-            {
-                if (start < 0) (start, rem) = (i, span.Length);
-                else break;
-            }
-
-            if (childExists && child.RelStart == i)
-            {
-                i += child.RelLength;
-                rem -= child.Length;
-                childExists = TAST.TryNodeAt(child.NextSiblingId, out child);
-                continue;
-            }
-
-            i++;
-            rem--;
-        }
-        return TAST.Nest(span.NodeId, start, i - start, new(args, default, ruleId));
+        return TAST.Nest(span.NodeId, slice.Start, slice.Length, new(args, ruleId));
     }
 
     public int NestSpan(TokenSpan span, RealmId? realmId = null, bool? isScoped = null)
     {
-        bool isNestValid = IsNestValidAtSpan(span, out var hasNest, out int nestId);
-        Debug.Assert(isNestValid);
+        if (TAST.TryGetNest(span, out var nestId))
+            return nestId;
 
-        if (hasNest) return nestId;
-
-        return Nest(
-            span,
-            TAST.ArgsAt(span.NodeId).With(realmId?.PhaseCode, realmId?.RealmCode, isScoped)
-        );
+        return Nest(span, realmId: realmId, isScoped: isScoped);
     }
     public bool TryNestSpan(TokenSpan span, out int nestId, RealmId? realmId = null, bool? isScoped = null)
     {
@@ -85,13 +58,7 @@ public partial class ParserProcess : BuildContext
             RuleInst = inst;
             inst.Build(this);
 
-            var span = inst.Span;
-            Debug.Assert(IsNestValidAtSpan(span, out _, out _));
-
-            inst.NodeId = Nest(
-                span, 
-                TAST.ArgsAt(span.NodeId).With(isScoped: isScoped), inst.RuleId
-            );
+            inst.NodeId = Nest(inst.Span, isScoped: isScoped, ruleId: inst.RuleId);
             Site._ruleAppliance[inst.NodeId] = inst;
         }
         inst.Parent = RuleInst = caller;

@@ -7,13 +7,13 @@ namespace DrzSharp.Compiler.Default.Lowerer;
 
 public static partial class Rules
 {
-    public static void Ldstr(Context ctx, Instr i)
+    public static void ASMLdstr(Context ctx, Instr i)
     {
         var il = ctx.Logic.ILProcessor;
         il.Append(il.Create(OpCodes.Ldstr, ctx.ReadString(i.Start)));
     }
 
-    public static void Print(Context ctx, Instr _)
+    public static void ASMPrint(Context ctx, Instr _)
     {
         var il = ctx.Logic.ILProcessor;
         var writeLineRef = ctx.Module.ImportReference(
@@ -21,7 +21,7 @@ public static partial class Rules
         );
         il.Append(il.Create(OpCodes.Call, writeLineRef));
     }
-    public static void Ret(Context ctx, Instr _)
+    public static void ASMRet(Context ctx, Instr _)
     {
         var il = ctx.Logic.ILProcessor;
         il.Append(il.Create(OpCodes.Ret));

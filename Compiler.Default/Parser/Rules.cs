@@ -4,23 +4,6 @@ using DrzSharp.Compiler.Parser;
 
 namespace DrzSharp.Compiler.Default.Parser;
 
-public class TESTRule : Rule<TEST>
-{
-    public TESTRule()
-    {
-        SetRealm(Realms.Virtual);
-        SetPatterns(new TokenPattern().TKeyword("HELLO"));
-    }
-
-    protected override void OnInstantiate(MatchView view, TEST instance) { }
-}
-public class TEST : RuleInstance
-{
-    protected override void OnBuild(BuildContext ctx) { }
-    protected override void OnValidate(ValidateContext ctx) { }
-    protected override void OnEmit(EmitContext ctx) { }
-}
-
 //===== ENTRY POINT =====
 public class EntryPointRule : Rule<EntryPoint>
 {

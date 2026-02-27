@@ -19,9 +19,6 @@ public interface Context
     //**TAST NODES**
     public TASTNode NodeAt(int nodeId);
 
-    public void Children(Action<int> action);
-    public void Children(int nodeId, Action<int> action);
-
     //**TAST TOKENS**
     public Token TokenAt(int tokenId);
 
@@ -53,9 +50,6 @@ public partial class ParserProcess : Context
 
     //**TAST NODES**
     public TASTNode NodeAt(int nodeId) => TAST.NodeAt(nodeId);
-
-    public void Children(Action<int> action) => TAST.Children(action);
-    public void Children(int nodeId, Action<int> action) => TAST.Children(nodeId, action);
 
     //**TAST TOKENS**
     public Token TokenAt(int tokenId) => TAST.TokenAt(tokenId);

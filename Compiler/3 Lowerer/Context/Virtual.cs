@@ -5,14 +5,14 @@ namespace DrzSharp.Compiler.Lowerer;
 
 public interface VirtualContext
 {
-    public void EnterLogic(ILProcessor iLProcessor);
+    public void SetILProcessor(ILProcessor iLProcessor);
 }
 public partial class LowererProcess : VirtualContext
 {
-    public void EnterLogic(ILProcessor iLProcessor)
+    public void SetILProcessor(ILProcessor iLProcessor)
     {
-        ILProcessor = iLProcessor;
         ResetLogic();
+        ILProcessor = iLProcessor;
     }
 
     //RESET

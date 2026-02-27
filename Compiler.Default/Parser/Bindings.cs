@@ -22,8 +22,6 @@ public static class Bindings
     //RULES
     private static void BindRules()
     {
-        Binding.BindRule<TESTRule>();
-
         Binding.BindRule<EntryPointRule>();
 
         Binding.BindRule<ASMPrintRule>();

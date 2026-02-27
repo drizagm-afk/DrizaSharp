@@ -46,11 +46,9 @@ public partial class ParserProcess
                 if (rule.IsAbstract) continue;
                 if (!rule.Evals(TAST.ArgsAt(node.Id).RealmId)) continue;
 
-                Console.WriteLine(ParserManager.GetRuleName(rule.Id));
-
                 //TRY MATCH
                 InitMatch();
-                var inst = MatchRule(rule, new(nodeId, i, 0, node.Length - i));
+                var inst = MatchRule(rule, new(nodeId, i, 0, -1));
 
                 //CLEAR
                 ClearVarStorage();
@@ -100,7 +98,7 @@ public partial class ParserProcess
             return true;
 
         //NESTING MEMOIZATION CHECK (REWRITE ONLY)
-        if (TryFindNestAtSpan(span, out var nestId)
+        if (TAST.TryGetNest(span, out var nestId)
         && Site._ruleAppliance.TryGetValue(nestId, out inst)
         && inst.RuleId.Equals(rule.Id))
         {
@@ -128,7 +126,6 @@ public partial class ParserProcess
     {
         var inst = rule.NewInstance();
         inst.Span = span;
-        Debug.Assert(IsNestValidAtSpan(inst.Span, out _, out _));
 
         //INSTANTIATE
         void instRule(RuleBase rule)

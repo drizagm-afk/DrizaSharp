@@ -39,8 +39,10 @@ public partial class ParserProcess : MutateContext
         if (!_reWrite) return;
 
         //BASE
-        RuleInst!.IsRewritten = true;
-        var slice = TAST.SourceSlice(RuleInst.NodeId);
+        var nodeId = RuleInst!.NodeId;
+
+        TAST.UpdateInfo(nodeId, isRewritten: true);
+        var slice = TAST.SourceSlice(nodeId);
 
         //REWRITE
         var start = TAST.TokenCount;
@@ -49,10 +51,10 @@ public partial class ParserProcess : MutateContext
             if (token.IsNull) TAST.NewToken(Token.NULL, slice.Start, slice.Length);
             else TAST.NewToken(token.Type, slice.Start, slice.Length, token.Content);
         }
-        TAST.Rewrite(RuleInst.NodeId, new(start, TAST.TokenCount - start), _reFillNodes);
+        TAST.Rewrite(nodeId, new(start, TAST.TokenCount - start), _reFillNodes);
 
         //EVAL REWRITE
-        Match(RuleInst.NodeId, _reRules);
+        Match(nodeId, _reRules);
 
         ResetRewrite();
     }

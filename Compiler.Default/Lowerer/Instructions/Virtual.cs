@@ -32,7 +32,7 @@ public static partial class Virtual
             programType.Methods.Add(mainMethod);
             ctx.Assembly.EntryPoint = mainMethod;
 
-            ctx.Virtual.EnterLogic(mainMethod.Body.GetILProcessor());
+            ctx.Virtual.SetILProcessor(mainMethod.Body.GetILProcessor());
         }
 
         private static Slice Add(EmitCtx ctx)

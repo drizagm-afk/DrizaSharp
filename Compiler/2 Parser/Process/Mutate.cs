@@ -73,7 +73,7 @@ public partial class ParserProcess
             if (inst is not null)
             {
                 //FINALIZATION
-                i += FlatLength(inst.Span);
+                i += TAST.ToFlatSlice(inst.Span).Length;
                 r++;
 
                 //BUILD STRUCTURE
@@ -92,6 +92,8 @@ public partial class ParserProcess
             }
         }
     }
+
+    /*
     private int FlatLength(TokenSpan span)
     {
         ref readonly var node = ref TAST.NodeAt(span.NodeId);
@@ -197,4 +199,5 @@ public partial class ParserProcess
         }
         return false;
     }
+    */
 }

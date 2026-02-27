@@ -161,26 +161,6 @@ public sealed class TAST(SourceSpan source)
         );
     }
 
-    public ref readonly TASTInfo InfoAt(int nodeId)
-    {
-        if (nodeId < 0 || nodeId >= _nodeCount)
-            throw new Exception($"Node Info not found in TAST: node={nodeId}");
-
-        return ref _nodeInfos[nodeId];
-    }
-    public TASTArgs ArgsAt(int nodeId)
-    {
-        if (nodeId < 0 || nodeId >= _nodeCount)
-            throw new Exception($"Node Args not found in TAST: node={nodeId}");
-        
-        return _nodeInfos[nodeId].Args;
-    }
-    public void UpdateInfo(int nodeId, TASTArgs? args = null, TASTEmit? emitId = null, int? ruleId = null)
-    {
-        ref readonly var info = ref InfoAt(nodeId);
-        _nodeInfos[nodeId] = new(args ?? info.Args, emitId ?? info.EmitId, ruleId ?? info.RuleId);
-    }
-
     public int Nest(int nodeId, int start, int length, TASTInfo info)
     {
         ref readonly var node = ref NodeAt(nodeId);
@@ -249,20 +229,151 @@ public sealed class TAST(SourceSpan source)
         }
     }
 
-    public void Children(Action<int> action)
-    => Children(RootId, action);
-    public void Children(int nodeId, Action<int> action)
+    //**NODE INFO**
+    public ref readonly TASTInfo InfoAt(int nodeId)
     {
-        ref readonly var node = ref NodeAt(nodeId);
-        var id = node.FirstChildId;
-        while (id >= 0)
-        {
-            action(id);
-            id = NodeAt(id).NextSiblingId;
-        }
+        if (nodeId < 0 || nodeId >= _nodeCount)
+            throw new Exception($"Node Info not found in TAST: node={nodeId}");
+
+        return ref _nodeInfos[nodeId];
+    }
+    public TASTArgs ArgsAt(int nodeId)
+    {
+        if (nodeId < 0 || nodeId >= _nodeCount)
+            throw new Exception($"Node Args not found in TAST: node={nodeId}");
+
+        return _nodeInfos[nodeId].Args;
+    }
+    public void UpdateInfo(int nodeId, TASTArgs? args = null, int? ruleId = null, bool? isRewritten = null, TASTEmit? emitId = null)
+    {
+        ref readonly var info = ref InfoAt(nodeId);
+        _nodeInfos[nodeId] = new(args ?? info.Args, ruleId ?? info.RuleId, isRewritten ?? info.IsRewritten, emitId ?? info.EmitId);
     }
 
-    //NODE SOURCE COVERAGE
+    //**NODE CURSOR METHODS**
+    //SEEK TO OFFSET
+    public int SeekToOffset(in TASTNode node, int offset, out bool childExists, out TASTNode child)
+    {
+        childExists = TryNodeAt(node.FirstChildId, out child);
+
+        while (childExists && child.RelStart < offset)
+        {
+            if (child.RelStart + child.RelLength > offset)
+                throw new Exception($"ILLEGAL OFFSET: offset={offset}, relStart={child.RelStart}, relLength={child.RelLength}");
+
+            childExists = TryNodeAt(child.NextSiblingId, out child);
+        }
+        return offset;
+    }
+
+    //FIND TOKEN AT NODE
+    public bool FindTokenAtNode(int nodeId, int offset, int start, out int tokenId)
+    {
+        tokenId = -1;
+        ref readonly var node = ref NodeAt(nodeId);
+
+        //NON-REWRITE TOKEN LOOKUP
+        if (!InfoAt(nodeId).IsRewritten)
+        {
+            int rel = offset + start;
+            if (rel >= node.Length)
+                return false;
+
+            tokenId = node.Start + rel;
+            return true;
+        }
+
+        //REWRITE TOKEN LOOKUP
+        int i = SeekToOffset(node, offset, out var childExists, out var child);
+        while (i < node.Length)
+        {
+            if (childExists && child.RelStart == i)
+            {
+                if (start < child.Length)
+                {
+                    tokenId = child.Start + start;
+                    return true;
+                }
+
+                start -= child.Length;
+                i += child.RelLength;
+                childExists = TryNodeAt(child.NextSiblingId, out child);
+                continue;
+            }
+            if (start == 0)
+            {
+                tokenId = node.Start + i;
+                return true;
+            }
+
+            start--;
+            i++;
+        }
+        return false;
+    }
+    public bool TryTokenAtNode(int nodeId, int offset, int start, out Token token)
+    {
+        token = default;
+        if (FindTokenAtNode(nodeId, offset, start, out var tokenId))
+            return TryTokenAt(tokenId, out token);
+
+        return false;
+    }
+    public bool HasTokenAtNode(int nodeId, int offset, int start)
+    => FindTokenAtNode(nodeId, offset, start, out var tokenId) && TryTokenAt(tokenId, out _);
+    public Token TokenAtNode(int nodeId, int offset, int start)
+    {
+        if (!TryTokenAtNode(nodeId, offset, start, out var token))
+            throw new Exception($"TOKEN NOT FOUND IN NODE: node={nodeId}, offset={offset}, start={start}");
+
+        return token;
+    }
+
+    public bool TryTokenAtNode(TokenSpan span, out Token token)
+    => TryTokenAtNode(span.NodeId, span.Offset, span.Start, out token);
+    public bool HasTokenAtNode(TokenSpan span)
+    => HasTokenAtNode(span.NodeId, span.Offset, span.Start);
+    public Token TokenAtNode(TokenSpan span)
+    => TokenAtNode(span.NodeId, span.Offset, span.Start);
+
+    //TO SLICE
+    public Slice ToFlatSlice(TokenSpan span)
+    => ToFlatSlice(span.NodeId, span.Offset, span.Start, span.Length);
+    public Slice ToFlatSlice(int nodeId, int offset, int start, int length)
+    {
+        ref readonly var node = ref NodeAt(nodeId);
+
+        bool childExists;
+        TASTNode child;
+        int advance(in TASTNode node, int i, int count)
+        {
+            while (i < node.Length && count > 0)
+            {
+                if (childExists && child.RelStart == i)
+                {
+                    i += child.RelLength;
+                    count -= child.Length;
+                    childExists = TryNodeAt(child.NextSiblingId, out child);
+
+                    continue;
+                }
+                i++;
+                count--;
+            }
+            if (count != 0)
+                throw new Exception($"ILLEGAL SPAN: node={nodeId}, nodeLength={node.Length}, offset={offset}, start={start}, length={length}");
+
+            return i;
+        }
+
+        int flatStart = SeekToOffset(node, offset, out childExists, out child);
+        flatStart = advance(node, flatStart, start);
+
+        int flatEnd = flatStart;
+        flatEnd = advance(node, flatEnd, length);
+
+        return new(flatStart, flatEnd - flatStart);
+    }
     public Slice SourceSlice(int nodeId)
     => SourceSlice(NodeAt(nodeId));
     public Slice SourceSlice(in TASTNode node)
@@ -277,86 +388,34 @@ public sealed class TAST(SourceSpan source)
         );
     }
 
-    //TOKEN AT NODE
-    private bool FindTokenAtNode(int nodeId, int offset, int remOrder, out int tokenId)
-    => FindTokenAtNode(NodeAt(nodeId), offset, ref remOrder, out tokenId);
-    private bool FindTokenAtNode(in TASTNode node, int offset, ref int remOrder, out int tokenId)
+    //TRY GET NEST
+    public bool TryGetNest(TokenSpan span, out int nestId)
+    => TryGetNest(span.NodeId, span.Offset, span.Start, out nestId);
+    public bool TryGetNest(int nodeId, int offset, int start, out int nestId)
     {
-        if (node.FirstChildId < 0)
-            return FindTokenAtFlatNode(node, offset, ref remOrder, out tokenId);
-        else
-            return FindTokenAtDeepNode(node, offset, ref remOrder, out tokenId);
-    }
-    private static bool FindTokenAtFlatNode(in TASTNode node, int offset, ref int remOrder, out int tokenId)
-    {
-        tokenId = default;
-        if (node.Length < offset + remOrder)
-        {
-            remOrder -= node.Length - offset;
-            return false;
-        }
+        nestId = -1;
+        ref readonly var node = ref NodeAt(nodeId);
 
-        tokenId = node.Start + offset + remOrder;
-        return true;
-    }
-    private bool FindTokenAtDeepNode(in TASTNode node, int offset, ref int remOrder, out int tokenId)
-    {
-        tokenId = default;
-        var i = SkipOffset(node, offset, out var childExists, out var child);
+        int i = SeekToOffset(node, offset, out var childExists, out var child);
         while (i < node.Length)
         {
             if (childExists && child.RelStart == i)
             {
-                if (FindTokenAtNode(child, 0, ref remOrder, out tokenId) && remOrder <= 0)
+                if (start == 0)
+                {
+                    nestId = child.Id;
                     return true;
-
+                }
                 i += child.RelLength;
+                start -= child.Length;
                 childExists = TryNodeAt(child.NextSiblingId, out child);
                 continue;
             }
-
-            if (remOrder <= 0)
-            {
-                tokenId = node.Start + i;
-                return true;
-            }
-            remOrder--;
+            if (start <= 0) break;
             i++;
+            start--;
         }
         return false;
-    }
-    public int SkipOffset(in TASTNode node, int offset, out bool childExists, out TASTNode child)
-    {
-        childExists = TryNodeAt(node.FirstChildId, out child);
-
-        while (childExists && child.RelStart < offset)
-        {
-            Debug.Assert(child.RelStart + child.RelLength <= offset);
-            childExists = TryNodeAt(child.NextSiblingId, out child);
-        }
-        return offset;
-    }
-
-    //TOKEN AT NODE
-    public bool TryTokenAtNode(int nodeId, int offset, int order, out Token token)
-    {
-        token = default;
-        if (FindTokenAtNode(nodeId, offset, order, out var tokenId))
-            return TryTokenAt(tokenId, out token);
-
-        return false;
-    }
-    public bool HasTokenAtNode(int nodeId, int offset, int order)
-    => FindTokenAtNode(nodeId, offset, order, out var tokenId) && TryTokenAt(tokenId, out _);
-
-    public Token TokenAtNode(int nodeId, int offset, int order)
-    {
-        if (!FindTokenAtNode(nodeId, offset, order, out var tokenId))
-            throw new Exception($"TOKEN NOT FOUND AT: NODE={nodeId}, ORDER={order}");
-        if (!TryTokenAt(tokenId, out var token))
-            throw new Exception($"UNTRACKED NULL TOKEN AT: NODE={nodeId}, ORDER={order}");
-
-        return token;
     }
 }
 
@@ -374,6 +433,23 @@ public readonly struct Token(int id, byte type, int start, int length)
     public bool IsNull => Type == NULL;
 }
 
+//===== NODES =====
+public readonly struct TASTNode(
+    int id, int relStart, int relLength, int start, int length,
+    int firstChildId, int nextSiblingId, int parentId
+)
+{
+    public readonly int Id = id;
+    public readonly int RelStart = relStart;
+    public readonly int RelLength = relLength;
+    public readonly int Start = start;
+    public readonly int Length = length;
+    public readonly int FirstChildId = firstChildId;
+    public readonly int NextSiblingId = nextSiblingId;
+    public readonly int ParentId = parentId;
+
+    public bool IsFlat() => FirstChildId < 0;
+}
 public readonly struct TokenSpan
 {
     //NodeId
@@ -410,31 +486,14 @@ public readonly struct TokenSpan
     public bool IsValid => Length != 0;
 }
 
-//===== NODES =====
-public readonly struct TASTNode(
-    int id, int relStart, int relLength, int start, int length,
-    int firstChildId, int nextSiblingId, int parentId
-)
-{
-    public readonly int Id = id;
-    public readonly int RelStart = relStart;
-    public readonly int RelLength = relLength;
-    public readonly int Start = start;
-    public readonly int Length = length;
-    public readonly int FirstChildId = firstChildId;
-    public readonly int NextSiblingId = nextSiblingId;
-    public readonly int ParentId = parentId;
-
-    public bool IsFlat() => FirstChildId < 0;
-}
-
 //===== NODE INFO =====
 public readonly struct TASTInfo
-(TASTArgs args, TASTEmit emitId = new(), int ruleId = -1)
+(TASTArgs args, int ruleId = -1, bool isRewritten = false, TASTEmit emitId = new())
 {
     public readonly TASTArgs Args = args;
-    public readonly TASTEmit EmitId = emitId;
     public readonly int RuleId = ruleId;
+    public readonly bool IsRewritten = isRewritten;
+    public readonly TASTEmit EmitId = emitId;
 }
 
 public readonly struct TASTArgs

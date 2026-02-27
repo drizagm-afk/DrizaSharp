@@ -1,4 +1,5 @@
 using DrzSharp.Compiler.Default.Lexer;
+using DrzSharp.Compiler.Lexer;
 using DrzSharp.Compiler.Parser;
 
 namespace DrzSharp.Compiler.Default.Parser;
@@ -45,12 +46,11 @@ public static class GroupPatterns
 {
     public static TokenPattern Group(this TokenPattern inst, string? captureTag = null)
     {
-        inst.NewPattern((ctx, span) =>
+        inst.NewPattern((id, ctx, span) =>
         {
-            var id = inst.CurPatternId;
             var length = 0;
             //MATCH
-            while (ctx.HasTokenAtSpan(span, 0))
+            while (ctx.HasTokenAtSpan(span))
             {
                 span = span.Skip();
                 length++;
@@ -78,46 +78,49 @@ public static class GroupPatterns
     }
     public static TokenPattern ClosedGroup(this TokenPattern inst, string? captureTag = null)
     {
-        inst.NewPattern((ctx, span) =>
+        inst.NewPattern((id, ctx, span) =>
         {
+            var evalSpan = span;
             var openerStack = new Stack<byte>();
-            var id = inst.CurPatternId;
             var length = 0;
+
             //MATCH
-            while (ctx.TryTokenAtSpan(span, 0, out var token))
+            while (ctx.TryTokenAtSpan(evalSpan, out var token))
             {
+                //EVAL ADJACENT PATTERNS
+                if (openerStack.Count == 0)
+                {
+                    int res = -1;
+                    int next = 0;
+                    while (id + next + 1 < inst.PatternCount && res < 0)
+                    {
+                        res = inst.EvalPattern(id + next + 1, ctx, evalSpan.Skip(next));
+                        next++;
+                    }
+                    if (res > 0)
+                    {
+                        length += next - 1;
+                        if (length == 0) length = -1;
+
+                        break;
+                    }
+                }
+
+                //EVAL CLOSURE
                 var type = token.Type;
                 if (IsOpener(type)) openerStack.Push(type);
                 else if (IsCloser(type))
                 {
                     if (openerStack.Count <= 0) return 0;
-                    if (!Matches(openerStack.Pop(), type)) return 0;
+                    if (!ClosureMatches(openerStack.Pop(), type)) return 0;
                 }
 
-                span = span.Skip();
+                //MOVE FORWARD
+                evalSpan = evalSpan.Skip();
                 length++;
-
-                //EVAL ADJACENT PATTERNS
-                if (openerStack.Count <= 0)
-                {
-                    int res = -1;
-                    int next = 0;
-                    int nextId = id + 1;
-                    while (nextId < inst.PatternCount && res < 0)
-                    {
-                        res = inst.EvalPattern(nextId, ctx, span.Skip(next));
-                        next++;
-                        nextId++;
-                    }
-                    if (res > 0)
-                    {
-                        length += next + res;
-                        break;
-                    }
-                }
             }
             if (openerStack.Count > 0) return 0;
-            if (captureTag is not null) ctx.StoreVar(captureTag, span.With(length: length));
+            if (length > 0 && captureTag is not null) ctx.StoreVar(captureTag, span.With(length: length));
             return length;
         });
         return inst;
@@ -126,7 +129,7 @@ public static class GroupPatterns
     => type == TokenType.OpParen || type == TokenType.OpBrack || type == TokenType.OpBrace;
     private static bool IsCloser(byte type)
     => type == TokenType.ClParen || type == TokenType.ClBrack || type == TokenType.ClBrace;
-    private static bool Matches(byte op, byte cl)
+    private static bool ClosureMatches(byte op, byte cl)
     {
         if (op == TokenType.OpParen && cl == TokenType.ClParen) return true;
         if (op == TokenType.OpBrack && cl == TokenType.ClBrack) return true;

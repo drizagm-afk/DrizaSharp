@@ -132,6 +132,7 @@ public sealed class TASI
             firstChildId ?? node.FirstChildId, nextSiblingId ?? node.NextSiblingId
         );
     }
+    
     public int AddNode(int start, int length, TASIInfo info)
     => AddNode(0, 0, start, length, info);
     public int AddNode(int parentId, int index, int start, int length, TASIInfo info)
@@ -149,15 +150,6 @@ public sealed class TASI
         }
         return NewChild(parentId, nestId, prevId, nextId);
     }
-
-    public ref readonly TASIInfo InfoAt(int nodeId)
-    {
-        if (nodeId < 0 || nodeId >= _nodeCount)
-            throw new Exception($"Node Info not found in TASI: node={nodeId}");
-
-        return ref _nodeInfos[nodeId];
-    }
-
     private int NewChild
     (int parentId, int nestId, int prevId, int nextId)
     {
@@ -166,6 +158,15 @@ public sealed class TASI
         else Update(parentId, firstChildId: nestId);
 
         return nestId;
+    }
+
+    //**NODE INFO**
+    public ref readonly TASIInfo InfoAt(int nodeId)
+    {
+        if (nodeId < 0 || nodeId >= _nodeCount)
+            throw new Exception($"Node Info not found in TASI: node={nodeId}");
+
+        return ref _nodeInfos[nodeId];
     }
 }
 

@@ -10,7 +10,6 @@ public abstract class RuleInstance
     //MATCH
     public TokenSpan Span;
     public RuleInstance? Parent { get; internal set; }
-    internal bool IsRewritten = false;
 
     internal void Build(BuildContext ctx) => OnBuild(ctx);
     protected abstract void OnBuild(BuildContext ctx);

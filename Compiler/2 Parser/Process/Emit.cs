@@ -25,7 +25,7 @@ public partial class ParserProcess
         }
 
         //NON-RULE EMIT
-        if (!Site._ruleAppliance.TryGetValue(node.Id, out var inst) || inst.IsRewritten)
+        if (!Site._ruleAppliance.TryGetValue(node.Id, out var inst) || TAST.InfoAt(node.Id).IsRewritten)
         {
             var childExists = TAST.TryNodeAt(node.FirstChildId, out var child);
             while (childExists)

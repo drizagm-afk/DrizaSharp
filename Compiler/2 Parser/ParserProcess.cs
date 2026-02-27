@@ -59,16 +59,20 @@ public partial class ParserProcess
         //FLAT CHILDREN
         while (Nodes.Count > 0)
         {
-            TAST.Children(Nodes.Pop(), i =>
+            ref readonly var node = ref TAST.NodeAt(Nodes.Pop());
+            var childExists = TAST.TryNodeAt(node.FirstChildId, out var child);
+
+            while (childExists)
             {
-                ref readonly var child = ref TAST.NodeAt(i);
                 if (child.IsFlat())
                 {
                     if (IsNodeSite(TAST, child.Id, _phaseCode))
-                        action(i);
+                        action(child.Id);
                 }
-                else Nodes.Push(i);
-            });
+                else Nodes.Push(child.Id);
+
+                childExists = TAST.TryNodeAt(child.NextSiblingId, out child);
+            }
         }
     }
     private static bool IsNodeSite(TAST TAST, int nodeId, int phase)
