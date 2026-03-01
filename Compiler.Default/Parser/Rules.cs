@@ -1,4 +1,3 @@
-using DrzSharp.Compiler.Default.Lexer;
 using DrzSharp.Compiler.Default.Lowerer;
 using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Parser;

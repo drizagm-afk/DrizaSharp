@@ -5,7 +5,7 @@ namespace DrzSharp.Compiler.Parser;
 public abstract class RuleInstance
 {
     internal int RuleId;
-    public int NodeId = -1;
+    public int NodeId { get; internal set; } = -1;
 
     //MATCH
     public TokenSpan Span;

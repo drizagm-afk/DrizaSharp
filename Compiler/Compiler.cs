@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using DrzSharp.Compiler.Project;
 
 namespace DrzSharp.Compiler;
 
@@ -11,7 +10,7 @@ public static partial class Compiler
         Default.Bindings.Bind();
         sw.Stop();
 
-        Console.WriteLine("BINDING TIME: " + sw.Elapsed.TotalMilliseconds);
+        Console.WriteLine($"BINDING TIME: {sw.Elapsed.TotalMilliseconds:F4}");
     }
     public static void Compile(string root, string target)
     {
@@ -37,7 +36,8 @@ public static partial class Compiler
         sw.Stop();
         ShowProcessTime(procTime);
 
-        Debug(proj);
+        var debug = Debug(proj);
+        File.WriteAllText(Path.Combine(root, ".dzdiag"), debug);
     }
 
     public static void ShowProcessTime(List<(string, double)> procTime)
@@ -45,10 +45,10 @@ public static partial class Compiler
         double total = 0;
         foreach (var (name, time) in procTime)
         {
-            Console.WriteLine(name + " TIME: " + (time - total));
+            Console.WriteLine($"{name} TIME: {time - total:F4}");
             total = time;
         }
 
-        Console.WriteLine("COMPILING TIME: " + total);
+        Console.WriteLine($"COMPILING TIME: {total:F4}");
     }
 }

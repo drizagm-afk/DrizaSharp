@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace DrzSharp.Compiler
 {
@@ -12,6 +13,23 @@ namespace DrzSharp.Compiler
 
 namespace DrzSharp.Compiler.Text
 {
+    public static class StringExt
+    {
+        public static string Repeat(this string value, int count)
+        {
+            if (count <= 0) return string.Empty;
+            if (count == 1) return value;
+
+            var sb = new StringBuilder(value.Length * count);
+            for (int i = 0; i < count; i++)
+                sb.Append(value);
+
+            return sb.ToString();
+        }
+        public static string Repeat(this char value, int count)
+        => new(value, count);
+    }
+
     public readonly struct SourceSpan
     {
         public SourceSpan(string source) : this(source, 0) { }

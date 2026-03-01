@@ -34,7 +34,7 @@ public partial class LexerProcess
         var cont = File.Content;
 
         //STARTING NEWLINE
-        NewToken(Token.NEWLINE, -1, -1);
+        NewToken(Token.NEWLINE, -1, 1);
 
         //LOOP
         iter = 0;
@@ -85,7 +85,7 @@ public partial class LexerProcess
 
         //ENDING NEWLINE
         if (LastToken().Type != Token.NEWLINE)
-            NewToken(Token.NEWLINE, -1, -1);
+            NewToken(Token.NEWLINE, -2, 1);
 
         //BUILD FLAT-TAST
         TAST.BuildFlatTAST();
