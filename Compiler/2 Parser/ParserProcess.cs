@@ -4,98 +4,48 @@ using DrzSharp.Compiler.Project;
 
 namespace DrzSharp.Compiler.Parser;
 
+public enum ParserPhase { SYNTACTIC, SEMANTIC }
 public partial class ParserProcess
 {
     //===== PARSING PROCESS =====
-    private DzProject Project = null!;
-    private byte _phaseCode = 0;
-
     public void ParseProject(DzProject project)
     {
-        for (byte i = 0; i < ParserManager._phases.Length; i++)
-            ParseProject(project, i);
+        ParseProject(project, ParserPhase.SYNTACTIC);
+        ParseProject(project, ParserPhase.SEMANTIC);
     }
-    public void ParseProject(DzProject project, byte phaseCode)
+    public void ParseProject(DzProject project, ParserPhase phase)
     {
-        Project = project;
-        _phaseCode = phaseCode;
+        foreach (var file in project.Files)
+            ParseFile(file, phase);
+    }
 
-        foreach (var file in Project.Files)
-            RegisterFileSites(file);
-
-        ParserManager._phases[phaseCode].phase(this);
-
-        Reset();
+    public void ParseFile(DzFile file)
+    {
+        ParseFile(file, ParserPhase.SYNTACTIC);
+        ParseFile(file, ParserPhase.SEMANTIC);
+    }
+    public void ParseFile(DzFile file, ParserPhase phase)
+    {
+        //SYNTACTIC
+        if (phase == ParserPhase.SYNTACTIC)
+            Match(file);
+        //SEMANTIC
+        else
+        {
+            Validate(file);
+            Emit(file);
+        }
     }
 
     public void Reset()
     {
-        Site = null!;
-        _sites.Clear();
-    }
-
-    //FIND SITES
-    private readonly List<ParserSite> _sites = [];
-
-    private void RegisterFileSites(DzFile file)
-    {
-        PerFileSite(file, i => _sites.Add(new(_sites.Count, file.Id, i)));
-    }
-    private void PerFileSite(DzFile file, Action<int> action)
-    {
-        var TAST = file.TAST;
-        var root = TAST.Root;
-
-        Stack<int> Nodes = [];
-        Nodes.Push(root.Id);
-
-        //FLAT ROOT
-        if (root.IsFlat() && IsNodeSite(TAST, root.Id, _phaseCode))
-        {
-            action(root.Id);
-            return;
-        }
-
-        //FLAT CHILDREN
-        while (Nodes.Count > 0)
-        {
-            ref readonly var node = ref TAST.NodeAt(Nodes.Pop());
-            var childExists = TAST.TryNodeAt(node.FirstChildId, out var child);
-
-            while (childExists)
-            {
-                if (child.IsFlat())
-                {
-                    if (IsNodeSite(TAST, child.Id, _phaseCode))
-                        action(child.Id);
-                }
-                else Nodes.Push(child.Id);
-
-                childExists = TAST.TryNodeAt(child.NextSiblingId, out child);
-            }
-        }
-    }
-    private static bool IsNodeSite(TAST TAST, int nodeId, int phase)
-    => TAST.ArgsAt(nodeId).OutCode == phase;
-
-    public void ForeachSite(Action<ParserSite> action)
-    {
-        foreach (var site in _sites)
-            action(site);
+        File = null!;
     }
 
     //===== PARSER PHASE =====
-    private ParserSite Site = null!;
-    private DzFile File => Project.Files[Site.FileId];
+    private DzFile File = null!;
 
     private GroupDiagnostics Diagnostics => File.Diagnostics.Parser;
     private TAST TAST => File.TAST;
     private TASI TASI => File.TASI;
-}
-
-public partial class ParserSite(int siteId, int fileId, int rootId)
-{
-    public readonly int SiteId = siteId;
-    public readonly int FileId = fileId;
-    public readonly int RootId = rootId;
 }

@@ -4,8 +4,6 @@ namespace DrzSharp.Compiler.Parser;
 
 public interface Context
 {
-    public byte PhaseCode { get; }
-
     public R GetRule<R>() where R : Rule;
     public int GetRuleId<R>() where R : Rule;
     public R GetRule<R>(int id) where R : Rule;
@@ -28,8 +26,6 @@ public interface Context
 public partial class ParserProcess : Context
 {
     //**PARSING PROCESS**
-    public byte PhaseCode => _phaseCode;
-
     public R GetRule<R>() where R : Rule
     => ParserManager.GetRule<R>();
     public int GetRuleId<R>() where R : Rule

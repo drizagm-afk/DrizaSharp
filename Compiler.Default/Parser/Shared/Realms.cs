@@ -1,13 +1,13 @@
-using DrzSharp.Compiler.Model;
+using DrzSharp.Compiler.Parser;
 
 namespace DrzSharp.Compiler.Default.Parser;
 
 public static class Realms
 {
     //VIRTUAL PHASE
-    public static RealmId Virtual { get; internal set; }
+    public const int VIRTUAL = ParserRealms.VIRTUAL;
 
     //LOGIC PHASE
-    public static RealmId ASMLogic { get; internal set; }
-    public static RealmId Logic { get; internal set; }
+    public static int ASMLogic { get; internal set; }
+    public static int Logic { get; internal set; }
 }

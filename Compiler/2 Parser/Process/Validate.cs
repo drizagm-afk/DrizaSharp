@@ -1,4 +1,5 @@
 using DrzSharp.Compiler.Model;
+using DrzSharp.Compiler.Project;
 
 namespace DrzSharp.Compiler.Parser;
 
@@ -10,10 +11,11 @@ public partial class ParserProcess
     => !_validatedNodes.Add(nodeId);
 
     //===== EXECUTE VALIDATING =====
-    public void Validate(ParserSite site)
+    public void Validate(DzFile file)
     {
-        Site = site;
-        Validate(site.RootId);
+        File = file;
+        Validate(TAST.Root);
+        
         //END
         _validatedNodes.Clear();
         _scope.Clear();
@@ -21,12 +23,12 @@ public partial class ParserProcess
     }
     private void Validate(in TASTNode node)
     {
-        if (TAST.ArgsAt(node.Id).OutCode != _phaseCode || IsValidated(node.Id)) return;
+        if (IsValidated(node.Id)) return;
 
         //VALIDATE
-        if (TAST.ArgsAt(node.Id).IsScoped) EnterScope();
+        if (TAST.InfoAt(node.Id).IsScoped) EnterScope();
 
-        if (Site._ruleAppliance.TryGetValue(node.Id, out var inst))
+        if (TAST.TryGetApplyRule(node.Id, out var inst))
         {
             RuleInst = inst;
             try { inst.Validate(this); }
@@ -47,6 +49,6 @@ public partial class ParserProcess
             childExists = TAST.TryNodeAt(child.NextSiblingId, out child);
         }
 
-        if (TAST.ArgsAt(node.Id).IsScoped) ExitScope();
+        if (TAST.InfoAt(node.Id).IsScoped) ExitScope();
     }
 }

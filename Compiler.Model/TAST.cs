@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using DrzSharp.Compiler.Text;
 
 namespace DrzSharp.Compiler.Model;
@@ -237,17 +238,10 @@ public sealed class TAST(SourceSpan source)
 
         return ref _nodeInfos[nodeId];
     }
-    public TASTArgs ArgsAt(int nodeId)
-    {
-        if (nodeId < 0 || nodeId >= _nodeCount)
-            throw new Exception($"Node Args not found in TAST: node={nodeId}");
-
-        return _nodeInfos[nodeId].Args;
-    }
-    public void UpdateInfo(int nodeId, TASTArgs? args = null, int? ruleId = null, bool? isRewritten = null, TASTEmit? emitId = null)
+    public void UpdateInfo(int nodeId, int? realmId = null, bool? isScoped = null, bool? isRewritten = null)
     {
         ref readonly var info = ref InfoAt(nodeId);
-        _nodeInfos[nodeId] = new(args ?? info.Args, ruleId ?? info.RuleId, isRewritten ?? info.IsRewritten, emitId ?? info.EmitId);
+        _nodeInfos[nodeId] = new(realmId ?? info.RealmId, isScoped ?? info.IsScoped, isRewritten ?? info.IsRewritten);
     }
 
     //**NODE CURSOR METHODS**
@@ -417,6 +411,22 @@ public sealed class TAST(SourceSpan source)
         }
         return false;
     }
+
+    //**NODE INSTANCES**
+    private Dictionary<int, Parser.RuleInstance> _ruleAppliance = [];
+    public bool TryGetApplyRule(int nodeId, [NotNullWhen(true)] out Parser.RuleInstance? instance)
+    => _ruleAppliance.TryGetValue(nodeId, out instance);
+    public Parser.RuleInstance GetApplyRule(int nodeId)
+    => _ruleAppliance[nodeId];
+    public void ApplyRule(int nodeId, Parser.RuleInstance instance)
+    => _ruleAppliance[nodeId] = instance;
+
+    //**NODE ATTRIBUTES**
+    private readonly HashSet<AttrKey> _attributes = [];
+    public bool StoreAttr(int nodeId, string attr)
+    => _attributes.Add(new(nodeId, attr));
+    public bool HasAttr(int nodeId, string attr)
+    => _attributes.Contains(new(nodeId, attr));
 }
 
 //===== TOKENS =====
@@ -488,32 +498,11 @@ public readonly struct TokenSpan
 
 //===== NODE INFO =====
 public readonly struct TASTInfo
-(TASTArgs args, int ruleId = -1, bool isRewritten = false, TASTEmit emitId = new())
+(int realmId, bool isScoped = false, bool isRewritten = false)
 {
-    public readonly TASTArgs Args = args;
-    public readonly int RuleId = ruleId;
-    public readonly bool IsRewritten = isRewritten;
-    public readonly TASTEmit EmitId = emitId;
-}
-
-public readonly struct TASTArgs
-(byte outCode, byte realmCode, bool isScoped)
-{
-    public readonly byte OutCode = outCode;
-    public readonly byte RealmCode = realmCode;
+    public readonly int RealmId = realmId;
     public readonly bool IsScoped = isScoped;
-
-    public TASTArgs With(byte? outCode = 0, byte? realmCode = null, bool? isScoped = null)
-    => new(outCode ?? OutCode, realmCode ?? RealmCode, isScoped ?? IsScoped);
-    public RealmId RealmId => new(OutCode, RealmCode);
-}
-public readonly struct RealmId(byte phaseCode, byte realmCode)
-{
-    public readonly byte PhaseCode = phaseCode;
-    public readonly byte RealmCode = realmCode;
-
-    public bool Equals(RealmId other)
-    => PhaseCode == other.PhaseCode && RealmCode == other.RealmCode;
+    public readonly bool IsRewritten = isRewritten;
 }
 
 public readonly struct TASTEmit(int parentId, int index)
@@ -522,3 +511,7 @@ public readonly struct TASTEmit(int parentId, int index)
     public readonly int Index = index;
     public readonly bool IsValid = true;
 }
+
+//===== NODE ATTRIBUTES =====
+internal readonly record struct AttrKey
+(int NodeId, string Attr);

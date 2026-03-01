@@ -6,8 +6,8 @@ namespace DrzSharp.Compiler.Default.Parser;
 
 public static class TokenPatterns
 {
-    public static TokenPattern TNewline(this TokenPattern inst, string? val = null, string? captureTag = null)
-    => inst.Token(TokenType.Newline, val, captureTag);
+    public static TokenPattern TNewline(this TokenPattern inst, string? captureTag = null)
+    => inst.Token(TokenType.NEWLINE, null, captureTag);
     public static TokenPattern TOperator(this TokenPattern inst, string? val = null, string? captureTag = null)
     => inst.Token(TokenType.Operator, val, captureTag);
     public static TokenPattern TKeyword(this TokenPattern inst, string? val = null, string? captureTag = null)

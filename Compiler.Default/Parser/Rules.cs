@@ -12,7 +12,7 @@ public class EntryPointRule : Rule<EntryPoint>
 
     public EntryPointRule()
     {
-        SetRealm(Realms.Virtual);
+        SetRealm(Realms.VIRTUAL);
         SetPattern(
             new TokenPattern()
                 .THashPrefix("#RUN")

@@ -1,31 +1,22 @@
 using DrzSharp.Compiler.Model;
+using DrzSharp.Compiler.Project;
 
 namespace DrzSharp.Compiler.Parser;
 
 public partial class ParserProcess
 {
     //===== EXECUTE EMIT =====
-    public void Emit(ParserSite site)
+    public void Emit(DzFile file)
     {
-        Site = site;
-
-        if (site.RootId == TAST.RootId)
-            Emit(site.RootId, new());
-        else
-            Emit(site.RootId, TAST.InfoAt(site.RootId).EmitId);
+        File = file;
+        Emit(TAST.Root, new());
     }
     private void Emit(int nodeId, TASTEmit emitId)
     => Emit(TAST.NodeAt(nodeId), emitId);
     private void Emit(in TASTNode node, TASTEmit emitId)
     {
-        if (TAST.ArgsAt(node.Id).OutCode != PhaseCode)
-        {
-            TAST.UpdateInfo(node.Id, emitId: emitId);
-            return;
-        }
-
         //NON-RULE EMIT
-        if (!Site._ruleAppliance.TryGetValue(node.Id, out var inst) || TAST.InfoAt(node.Id).IsRewritten)
+        if (!TAST.TryGetApplyRule(node.Id, out var inst) || TAST.InfoAt(node.Id).IsRewritten)
         {
             var childExists = TAST.TryNodeAt(node.FirstChildId, out var child);
             while (childExists)

@@ -195,7 +195,7 @@ public readonly struct TASINode(
 
 //===== NODE INFO =====
 public readonly struct TASIInfo
-(int sourceId)
+(int sourceNodeId)
 {
-    public readonly int SourceId = sourceId;
+    public readonly int SourceNodeId = sourceNodeId;
 }

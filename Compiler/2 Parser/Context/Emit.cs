@@ -34,7 +34,7 @@ public partial class ParserProcess : EmitContext
         var emitNodeId = TASI.AddNode(
             emitId.ParentId, emitId.Index,
             _instructCount, count - _instructCount,
-            new(RuleInst.RuleId)
+            new(RuleInst.NodeId)
         );
         _instructCount = count;
 

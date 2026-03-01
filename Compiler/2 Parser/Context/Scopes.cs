@@ -63,7 +63,7 @@ public partial class ParserProcess : INodeTags, INodeAttrs
     where R : RuleInstance
     {
         inst = null;
-        if (!TryFindTag(tagType, tag, out var nodeId) || !Site._ruleAppliance.TryGetValue(nodeId, out var rinst))
+        if (!TryFindTag(tagType, tag, out var nodeId) || !TAST.TryGetApplyRule(nodeId, out var rinst))
             return false;
 
         Debug.Assert(rinst is R);
@@ -73,7 +73,7 @@ public partial class ParserProcess : INodeTags, INodeAttrs
     public R ResolveTag<R>(string tagType, string tag)
     where R : RuleInstance
     {
-        if (!Site._ruleAppliance.TryGetValue(FindTag(tagType, tag), out var inst))
+        if (!TAST.TryGetApplyRule(FindTag(tagType, tag), out var inst))
             throw new Exception($"TAG INSTANCE NOT FOUND: tagType={tagType}, tag={tag}");
 
         Debug.Assert(inst is R);
@@ -87,12 +87,12 @@ public partial class ParserProcess : INodeTags, INodeAttrs
 
     //ATTRIBUTES
     public void StoreAttr(string attr)
-    => Site.StoreAttr(RuleInst!.NodeId, attr);
+    => TAST.StoreAttr(RuleInst!.NodeId, attr);
 
     public bool HasAttr(string attr)
     => TryFindScopedAttr(attr, out _);
     public bool HasAttr(int nodeId, string attr)
-    => Site.HasAttr(nodeId, attr);
+    => TAST.HasAttr(nodeId, attr);
 
     public bool TryFindAttr(string attr, out int nodeId)
     => TryFindScopedAttr(attr, out nodeId);
@@ -108,7 +108,7 @@ public partial class ParserProcess : INodeTags, INodeAttrs
     where R : RuleInstance
     {
         inst = null;
-        if (!TryFindAttr(attr, out var nodeId) || !Site._ruleAppliance.TryGetValue(nodeId, out var rinst))
+        if (!TryFindAttr(attr, out var nodeId) || !TAST.TryGetApplyRule(nodeId, out var rinst))
             return false;
 
         Debug.Assert(rinst is R);
@@ -118,7 +118,7 @@ public partial class ParserProcess : INodeTags, INodeAttrs
     public R ResolveAttr<R>(string attr)
     where R : RuleInstance
     {
-        if (!Site._ruleAppliance.TryGetValue(FindAttr(attr), out var inst))
+        if (!TAST.TryGetApplyRule(FindAttr(attr), out var inst))
             throw new Exception($"ATTRIBUTE INSTANCE NOT FOUND: attr={attr}");
 
         Debug.Assert(inst is R);

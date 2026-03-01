@@ -5,8 +5,12 @@ namespace DrzSharp.Compiler.Parser;
 public static class Binding
 {
     //REALMS
-    public static RealmId AddRealm(byte phaseCode)
-    => new(phaseCode, ParserManager._phases[phaseCode].realmCount++);
+    public static int AddRealm(string realmName)
+    {
+        int id = ParserManager.Realms.Count;
+        ParserManager.Realms.Add(realmName);
+        return id;
+    }
 
     //RULES
     public static void BindRule<R>() where R : Rule, new()

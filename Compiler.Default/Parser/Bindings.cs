@@ -13,10 +13,8 @@ public static class Bindings
     //REALMS
     private static void BindRealms()
     {
-        Realms.Virtual = Binding.AddRealm(Phases.VIRTUAL);
-
-        Realms.ASMLogic = Binding.AddRealm(Phases.LOGIC);
-        Realms.Logic = Binding.AddRealm(Phases.LOGIC);
+        Realms.ASMLogic = Binding.AddRealm("ASMLogic");
+        Realms.Logic = Binding.AddRealm("Logic");
     }
 
     //RULES

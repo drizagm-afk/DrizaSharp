@@ -13,12 +13,6 @@ namespace DrzSharp.Compiler
             lex.LexProject(project);
             lex.EndProcess();
         }
-        public static void LexFile(DzFile file)
-        {
-            var lex = NewLexer();
-            lex.LexFile(file);
-            lex.EndProcess();
-        }
     }
 }
 

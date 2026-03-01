@@ -18,23 +18,14 @@ namespace DrzSharp.Compiler
 
 namespace DrzSharp.Compiler.Parser
 {
-    internal static class RuleManager
-    {
-
-    }
     internal static class ParserManager
     {
         //PROCESSES
         public static ParserProcess NewProcess() => new();
         public static void EndProcess(this ParserProcess process) { }
 
-        //===== PHASES =====
-        public static ParserPhase[] _phases = [
-            new(Phases.VirtualPhase),
-            new(Phases.LogicPhase)
-        ];
-
         //===== RULES =====
+        public static readonly List<string> Realms = ["Virtual"];
         public static readonly List<RuleInfo> _ruleInfos = [];
         public static readonly Dictionary<Type, int> _rulesByType = [];
 
@@ -51,7 +42,7 @@ namespace DrzSharp.Compiler.Parser
         public static string? GetRuleName(int id)
         => _ruleInfos[id].RuleName;
 
-        //MONO RULES
+        //RULE MONOS
         public static readonly List<Rule> _rules = [];
 
         public static R GetRule<R>() where R : Rule
@@ -89,36 +80,9 @@ namespace DrzSharp.Compiler.Parser
 
         public static int GetRuleClassId<C>() where C : RuleClass => _rulesByType[typeof(C)];
     }
-    public static class Phases
+    public static class ParserRealms
     {
-        public const byte VIRTUAL = 0;
-        public const byte LOGIC = 1;
-
-        //PHASE IMPLEMENTATIONS
-        internal static void VirtualPhase(ParserProcess proc)
-        {
-            proc.ForeachSite(proc.Match);
-            proc.ForeachSite(s =>
-            {
-                proc.Validate(s);
-                proc.Emit(s);
-            });
-        }
-
-        internal static void LogicPhase(ParserProcess proc)
-        {
-            proc.ForeachSite(s =>
-            {
-                proc.Match(s);
-                proc.Validate(s);
-                proc.Emit(s);
-            });
-        }
-    }
-    public class ParserPhase(Action<ParserProcess> phase)
-    {
-        internal readonly Action<ParserProcess> phase = phase;
-        internal byte realmCount = 0;
+        public const int VIRTUAL = 0;
     }
 
     public class RuleInfo(int ruleId, string ruleName, bool isClass)

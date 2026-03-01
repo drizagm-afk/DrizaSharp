@@ -9,7 +9,7 @@ public abstract class RuleInstance
 
     //MATCH
     public TokenSpan Span;
-    public RuleInstance? Parent { get; internal set; }
+    public RuleInstance? Caller { get; internal set; }
 
     internal void Build(BuildContext ctx) => OnBuild(ctx);
     protected virtual void OnBuild(BuildContext ctx) { }

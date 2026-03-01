@@ -52,7 +52,7 @@ public partial class ParserProcess
         bool hasScopeVar(int nodeId, out int id)
         {
             id = nodeId;
-            return Site.HasAttr(nodeId, attr);
+            return TAST.HasAttr(nodeId, attr);
         }
         bool findVarInSibling(int nodeId, int limit, out int id)
         {
@@ -67,7 +67,7 @@ public partial class ParserProcess
         }
         bool findVarInChildren(in TASTNode node, out int id)
         {
-            if (!TAST.ArgsAt(node.Id).IsScoped)
+            if (!TAST.InfoAt(node.Id).IsScoped)
             {
                 var childId = node.FirstChildId;
                 while (TAST.TryNodeAt(childId, out var child))
@@ -83,7 +83,7 @@ public partial class ParserProcess
         {
             if (hasScopeVar(node.Id, out id))
                 return true;
-            else if (node.Id != Site.RootId && TAST.TryNodeAt(node.ParentId, out var parent))
+            else if (TAST.TryNodeAt(node.ParentId, out var parent))
             {
                 if (findVarInSibling(parent.FirstChildId, node.Id, out id)
                 || findVarInNode(parent, out id))
@@ -96,15 +96,3 @@ public partial class ParserProcess
 }
 internal readonly record struct TagKey
 (string TagType, string Tag);
-
-public partial class ParserSite
-{
-    //ATTRIBUTES
-    private readonly HashSet<AttrKey> _attributes = [];
-    public bool StoreAttr(int nodeId, string attr)
-    => _attributes.Add(new(nodeId, attr));
-    public bool HasAttr(int nodeId, string attr)
-    => _attributes.Contains(new(nodeId, attr));
-}
-internal readonly record struct AttrKey
-(int NodeId, string Attr);

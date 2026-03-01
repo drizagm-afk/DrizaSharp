@@ -11,9 +11,9 @@ public abstract class RuleBase
     private protected void SetAbstract() => IsAbstract = true;
 
     //PARSER
-    private RealmId RealmId;
-    private protected void SetRealm(RealmId realmId) => RealmId = realmId;
-    public virtual bool Evals(RealmId realmId) => realmId.Equals(RealmId);
+    private int RealmId;
+    private protected void SetRealm(int realmId) => RealmId = realmId;
+    public virtual bool Evals(int realmId) => realmId == RealmId;
 
     internal TokenPattern[] Patterns = [];
     private protected void SetPatterns(params TokenPattern[] patterns) => Patterns = patterns;

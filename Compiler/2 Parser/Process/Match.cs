@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using DrzSharp.Compiler.Model;
+using DrzSharp.Compiler.Project;
 
 namespace DrzSharp.Compiler.Parser;
 
@@ -25,10 +26,10 @@ public partial class ParserProcess
     internal void DropMemos() => _ruleMemoization.Clear();
 
     //===== EXECUTE MATCHING =====
-    public void Match(ParserSite site)
+    public void Match(DzFile file)
     {
-        Site = site;
-        Match(site.RootId);
+        File = file;
+        Match(TAST.RootId);
     }
     private void Match(int nodeId)
     {
@@ -44,7 +45,7 @@ public partial class ParserProcess
                 var rule = ParserManager._rules[r];
 
                 if (rule.IsAbstract) continue;
-                if (!rule.Evals(TAST.ArgsAt(node.Id).RealmId)) continue;
+                if (!rule.Evals(TAST.InfoAt(node.Id).RealmId)) continue;
 
                 //TRY MATCH
                 InitMatch();
@@ -99,7 +100,7 @@ public partial class ParserProcess
 
         //NESTING MEMOIZATION CHECK (REWRITE ONLY)
         if (TAST.TryGetNest(span, out var nestId)
-        && Site._ruleAppliance.TryGetValue(nestId, out inst)
+        && TAST.TryGetApplyRule(nestId, out inst)
         && inst.RuleId.Equals(rule.Id))
         {
             inst.Span = span.With(length: inst.Span.Length);

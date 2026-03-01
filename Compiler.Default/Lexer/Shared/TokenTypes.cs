@@ -4,7 +4,7 @@ namespace DrzSharp.Compiler.Default.Lexer;
 
 public static class TokenType
 {
-    public static byte Newline => Token.NEWLINE;
+    public const byte NEWLINE = Token.NEWLINE;
     public static byte Operator { get; internal set; }
     public static byte Keyword { get; internal set; }
 

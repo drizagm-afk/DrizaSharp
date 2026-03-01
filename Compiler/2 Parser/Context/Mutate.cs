@@ -12,10 +12,7 @@ public partial class ParserProcess : MutateContext
 {
     //UPDATE
     public void SetScoped()
-    {
-        var id = RuleInst!.NodeId;
-        TAST.UpdateInfo(id, args: TAST.ArgsAt(id).With(isScoped: true));
-    }
+    => TAST.UpdateInfo(RuleInst!.NodeId, isScoped: true);
 
     //REWRITE
     public void Rewrite(RewriteToken[] tokens, int[] fillNodes, params int[] rules)
