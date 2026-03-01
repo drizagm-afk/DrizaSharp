@@ -7,7 +7,7 @@ public static partial class Virtual
 {
     public static void Bind()
     {
-        EntryPoint.Id = Binding.BindRule(EntryPoint.Rule);
+        EntryPoint.Id = Binding.BindRule(Rules.EntryPoint);
     }
 }
 

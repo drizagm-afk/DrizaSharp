@@ -17,6 +17,7 @@ public abstract class RuleBase
 
     internal TokenPattern[] Patterns = [];
     private protected void SetPatterns(params TokenPattern[] patterns) => Patterns = patterns;
+    private protected void SetPattern(TokenPattern pattern) => Patterns = [pattern];
 
     internal abstract void Instantiate(MatchView view, RuleInstance instance);
 }
@@ -32,7 +33,7 @@ public abstract class Rule<T> : Rule where T : RuleInstance, new()
     internal sealed override RuleInstance NewInstance() => new T() { RuleId = Id };
     internal sealed override void Instantiate(MatchView view, RuleInstance instance)
     => OnInstantiate(view, (T)instance);
-    protected abstract void OnInstantiate(MatchView view, T instance);
+    protected virtual void OnInstantiate(MatchView view, T instance) { }
 }
 
 //RULE CLASS
@@ -44,5 +45,5 @@ public abstract class RuleClass<T> : RuleClass where T : RuleInstance, new()
 {
     internal sealed override void Instantiate(MatchView view, RuleInstance instance)
     => OnInstantiate(view, (T)instance);
-    protected abstract void OnInstantiate(MatchView view, T instance);
+    protected virtual void OnInstantiate(MatchView view, T instance) { }
 }

@@ -1,3 +1,4 @@
+using DrzSharp.Compiler.Default.Lexer;
 using DrzSharp.Compiler.Default.Lowerer;
 using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Parser;
@@ -12,7 +13,7 @@ public class EntryPointRule : Rule<EntryPoint>
     public EntryPointRule()
     {
         SetRealm(Realms.Virtual);
-        SetPatterns(
+        SetPattern(
             new TokenPattern()
                 .THashPrefix("#RUN")
                 .TKeyword("ASM")
@@ -35,7 +36,6 @@ public class EntryPoint : RuleInstance
     {
         Body = ctx.NestSpan(_body, Realms.ASMLogic);
     }
-    protected override void OnValidate(ValidateContext ctx) { }
     protected override void OnEmit(EmitContext ctx)
     {
         Virtual.EntryPoint.New(ctx, NodeId);
@@ -51,7 +51,7 @@ public class ASMLoadStrRule : Rule<ASMLoadStr>
     public ASMLoadStrRule()
     {
         SetRealm(Realms.ASMLogic);
-        SetPatterns(
+        SetPattern(
             new TokenPattern()
                 .TKeyword("ldstr")
                 .TString(captureTag: CONTENT)
@@ -66,8 +66,6 @@ public class ASMLoadStr : RuleInstance
 {
     internal Token cont;
 
-    protected override void OnBuild(BuildContext ctx) { }
-    protected override void OnValidate(ValidateContext ctx) { }
     protected override void OnEmit(EmitContext ctx)
     {
         Logic.Ldstr.New(ctx, NodeId, ctx.GetText(cont.Id));
@@ -80,17 +78,14 @@ public class ASMPrintRule : Rule<ASMPrint>
     public ASMPrintRule()
     {
         SetRealm(Realms.ASMLogic);
-        SetPatterns(
+        SetPattern(
             new TokenPattern()
                 .TKeyword("print")
         );
     }
-    protected override void OnInstantiate(MatchView view, ASMPrint instance) { }
 }
 public class ASMPrint : RuleInstance
 {
-    protected override void OnBuild(BuildContext ctx) { }
-    protected override void OnValidate(ValidateContext ctx) { }
     protected override void OnEmit(EmitContext ctx)
     {
         Logic.Print.New(ctx, NodeId);
@@ -103,17 +98,14 @@ public class ASMReturnRule : Rule<ASMReturn>
     public ASMReturnRule()
     {
         SetRealm(Realms.ASMLogic);
-        SetPatterns(
+        SetPattern(
             new TokenPattern()
                 .TKeyword("ret")
         );
     }
-    protected override void OnInstantiate(MatchView view, ASMReturn instance) { }
 }
 public class ASMReturn : RuleInstance
 {
-    protected override void OnBuild(BuildContext ctx) { }
-    protected override void OnValidate(ValidateContext ctx) { }
     protected override void OnEmit(EmitContext ctx)
     {
         Logic.Ret.New(ctx, NodeId);

@@ -1,4 +1,3 @@
-using System.Data.SqlTypes;
 using DrzSharp.Compiler.Model;
 
 namespace DrzSharp.Compiler.Parser;
@@ -72,5 +71,6 @@ public readonly struct RewriteToken(byte type, string content)
     public readonly byte Type = type;
     public readonly string Content = content;
 
-    public bool IsNull => Content is null;
+    public RewriteToken(byte type) : this(type, "") {}
+    public bool IsNull => Type == Token.NULL;
 }
