@@ -13,11 +13,11 @@ namespace DrzSharp.Compiler
 {
     public static partial class Compiler
     {
-        public static string Debug(DzProject project)
-        => new Render().DebugProject(project);
+        public static void Debug(DzProject project, Config config)
+        => new Render().DebugProject(project, config);
 
-        public static string Debug(DzFile file)
-        => new Render().DebugFile(file);
+        public static void Debug(DzFile file, Config config)
+        => new Render().DebugFile(file, config);
     }
 }
 
@@ -25,20 +25,47 @@ namespace DrzSharp.Compiler.Diagnostics
 {
     public class Render
     {
+        private Config Config = null!;
         private StringBuilder Stream = null!;
-        private DebugSource Source = null!;
-        private DzFile File = null!;
 
-        public string DebugProject(DzProject project)
-        => string.Join("\n", project.Files.Select(DebugFile));
-        public string DebugFile(DzFile file)
+        private DzFile File = null!;
+        private TAST TAST => File.TAST;
+        private TASI TASI => File.TASI;
+
+        private DebugSource Source = null!;
+
+        public void DebugProject(DzProject project, Config config)
         {
-            File = file;
+            Config = config;
             Stream = new();
+
+            foreach (var file in project.Files)
+            {
+                File = file;
+                Source = new(file.Content, Stream);
+
+                Debug();
+                Stream.AppendLine();
+            }
+            RenderDebug();
+        }
+        public void DebugFile(DzFile file, Config config)
+        {
+            Config = config;
+            Stream = new();
+
+            File = file;
             Source = new(File.Content, Stream);
 
             Debug();
-            return Stream.ToString();
+            RenderDebug();
+        }
+        private void RenderDebug()
+        {
+            if (Config.Output == OutputMode.CONSOLE)
+                Console.WriteLine(Stream.ToString());
+            else
+                System.IO.File.WriteAllText(@"C:\Driza\DrizaSharp\.dzdiag", Stream.ToString());
         }
 
         public void WriteLine(string? cont = null)
@@ -70,20 +97,48 @@ namespace DrzSharp.Compiler.Diagnostics
 
             WriteLine();
             //LEXER
-            printTitle("LEXER DIAGNOSTICS");
-            DebugTokens(File.TAST);
-            DebugLogs("Lexer", File.Diagnostics.Lexer);
+            {
+                var showStruct = Config.Lexer.ShowTokenList;
+                var showLogs = Config.Lexer.ShowLogs;
+
+                if (showStruct || showLogs)
+                    printTitle("LEXER DIAGNOSTICS");
+
+                if (showStruct)
+                    DebugTokens();
+                if (showLogs)
+                    DebugLogs("Lexer", File.Diagnostics.Lexer);
+            }
             //PARSER
-            printTitle("PARSER DIAGNOSTICS");
-            DebugTAST(File.TAST);
-            DebugLogs("Parser", File.Diagnostics.Parser);
+            {
+                var showStruct = Config.Parser.ShowTAST != TASTMode.Hidden;
+                var showLogs = Config.Parser.ShowLogs;
+
+                if (showStruct || showLogs)
+                    printTitle("PARSER DIAGNOSTICS");
+
+                if (showStruct)
+                    DebugTAST();
+                if (showLogs)
+                    DebugLogs("Parser", File.Diagnostics.Parser);
+            }
             //LOWERER
-            printTitle("LOWERER DIAGNOSTICS");
-            DebugLogs("Lowerer", File.Diagnostics.Lowerer);
+            {
+                var showStruct = Config.Lowerer.ShowTASI;
+                var showLogs = Config.Lowerer.ShowLogs;
+
+                if (showStruct || showLogs)
+                    printTitle("LOWERER DIAGNOSTICS");
+
+                if (showStruct)
+                    DebugTASI();
+                if (showLogs)
+                    DebugLogs("Lowerer", File.Diagnostics.Lowerer);
+            }
         }
 
         //DEBUG TOKENS
-        private void DebugTokens(TAST TAST)
+        private void DebugTokens()
         {
             WriteLine(">> BASE TOKENS: ");
 
@@ -120,7 +175,7 @@ namespace DrzSharp.Compiler.Diagnostics
         => WriteLine(GRAPH_TAB.Repeat(tabs) + cont);
 
         //DEBUG TAST
-        private void DebugTAST(TAST TAST)
+        private void DebugTAST()
         {
             WriteLine(">> TAST (Abstract Stratified Token Tree): ");
 
@@ -134,8 +189,8 @@ namespace DrzSharp.Compiler.Diagnostics
                 var newRealm = realms.Peek() != info.RealmId;
 
                 //HEADER
-                printHeader(node.Id, newRealm);
-                printContent(node);
+                var header = printHeader(node.Id, newRealm);
+                printContent(node, header);
 
                 //BODY
                 tabs++;
@@ -153,13 +208,11 @@ namespace DrzSharp.Compiler.Diagnostics
                 if (newRealm)
                     realms.Pop();
             }
-            void printHeader(int nodeId, bool newRealm)
+            string printHeader(int nodeId, bool newRealm)
             {
                 if (nodeId == 0)
-                {
-                    PrintGConn("VIRTUAL ROOT", tabs);
-                    return;
-                }
+                    return "VIRTUAL ROOT ";
+                
                 var info = TAST.InfoAt(nodeId);
                 string header = "";
 
@@ -172,19 +225,21 @@ namespace DrzSharp.Compiler.Diagnostics
                     header += "REWRITTEN ";
 
                 if (TAST.TryGetApplyRule(nodeId, out var inst))
-                    header += ParserManager.GetRuleName(inst.RuleId);
-                else
-                    header += "GROUP";
+                    header += ParserManager.GetRuleName(inst.RuleId) + " ";
 
-                PrintGConn(header, tabs);
+                return header;
             }
-            void printContent(in TASTNode node)
+            void printContent(in TASTNode node, string header)
             {
-                //**TEXT**
-                var start = TAST.TokenAt(node.Start);
-                var end = TAST.TokenAt(node.Start + node.Length - 1);
+                if (Config.Parser.ShowTAST == TASTMode.TextOriented)
+                {
+                    //**TEXT**
+                    var start = TAST.TokenAt(node.Start);
+                    var end = TAST.TokenAt(node.Start + node.Length - 1);
 
-                PrintGTab($"//Text: {Source.Interval(start.Start, end.Start + end.Length)}", tabs);
+                    PrintGConn($"{header} {Source.Interval(start.Start, end.Start + end.Length)}", tabs);
+                    return;
+                }
 
                 //**TOKENS**
                 List<int?> tokens = [];
@@ -240,7 +295,7 @@ namespace DrzSharp.Compiler.Diagnostics
 
                     return $"{span.start:D3} - {span.end:D3}";
                 });
-                PrintGTab($"//Tokens: ({string.Join(", ", listSpans)})", tabs);
+                PrintGConn($"{header}[{string.Join(", ", listSpans)}]", tabs);
 
                 //TOKENS
                 var listTokens = tokens.Select(nullId =>
@@ -254,12 +309,68 @@ namespace DrzSharp.Compiler.Diagnostics
 
                     return $"{LexerManager.TokenTypes[token.Type]} \"{TAST.GetText(id)}\"";
                 });
-                PrintGTab($"//{string.Join(", ", listTokens)}", tabs);
+                PrintGTab($"<{string.Join(", ", listTokens)}>", tabs);
             }
 
             realms.Push(0);
             printNode(TAST.Root);
             WriteLine();
+        }
+
+        //DEBUG TASI
+        private void DebugTASI()
+        {
+            WriteLine(">> TASI (Abstract Stratified Instruction Tree): ");
+
+            int tabs = 0;
+            PrintGConn("VIRTUAL ROOT", tabs);
+            void printSibs(int nodeId)
+            {
+                if (TASI.TryNodeAt(nodeId, out var child))
+                {
+                    printSibs(child.NextSiblingId);
+                    DebugTASI(child, ref tabs);
+                }
+            }
+            printSibs(TASI.Root.FirstChildId);
+            WriteLine();
+        }
+        private void DebugTASI(in TASINode node, ref int tabs)
+        {
+            tabs++;
+
+            //HEADER
+            var source = TASI.InfoAt(node.Id).SourceNodeId;
+            PrintGConn($"From <{source:D3}> {ParserManager.GetRuleName(TAST.GetApplyRule(source).RuleId)}", tabs);
+
+            //STACKING CHILDREN
+            Stack<NodeRef> children = [];
+            var childExists = TASI.TryNodeAt(node.FirstChildId, out var child);
+            while (childExists)
+            {
+                children.Push(new(child.Id, child.RelIndex));
+                childExists = TASI.TryNodeAt(child.NextSiblingId, out child);
+            }
+
+            //PRINTING
+            for (int i = 0; i < node.Length; i++)
+            {
+                var instr = TASI.InstructionAt(node.Start + i);
+                PrintGTab($"[{i}] {LowererManager._rules[instr.RuleId].Method.Name}", tabs);
+
+                while (children.TryPeek(out var next) && next.RelIndex == i)
+                {
+                    children.Pop();
+                    DebugTASI(TASI.NodeAt(next.NodeId), ref tabs);
+                }
+            }
+
+            tabs--;
+        }
+        private readonly struct NodeRef(int nodeId, int relIndex)
+        {
+            public readonly int NodeId = nodeId;
+            public readonly int RelIndex = relIndex;
         }
 
         //DEBUG LOGS

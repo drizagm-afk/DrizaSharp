@@ -2,4 +2,3 @@ bin/
 obj/
 packages/
 testfiles/
-*.dzdiag

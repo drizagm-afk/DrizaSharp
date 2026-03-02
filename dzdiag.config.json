@@ -1,0 +1,15 @@
+{
+    "output": "DZDIAG",
+    "lexer": {
+        "showLogs": true,
+        "showTokenList": true
+    },
+    "parser": {
+        "showLogs": true,
+        "showTAST": "TokenOriented"
+    },
+    "lowerer": {
+        "showLogs": true,
+        "showTASI": true
+    }
+}

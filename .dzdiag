@@ -1,0 +1,56 @@
+//////////////////////////////////////////////////
+FILE:   C:\Driza\DrizaSharp\testfiles\Program.dz
+MODULE: <default>
+//////////////////////////////////////////////////
+
+=============== LEXER DIAGNOSTICS ================
+>> BASE TOKENS: 
+[000 NEWLINE] (START)
+[001 Hash Prefix] "#RUN" (L1:C1 - L1:C5)
+[002 Keyword] "ASM" (L1:C6 - L1:C9)
+[003 Braces Opener] "{" (L1:C10)
+[004 NEWLINE] (L2)
+[005 Keyword] "ldstr" (L2:C5 - L2:C10)
+[006 String] "Hello World!" (L2:C11 - L2:C25)
+[007 NEWLINE] (L3)
+[008 Keyword] "print" (L3:C5 - L3:C10)
+[009 NEWLINE] (L4)
+[010 Keyword] "ret" (L4:C5 - L4:C8)
+[011 NEWLINE] (L5)
+[012 Braces Closer] "}" (L5:C1)
+[013 NEWLINE] (END)
+
+>> COMPILER LOGS: NONE
+
+=============== PARSER DIAGNOSTICS ===============
+>> TAST (Abstract Stratified Token Tree): 
+VIRTUAL ROOT [000, 013]
+<NEWLINE, ..., NEWLINE>
+ ├─ <002> EntryPointRule [001 - 003, 012]
+ │  <Hash Prefix "#RUN", Keyword "ASM", Braces Opener "{", ..., Braces Closer "}">
+ │   ├─ Entering ASMLogic <001> [004, 007, 009, 011]
+ │   │  <NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE>
+ │   │   ├─ <003> ASMLoadStrRule [005 - 006]
+ │   │   │  <Keyword "ldstr", String "Hello World!">
+ │   │   ├─ <004> ASMPrintRule [008]
+ │   │   │  <Keyword "print">
+ │   │   ├─ <005> ASMReturnRule [010]
+ │   │   │  <Keyword "ret">
+
+>> COMPILER LOGS: NONE
+
+============== LOWERER DIAGNOSTICS ===============
+>> TASI (Abstract Stratified Instruction Tree): 
+VIRTUAL ROOT
+ ├─ From <002> EntryPointRule
+ │  [0] EntryPoint
+ │   ├─ From <003> ASMLoadStrRule
+ │   │  [0] ASMLdstr
+ │   ├─ From <004> ASMPrintRule
+ │   │  [0] ASMPrint
+ │   ├─ From <005> ASMReturnRule
+ │   │  [0] ASMRet
+
+>> COMPILER LOGS: NONE
+
+

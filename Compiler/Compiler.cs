@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace DrzSharp.Compiler;
 
@@ -36,8 +38,16 @@ public static partial class Compiler
         sw.Stop();
         ShowProcessTime(procTime);
 
-        var debug = Debug(proj);
-        File.WriteAllText(Path.Combine(root, ".dzdiag"), debug);
+        //DEBUG
+        var opts = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        opts.Converters.Add(new JsonStringEnumConverter());
+        var json = File.ReadAllText(@"C:\Driza\DrizaSharp\dzdiag.config.json");
+        var config = JsonSerializer.Deserialize<Diagnostics.Config>(json, opts);
+
+        Debug(proj, config!);
     }
 
     public static void ShowProcessTime(List<(string, double)> procTime)
