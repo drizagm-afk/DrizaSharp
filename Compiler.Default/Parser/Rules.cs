@@ -7,18 +7,14 @@ namespace DrzSharp.Compiler.Default.Parser;
 //===== ENTRY POINT =====
 public class EntryPointRule : Rule<EntryPoint>
 {
-    const string BODY = "body";
+    const int BODY = 0;
 
     public EntryPointRule()
     {
         SetRealm(Realms.VIRTUAL);
         SetPattern(
             new TokenPattern()
-                .THashPrefix("#RUN")
-                .TKeyword("ASM")
-                .TOpBrace()
-                .ClosedGroup(captureTag: BODY)
-                .TClBrace()
+                .hashpx("#RUN").kw("ASM").obrace().CGroup(captureTag: BODY).cbrace()
         );
     }
     protected override void OnInstantiate(MatchView view, EntryPoint instance)
@@ -46,7 +42,7 @@ public class EntryPoint : RuleInstance, IASMMethod
     {
         if (_labels.TryGetValue(name, out int id))
             return id;
-        
+
         return _labels[name] = NewLabel();
     }
 
@@ -58,7 +54,7 @@ public class EntryPoint : RuleInstance, IASMMethod
     {
         Virtual.EntryPoint.New(ctx, NodeId);
         Virtual.InitASMMethod.New(ctx, NodeId, _labelCount);
-        
+
         ctx.Emit(default, new EmitNode(1, Body));
     }
 }
@@ -76,21 +72,18 @@ public interface IASMMethod : IMethod
 //===== ASM Locals =====
 public class ASMLocalsRule : Rule<ASMLocals>
 {
-    const string VARDECL = "varDecl";
+    const int VARDECL = 0;
 
     public ASMLocalsRule()
     {
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .TOperator(".")
-                .TKeyword("locals")
-                .TOpBrace()
-                .OptNEWLINE()
-                .Repeat(t => t.Rule<ASMVarDeclRule>(captureTag: VARDECL)
-                    .OptNEWLINE(), min: 0)
-                .OptNEWLINE()
-                .TClBrace()
+                .oper(".").kw("locals").obrace()
+                .OptNl().Repeat(t =>
+                    t.Rule<ASMVarDeclRule>(VARDECL).OptNl()
+                ).OptNl()
+                .cbrace()
         );
     }
 
@@ -112,8 +105,8 @@ public class ASMLocals : RuleInstance
 
 public class ASMVarDeclRule : Rule<ASMVarDecl>
 {
-    const string VARTYPE = "varType";
-    const string VARNAME = "varName";
+    const int VARTYPE = 0;
+    const int VARNAME = 1;
 
     public ASMVarDeclRule()
     {
@@ -121,8 +114,8 @@ public class ASMVarDeclRule : Rule<ASMVarDecl>
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .TKeyword(captureTag: VARTYPE)
-                .TKeyword(captureTag: VARNAME)
+                .kw(captureTag: VARTYPE)
+                .kw(captureTag: VARNAME)
         );
     }
 
@@ -174,39 +167,33 @@ public interface IVarDecl
 
 public class ASMVarUseRule : Rule<ASMVarUse>
 {
-    const string VARNAME = "varName";
-
-    const string IsLDLOC = "ldloc";
-    const string IsSTLOC = "stloc";
+    const int VARNAME = 10;
 
     public ASMVarUseRule()
     {
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .Or(
-                    t => t.TKeyword("ldloc", IsLDLOC),
-                    t => t.TKeyword("stloc", IsSTLOC)
-                )
-                .TKeyword(captureTag: VARNAME)
+                .KeywordTable("ldloc", "stloc")
+                .kw(captureTag: VARNAME)
         );
     }
 
     protected override void OnInstantiate(MatchView view, ASMVarUse instance)
     {
-        if (view.HasVar(IsLDLOC))
-            instance.oper = VarOperations.LDLOC;
-        if (view.HasVar(IsSTLOC))
-            instance.oper = VarOperations.STLOC;
-
+        view.HasVarInRange(0..2, out instance.oper);
         instance._varName = view.LoadTokenVar(VARNAME);
     }
 }
 public class ASMVarUse : RuleInstance
 {
-    internal VarOperations oper;
     internal Token _varName;
     private int varId;
+
+    const int LDLOC = 0;
+    const int STLOC = 1;
+
+    internal int oper;
 
     protected override void OnValidate(ValidateContext ctx)
     {
@@ -222,28 +209,27 @@ public class ASMVarUse : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        if (oper == VarOperations.LDLOC)
+        if (oper == LDLOC)
             Logic.LdLoc.New(ctx, NodeId, varId);
-        else
+        else if (oper == STLOC)
             Logic.StLoc.New(ctx, NodeId, varId);
 
         ctx.Emit();
     }
 }
-public enum VarOperations { LDLOC, STLOC }
 
 //===== ASM Branches =====
 public class ASMLabelRule : Rule<ASMLabel>
 {
-    const string LABELNAME = "labelName";
+    const int LABELNAME = 0;
 
     public ASMLabelRule()
     {
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .TKeyword(captureTag: LABELNAME)
-                .TOperator(":")
+                .kw(captureTag: LABELNAME)
+                .oper(":")
         );
     }
 
@@ -279,43 +265,34 @@ public class ASMLabel : RuleInstance
 
 public class ASMBrRule : Rule<ASMBr>
 {
-    const string LABELNAME = "labelName";
-
-    const string IsBR = "br";
-    const string IsBRTRUE = "brtrue";
-    const string IsBRFALSE = "brfalse";
+    const int LABELNAME = 10;
 
     public ASMBrRule()
     {
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .Or(
-                    t => t.TKeyword("br", IsBR),
-                    t => t.TKeyword("brtrue", IsBRTRUE),
-                    t => t.TKeyword("brfalse", IsBRFALSE)
-                )
-                .TKeyword(captureTag: LABELNAME)
+                .KeywordTable("br", "brtrue", "brfalse")
+                .kw(captureTag: LABELNAME)
         );
     }
 
     protected override void OnInstantiate(MatchView view, ASMBr instance)
     {
-        if (view.HasVar(IsBR))
-            instance.oper = BrOperation.BR;
-        else if (view.HasVar(IsBRTRUE))
-            instance.oper = BrOperation.BRTRUE;
-        else if (view.HasVar(IsBRFALSE))
-            instance.oper = BrOperation.BRFALSE;
-
+        view.HasVarInRange(0..4, out instance.oper);
         instance._labelName = view.LoadTokenVar(LABELNAME);
     }
 }
 public class ASMBr : RuleInstance
 {
-    internal BrOperation oper;
     internal Token _labelName;
     private int labelId;
+
+    const int BR = 0;
+    const int BRTRUE = 1;
+    const int BRFALSE = 2;
+
+    internal int oper;
 
     protected override void OnValidate(ValidateContext ctx)
     {
@@ -330,132 +307,108 @@ public class ASMBr : RuleInstance
     }
     protected override void OnEmit(EmitContext ctx)
     {
-        if (oper == BrOperation.BR)
+        if (oper == BR)
             Logic.Br.New(ctx, NodeId, labelId);
-        else if (oper == BrOperation.BRTRUE)
+        else if (oper == BRTRUE)
             Logic.BrTrue.New(ctx, NodeId, labelId);
-        else
+        else if (oper == BRFALSE)
             Logic.BrFalse.New(ctx, NodeId, labelId);
 
         ctx.Emit();
     }
 }
-public enum BrOperation { BR, BRTRUE, BRFALSE }
 
 //===== ASM Comparisons =====
 public class ASMCompareRule : Rule<ASMCompare>
 {
-    const string IsCEQ = "ceq";
-    const string IsCGT = "cgt";
-    const string IsCLT = "clt";
-
     public ASMCompareRule()
     {
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .Or(
-                    t => t.TKeyword("ceq", IsCEQ),
-                    t => t.TKeyword("cgt", IsCGT),
-                    t => t.TKeyword("clt", IsCLT)
-                )
+                .KeywordTable("ceq", "cgt", "clt")
         );
     }
     protected override void OnInstantiate(MatchView view, ASMCompare instance)
     {
-        if (view.HasVar(IsCEQ))
-            instance.oper = CompOperation.CEQ;
-        if (view.HasVar(IsCGT))
-            instance.oper = CompOperation.CGT;
-        if (view.HasVar(IsCLT))
-            instance.oper = CompOperation.CLT;
+        view.HasVarInRange(0..3, out instance.oper);
     }
 }
 public class ASMCompare : RuleInstance
 {
-    internal CompOperation oper;
+    const int CEQ = 0;
+    const int CGT = 1;
+    const int CLT = 2;
+
+    internal int oper;
 
     protected override void OnEmit(EmitContext ctx)
     {
-        if (oper == CompOperation.CEQ)
+        if (oper == CEQ)
             Logic.Ceq.New(ctx, NodeId);
-        else if (oper == CompOperation.CGT)
+        else if (oper == CGT)
             Logic.Cgt.New(ctx, NodeId);
-        else
+        else if (oper == CLT)
             Logic.Clt.New(ctx, NodeId);
 
         ctx.Emit();
     }
 }
-public enum CompOperation { CEQ, CGT, CLT }
 
 //===== ASM Arithmetic =====
 public class ASMArithmeticRule : Rule<ASMArithmetic>
 {
-    const string IsADD = "add";
-    const string IsSUB = "sub";
-    const string IsMUL = "mul";
-    const string IsDIV = "div";
-
     public ASMArithmeticRule()
     {
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .Or(
-                    t => t.TKeyword("add", IsADD),
-                    t => t.TKeyword("sub", IsSUB),
-                    t => t.TKeyword("mul", IsMUL),
-                    t => t.TKeyword("div", IsDIV)
-                )
+                .KeywordTable("add", "sub", "mul", "div")
         );
     }
 
     protected override void OnInstantiate(MatchView view, ASMArithmetic instance)
     {
-        if (view.HasVar(IsADD))
-            instance.oper = AritOperation.ADD;
-        if (view.HasVar(IsSUB))
-            instance.oper = AritOperation.SUB;
-        if (view.HasVar(IsMUL))
-            instance.oper = AritOperation.MUL;
-        if (view.HasVar(IsDIV))
-            instance.oper = AritOperation.DIV;
+        view.HasVarInRange(0..4, out instance.oper);
     }
 }
 public class ASMArithmetic : RuleInstance
 {
-    internal AritOperation oper;
+    const int ADD = 0;
+    const int SUB = 1;
+    const int MUL = 2;
+    const int DIV = 3;
+
+    internal int oper;
 
     protected override void OnEmit(EmitContext ctx)
     {
-        if (oper == AritOperation.ADD)
+        if (oper == ADD)
             Logic.Add.New(ctx, NodeId);
-        else if (oper == AritOperation.SUB)
+        else if (oper == SUB)
             Logic.Sub.New(ctx, NodeId);
-        else if (oper == AritOperation.MUL)
+        else if (oper == MUL)
             Logic.Mul.New(ctx, NodeId);
-        else
+        else if (oper == DIV)
             Logic.Div.New(ctx, NodeId);
 
         ctx.Emit();
     }
 }
-public enum AritOperation { ADD, SUB, MUL, DIV }
 
 //===== ASM Constants =====
 public class ASMLdcI4Rule : Rule<ASMLdcI4>
 {
-    const string VALUE = "val";
+    const int VALUE = 0;
 
     public ASMLdcI4Rule()
     {
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .TKeyword("ldc")
-                .TKeyword("i4")
-                .TNumber(captureTag: VALUE)
+                .kw("ldc")
+                .kw("i4")
+                .numberVal(captureTag: VALUE)
         );
     }
     protected override void OnInstantiate(MatchView view, ASMLdcI4 instance)
@@ -478,15 +431,15 @@ public class ASMLdcI4 : RuleInstance
 
 public class ASMLdstrRule : Rule<ASMLdstr>
 {
-    const string CONTENT = "cont";
+    const int CONTENT = 0;
 
     public ASMLdstrRule()
     {
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .TKeyword("ldstr")
-                .TString(captureTag: CONTENT)
+                .kw("ldstr")
+                .stringVal(captureTag: CONTENT)
         );
     }
     protected override void OnInstantiate(MatchView view, ASMLdstr instance)
@@ -513,7 +466,7 @@ public class ASMPrintRule : Rule<ASMPrint>
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .TKeyword("print")
+                .kw("print")
         );
     }
 }
@@ -533,7 +486,7 @@ public class ASMReturnRule : Rule<ASMReturn>
         SetRealm(Realms.ASMLogic);
         SetPattern(
             new TokenPattern()
-                .TKeyword("ret")
+                .kw("ret")
         );
     }
 }

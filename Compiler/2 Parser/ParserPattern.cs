@@ -5,11 +5,11 @@ namespace DrzSharp.Compiler.Parser;
 public class TokenPattern
 {
     //VARIABLE REFERENCES
-    internal readonly string? _varName;
+    internal readonly int? _varTag;
 
     public TokenPattern() { }
-    public TokenPattern(string varName)
-    { _varName = varName; }
+    public TokenPattern(int varTag)
+    { _varTag = varTag; }
 
     //PATTERN LIST
     private List<Func<int, MatchContext, TokenSpan, int>> _patts = [];
@@ -70,7 +70,7 @@ public class TokenPattern
     }
 
     //DEFAULT PATTERNS
-    public TokenPattern Token(byte type, string? val = null, string? captureTag = null)
+    public TokenPattern Token(byte type, string? val = null, int? captureTag = null)
     {
         AddPattern((_, ctx, span) =>
         {
@@ -88,15 +88,15 @@ public class TokenPattern
             }
 
             //VAR
-            if (captureTag is not null)
-                ctx.StoreVar(captureTag, span.With(length: 1));
+            if (captureTag is int tag)
+                ctx.StoreVar(tag, span.With(length: 1));
 
             return 1;
         });
         return this;
     }
 
-    public TokenPattern Rule<R>(string? captureTag = null) where R : Rule
+    public TokenPattern Rule<R>(int? captureTag = null) where R : Rule
     {
         AddPattern((_, ctx, span) =>
         {
@@ -112,14 +112,14 @@ public class TokenPattern
 
             //RETURN
             ctx.LoadHash(hash);
-            if (captureTag != null)
-                ctx.StoreRuleVar(captureTag, inst);
+            if (captureTag is int tag)
+                ctx.StoreRuleVar(tag, inst);
 
             return inst.Span.Length;
         });
         return this;
     }
-    public TokenPattern RuleClass<C>(string? captureTag = null) where C : RuleClass
+    public TokenPattern RuleClass<C>(int? captureTag = null) where C : RuleClass
     {
         AddPattern((_, ctx, span) =>
         {
@@ -135,11 +135,107 @@ public class TokenPattern
 
             //RETURN
             ctx.LoadHash(hash);
-            if (captureTag != null)
-                ctx.StoreRuleVar(captureTag, inst);
+            if (captureTag is int tag)
+                ctx.StoreRuleVar(tag, inst);
 
             return inst.Span.Length;
         });
+        return this;
+    }
+
+    //REGEX PATTERNS
+    public TokenPattern Or(params Action<TokenPattern>[] patterns)
+    {
+        var patts = new TokenPattern[patterns.Length];
+        for (int i = 0; i < patts.Length; i++)
+        {
+            TokenPattern patt = new();
+            patts[i] = patt;
+            patterns[i](patt);
+        }
+
+        AddPattern((_, ctx, span) =>
+        {
+            foreach (var patt in patts)
+            {
+                var iterCommit = ctx.Commit();
+                int len = patt.Matches(ctx, span);
+                if (len <= 0)
+                    ctx.Rollback(iterCommit);
+                else
+                    return len;
+            }
+
+            return 0;
+        });
+        AddSubPatterns(patts);
+
+        return this;
+    }
+
+    public TokenPattern Optional(Action<TokenPattern> optPattern)
+    {
+        TokenPattern patt = new();
+        optPattern(patt);
+
+        AddPattern((_, ctx, span) =>
+        {
+            var commit = ctx.Commit();
+
+            var len = patt.Matches(ctx, span);
+            if (len <= 0)
+            {
+                ctx.Rollback(commit);
+                return -1;
+            }
+
+            return len;
+        });
+        AddSubPattern(patt);
+
+        return this;
+    }
+
+    public TokenPattern Repeat(Action<TokenPattern> repPattern, int min = 1, int max = -1)
+    {
+        TokenPattern patt = new();
+        repPattern(patt);
+
+        AddPattern((_, ctx, span) =>
+        {
+            var srtCommit = ctx.Commit();
+
+            int total = 0;
+            int count = 0;
+
+            var evalSpan = span;
+
+            while (max == -1 || count < max)
+            {
+                var iterCommit = ctx.Commit();
+                int len = patt.Matches(ctx, evalSpan);
+
+                if (len <= 0)
+                {
+                    ctx.Rollback(iterCommit);
+                    break;
+                }
+
+                total += len;
+                evalSpan = evalSpan.Skip(len);
+                count++;
+            }
+
+            if (count < min)
+            {
+                ctx.Rollback(srtCommit);
+                return 0;
+            }
+
+            return total > 0 ? total : -1;
+        });
+        AddSubPattern(patt);
+
         return this;
     }
 }

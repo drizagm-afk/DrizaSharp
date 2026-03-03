@@ -113,13 +113,13 @@ public partial class ParserProcess
     {
         foreach (var pattern in rule.Patterns)
         {
-            if (pattern._varName is null)
+            if (pattern._varTag is not int tag)
             {
                 Debug.Assert(length <= 0, $"MORE THAN ONE NON-VAR PATTERNS AREN'T ALLOWED: rule={rule.GetType().Name}");
                 length = pattern.Matches(this, span);
                 if (length <= 0) return 0;
             }
-            else if (!EvalVars(pattern._varName, pattern)) return 0;
+            else if (!EvalVars(tag, pattern)) return 0;
         }
         return length > 0 ? length : 0;
     }
