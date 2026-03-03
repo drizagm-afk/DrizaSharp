@@ -20,7 +20,7 @@ namespace DrzSharp.Compiler
 
 namespace DrzSharp.Compiler.Lowerer
 {
-    public delegate void Rule(Context ctx, Instruction instruction);
+    public delegate void Rule(Context ctx);
 
     internal static class LowererManager
     {

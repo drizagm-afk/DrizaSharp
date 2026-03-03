@@ -23,9 +23,10 @@ public partial class ParserProcess
         }
 
         //RULE EMIT
-        RuleInst = inst;
-
         _instructCount = TASI.InstructionCount;
+        _dataCount = TASI.DataCount;
+
+        RuleInst = inst;
         inst.EmitId = emitId;
 
         var count = TASI.NodeCount;

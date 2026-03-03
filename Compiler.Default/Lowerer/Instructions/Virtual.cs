@@ -1,32 +1,57 @@
-using DrzSharp.Compiler.Model;
-using DrzSharp.Compiler.Parser;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+
+using EmitContext = DrzSharp.Compiler.Parser.EmitContext;
+using DrzSharp.Compiler.Lowerer;
 
 namespace DrzSharp.Compiler.Default.Lowerer;
 
 public static partial class Virtual
 {
-    public static class EntryPoint
+    public static int EntryPoint_Id { get; internal set; }
+    public static int EntryPoint(EmitContext _) => EntryPoint_Id;
+
+    public static int InitASMMethod_Id { get; internal set; }
+    public static int InitASMMethod(EmitContext ctx, int labelCount)
     {
-        public static int Id { get; internal set; }
-        private static Slice Add(EmitContext ctx)
-        => new(ctx.DataCount, 0);
-        public static void New(EmitContext ctx, int source)
-        => ctx.AddInstruction(Id, Add(ctx), source);
-        public static void New(EmitContext ctx, Slice source)
-        => ctx.AddInstruction(Id, Add(ctx), source);
+        ctx.WriteInt(labelCount);
+        return InitASMMethod_Id;
+    }
+}
+
+public static partial class VirtualRules
+{
+    public static void EntryPoint(Context ctx)
+    {
+        //ADD PROGRAM TYPE
+        var programType = new TypeDefinition(
+            "", "Program",
+            TypeAttributes.Public | TypeAttributes.Class,
+            ctx.Module.TypeSystem.Object
+        );
+        ctx.Module.Types.Add(programType);
+
+        //ADD MAIN METHOD
+        var mainMethod = new MethodDefinition(
+            "Main",
+            MethodAttributes.Public | MethodAttributes.Static,
+            ctx.Module.TypeSystem.Void
+        );
+
+        programType.Methods.Add(mainMethod);
+        ctx.Assembly.EntryPoint = mainMethod;
+
+        var body = mainMethod.Body;
+        body.InitLocals = true;
+        ctx.Virtual.EnterMethod(body);
     }
 
-    public static class InitASMMethod
+    public static void InitASMMethod(Context ctx)
     {
-        public static int Id { get; internal set; }
-        private static Slice Add(EmitContext ctx, int labelCount)
-        {
-            var start = ctx.WriteInt(labelCount);
-            return new(start, TASI.INT_SIZE);
-        }
-        public static void New(EmitContext ctx, int source, int labelCount)
-        => ctx.AddInstruction(Id, Add(ctx, labelCount), source);
-        public static void New(EmitContext ctx, Slice source, int labelCount)
-        => ctx.AddInstruction(Id, Add(ctx, labelCount), source);
+        var labelCount = ctx.ReadInt();
+
+        var il = ctx.Logic.IL;
+        for (int j = 0; j < labelCount; j++)
+            ctx.Logic.Labels.Add(il.Create(OpCodes.Nop));
     }
 }

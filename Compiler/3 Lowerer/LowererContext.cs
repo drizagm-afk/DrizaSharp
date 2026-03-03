@@ -14,14 +14,11 @@ public interface Context
     public ModuleDefinition Module { get; }
 
     //INSTRUCTIONS
-    public const int BYTE_SIZE = TASI.BYTE_SIZE;
-    public const int INT_SIZE = TASI.INT_SIZE;
-    public const int REF_SIZE = TASI.REF_SIZE;
-
-    public byte ReadByte(int offset);
-    public int ReadInt(int offset);
-    public T ReadObject<T>(int offset);
-    public string ReadString(int offset);
+    public Instruction Instruction { get; }
+    public byte ReadByte();
+    public int ReadInt();
+    public T ReadObject<T>();
+    public string ReadString();
 }
 
 public partial class LowererProcess : Context
@@ -32,8 +29,32 @@ public partial class LowererProcess : Context
     public AssemblyDefinition Assembly => _asm;
     public ModuleDefinition Module { get; private set; } = null!;
 
-    public byte ReadByte(int offset) => TASI.ReadByte(offset);
-    public int ReadInt(int offset) => TASI.ReadInt(offset);
-    public T ReadObject<T>(int offset) => (T)TASI.ReadObject(offset);
-    public string ReadString(int offset) => TASI.ReadString(offset);
+    public Instruction Instruction => _instr;
+    private Instruction _instr;
+
+    private int _offset;
+    public byte ReadByte()
+    {
+        var val = TASI.ReadByte(_offset);
+        _offset += TASI.BYTE_SIZE;
+        return val;
+    }
+    public int ReadInt()
+    {
+        var val = TASI.ReadInt(_offset);
+        _offset += TASI.INT_SIZE;
+        return val;
+    }
+    public T ReadObject<T>()
+    {
+        var val = TASI.ReadObject(_offset);
+        _offset += TASI.REF_SIZE;
+        return (T)val;
+    }
+    public string ReadString()
+    {
+        var val = TASI.ReadString(_offset);
+        _offset += TASI.REF_SIZE;
+        return val;
+    }
 }

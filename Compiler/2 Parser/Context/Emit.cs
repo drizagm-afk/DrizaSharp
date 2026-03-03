@@ -7,15 +7,14 @@ public interface EmitContext : Context
     public void Emit(TASTEmit emitId = new(), params EmitNode[] emitNodes);
 
     //INSTRUCTIONS
-    public int DataCount { get; }
-
     public int WriteByte(byte value);
     public int WriteInt(int value);
     public int WriteObject(object value);
     public int WriteString(string value);
 
-    public void AddInstruction(int ruleId, Slice data, Slice source);
-    public void AddInstruction(int ruleId, Slice data, int source);
+    public void EmitInstr(int ruleId);
+    public void EmitInstr(int ruleId, int source);
+    public void EmitInstr(int ruleId, Slice source);
 }
 
 public partial class ParserProcess : EmitContext
@@ -47,16 +46,21 @@ public partial class ParserProcess : EmitContext
     }
 
     //INSTRUCTIONS
-    public int DataCount => TASI.DataCount;
+    private int _dataCount = 0;
     public int WriteByte(byte value) => TASI.WriteByte(value);
     public int WriteInt(int value) => TASI.WriteInt(value);
     public int WriteObject(object value) => TASI.WriteObject(value);
     public int WriteString(string value) => TASI.WriteString(value);
 
-    public void AddInstruction(int ruleId, Slice data, Slice source)
-    => TASI.NewInstruction(ruleId, data.Start, data.Length, source);
-    public void AddInstruction(int ruleId, Slice data, int source)
-    => AddInstruction(ruleId, data, TAST.SourceSlice(source));
+    public void EmitInstr(int ruleId)
+    => EmitInstr(ruleId, RuleInst!.NodeId);
+    public void EmitInstr(int ruleId, int source)
+    => EmitInstr(ruleId, TAST.SourceSlice(source));
+    public void EmitInstr(int ruleId, Slice source)
+    {
+        TASI.NewInstruction(ruleId, _dataCount, _dataCount - TASI.DataCount, source);
+        _dataCount = TASI.DataCount;
+    }
 }
 
 public readonly struct EmitNode(int emitId, int nodeId)

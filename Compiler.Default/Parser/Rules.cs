@@ -52,8 +52,8 @@ public class EntryPoint : RuleInstance, IASMMethod
     }
     protected override void OnEmit(EmitContext ctx)
     {
-        Virtual.EntryPoint.New(ctx, NodeId);
-        Virtual.InitASMMethod.New(ctx, NodeId, _labelCount);
+        ctx.EmitInstr(Virtual.EntryPoint(ctx));
+        ctx.EmitInstr(Virtual.InitASMMethod(ctx, _labelCount));
 
         ctx.Emit(default, new EmitNode(1, Body));
     }
@@ -154,7 +154,7 @@ public class ASMVarDecl : RuleInstance, IVarDecl
 
     protected override void OnEmit(EmitContext ctx)
     {
-        Logic.NewLoc.New(ctx, NodeId);
+        ctx.EmitInstr(Logic.NewLoc(ctx));
         ctx.Emit();
     }
 }
@@ -192,7 +192,6 @@ public class ASMVarUse : RuleInstance
 
     const int LDLOC = 0;
     const int STLOC = 1;
-
     internal int oper;
 
     protected override void OnValidate(ValidateContext ctx)
@@ -209,11 +208,13 @@ public class ASMVarUse : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        if (oper == LDLOC)
-            Logic.LdLoc.New(ctx, NodeId, varId);
-        else if (oper == STLOC)
-            Logic.StLoc.New(ctx, NodeId, varId);
-
+        ctx.EmitInstr(
+            oper switch
+            {
+                LDLOC => Logic.LdLoc(ctx, varId),
+                _ => Logic.StLoc(ctx, varId),
+            }
+        );
         ctx.Emit();
     }
 }
@@ -258,7 +259,7 @@ public class ASMLabel : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        Logic.NewBr.New(ctx, NodeId, labelId);
+        ctx.EmitInstr(Logic.NewBr(ctx, labelId));
         ctx.Emit();
     }
 }
@@ -307,13 +308,14 @@ public class ASMBr : RuleInstance
     }
     protected override void OnEmit(EmitContext ctx)
     {
-        if (oper == BR)
-            Logic.Br.New(ctx, NodeId, labelId);
-        else if (oper == BRTRUE)
-            Logic.BrTrue.New(ctx, NodeId, labelId);
-        else if (oper == BRFALSE)
-            Logic.BrFalse.New(ctx, NodeId, labelId);
-
+        ctx.EmitInstr(
+            oper switch
+            {
+                BR => Logic.Br(ctx, labelId),
+                BRTRUE => Logic.Br(ctx, labelId),
+                _ => Logic.BrFalse(ctx, labelId)
+            }
+        );
         ctx.Emit();
     }
 }
@@ -344,13 +346,14 @@ public class ASMCompare : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        if (oper == CEQ)
-            Logic.Ceq.New(ctx, NodeId);
-        else if (oper == CGT)
-            Logic.Cgt.New(ctx, NodeId);
-        else if (oper == CLT)
-            Logic.Clt.New(ctx, NodeId);
-
+        ctx.EmitInstr(
+            oper switch
+            {
+                CEQ => Logic.Ceq(ctx),
+                CGT => Logic.Cgt(ctx),
+                _ => Logic.Clt(ctx)
+            }
+        );
         ctx.Emit();
     }
 }
@@ -383,15 +386,15 @@ public class ASMArithmetic : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        if (oper == ADD)
-            Logic.Add.New(ctx, NodeId);
-        else if (oper == SUB)
-            Logic.Sub.New(ctx, NodeId);
-        else if (oper == MUL)
-            Logic.Mul.New(ctx, NodeId);
-        else if (oper == DIV)
-            Logic.Div.New(ctx, NodeId);
-
+        ctx.EmitInstr(
+            oper switch
+            {
+                ADD => Logic.Add(ctx),
+                SUB => Logic.Sub(ctx),
+                MUL => Logic.Mul(ctx),
+                _ => Logic.Div(ctx)
+            }
+        );
         ctx.Emit();
     }
 }
@@ -422,9 +425,9 @@ public class ASMLdcI4 : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        int value = int.Parse(ctx.GetText(val.Id));
-
-        Logic.LdcI4.New(ctx, NodeId, value);
+        ctx.EmitInstr(Logic.LdcI4(
+            ctx, int.Parse(ctx.GetText(val.Id))
+        ));
         ctx.Emit();
     }
 }
@@ -453,7 +456,9 @@ public class ASMLdstr : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        Logic.LdStr.New(ctx, NodeId, ctx.GetText(cont.Id));
+        ctx.EmitInstr(Logic.LdStr(
+            ctx, ctx.GetText(cont.Id)
+        ));
         ctx.Emit();
     }
 }
@@ -474,7 +479,7 @@ public class ASMPrint : RuleInstance
 {
     protected override void OnEmit(EmitContext ctx)
     {
-        Logic.Print.New(ctx, NodeId);
+        ctx.EmitInstr(Logic.Print(ctx));
         ctx.Emit();
     }
 }
@@ -494,7 +499,7 @@ public class ASMReturn : RuleInstance
 {
     protected override void OnEmit(EmitContext ctx)
     {
-        Logic.Ret.New(ctx, NodeId);
+        ctx.EmitInstr(Logic.Ret(ctx));
         ctx.Emit();
     }
 }

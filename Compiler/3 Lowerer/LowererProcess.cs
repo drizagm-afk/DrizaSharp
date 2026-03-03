@@ -87,7 +87,12 @@ public partial class LowererProcess
     private void LowerInst(Instruction inst, int sourceId)
     {
         if (LowererManager.TryGetRule(inst.RuleId, out var rule))
-            rule(this, inst);
+        {
+            _instr = inst;
+            _offset = inst.Start;
+
+            rule(this);
+        }
         else
         {
             var callerName = ParserManager.GetRuleName(File.TAST.GetApplyRule(sourceId).RuleId);
