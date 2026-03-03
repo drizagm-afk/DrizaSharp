@@ -84,6 +84,7 @@ public sealed class TASI
     private TASINode[] _nodes = new TASINode[128];
     private TASIInfo[] _nodeInfos = new TASIInfo[128];
     private int _nodeCount = 0;
+    public int NodeCount => _nodeCount;
 
     //ROOT
     public const byte RootId = 0;

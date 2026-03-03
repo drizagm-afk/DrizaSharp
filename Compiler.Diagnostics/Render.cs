@@ -237,7 +237,7 @@ namespace DrzSharp.Compiler.Diagnostics
                     var start = TAST.TokenAt(node.Start);
                     var end = TAST.TokenAt(node.Start + node.Length - 1);
 
-                    PrintGConn($"{header} {Source.Interval(start.Start, end.Start + end.Length)}", tabs);
+                    PrintGConn($"{header}{Source.Interval(start.Start, end.Start + end.Length)}", tabs);
                     return;
                 }
 

@@ -112,19 +112,19 @@ public partial class ParserProcess : MatchContext
     public void StoreVar(string tag, TokenSpan var)
     {
         var key = new VarKey(_hash, tag);
-        if (_matchVarDict.TryGetValue(key, out var nodeId))
+        if (_matchVarDict.TryGetValue(key, out var entryId))
         {
             do
             {
-                var node = _matchVars[nodeId];
-                if (_validCommits[node.CommitCode])
+                var entry = _matchVars[entryId];
+                if (_validCommits[entry.CommitCode])
                 {
-                    NewVar(key, var, node.Count, node.SiblingId);
+                    NewVar(key, var, entry.Count, entryId);
                     return;
                 }
-                nodeId = node.SiblingId;
+                entryId = entry.SiblingId;
             }
-            while (nodeId >= 0);
+            while (entryId >= 0);
         }
         NewVar(key, var);
     }

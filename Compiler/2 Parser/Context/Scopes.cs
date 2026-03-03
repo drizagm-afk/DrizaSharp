@@ -12,12 +12,12 @@ public interface INodeTags
     public bool TryFindTag(string tagType, string tag, out int nodeId);
     public int FindTag(string tagType, string tag);
 
-    public bool TryResolveTag<R>(string tagType, string tag, [NotNullWhen(true)] out R? inst)
+    public bool TryResolveTag<R>(string tagType, string tag, out R inst)
     where R : RuleInstance;
     public R ResolveTag<R>(string tagType, string tag)
     where R : RuleInstance;
 
-    public bool TryResolveTag(string tagType, string tag, [NotNullWhen(true)] out RuleInstance? inst);
+    public bool TryResolveTag(string tagType, string tag, out RuleInstance inst);
     public RuleInstance ResolveTag(string tagType, string tag);
 }
 public interface INodeAttrs
@@ -59,10 +59,10 @@ public partial class ParserProcess : INodeTags, INodeAttrs
         return nodeId;
     }
 
-    public bool TryResolveTag<R>(string tagType, string tag, [NotNullWhen(true)] out R? inst)
+    public bool TryResolveTag<R>(string tagType, string tag, out R inst)
     where R : RuleInstance
     {
-        inst = null;
+        inst = null!;
         if (!TryFindTag(tagType, tag, out var nodeId) || !TAST.TryGetApplyRule(nodeId, out var rinst))
             return false;
 
@@ -80,7 +80,7 @@ public partial class ParserProcess : INodeTags, INodeAttrs
         return (R)inst;
     }
 
-    public bool TryResolveTag(string tagType, string tag, [NotNullWhen(true)] out RuleInstance? inst)
+    public bool TryResolveTag(string tagType, string tag, out RuleInstance inst)
     => TryResolveTag<RuleInstance>(tagType, tag, out inst);
     public RuleInstance ResolveTag(string tagType, string tag)
     => ResolveTag<RuleInstance>(tagType, tag);

@@ -72,7 +72,7 @@ public partial class ParserProcess : BuildContext
     }
     public void NestRules(RuleInstance[] insts, bool isScoped = false)
     {
-        for (int i = 0; i < insts.Length; i++)
-            NestRule(insts[i], isScoped);
+        foreach (var inst in insts)
+            NestRule(inst, isScoped);
     }
 }

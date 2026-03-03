@@ -14,7 +14,10 @@ public partial class ParserProcess
     public void Validate(DzFile file)
     {
         File = file;
+
+        EnterScope();
         Validate(TAST.Root);
+        ExitScope();
         
         //END
         _validatedNodes.Clear();

@@ -5,35 +5,59 @@ namespace DrzSharp.Compiler.Parser;
 public class TokenPattern
 {
     //VARIABLE REFERENCES
-    internal string? _varName;
+    internal readonly string? _varName;
 
     public TokenPattern() { }
     public TokenPattern(string varName)
     { _varName = varName; }
 
     //PATTERN LIST
-    private List<Func<int, MatchContext, TokenSpan, int>> _patterns = [];
-    public int PatternCount => _patterns.Count;
+    private List<Func<int, MatchContext, TokenSpan, int>> _patts = [];
 
-    public void NewPattern(Func<int, MatchContext, TokenSpan, int> pattern)
-    => _patterns.Add(pattern);
-    public int EvalPattern(int patternId, MatchContext ctx, TokenSpan span)
-    => _patterns[patternId].Invoke(patternId, ctx, span);
+    private TokenPattern? _parent;
+    private int _nextRelId;
+
+    public void AddPattern(Func<int, MatchContext, TokenSpan, int> patt)
+    => _patts.Add(patt);
+    public void AddSubPattern(TokenPattern subPatt)
+    {
+        subPatt._parent = this;
+        subPatt._nextRelId = _patts.Count;
+    }
+    public void AddSubPatterns(params TokenPattern[] subPatts)
+    {
+        foreach(var subPatt in subPatts)
+            AddSubPattern(subPatt);
+    }
+
+    public bool TryEvalPattern(int pattId, MatchContext ctx, TokenSpan span, out int res)
+    {
+        if (pattId < _patts.Count)
+        {
+            res = _patts[pattId].Invoke(pattId, ctx, span);
+            return true;
+        }
+        else if (_parent is not null)
+            return _parent.TryEvalPattern(_nextRelId + pattId - _patts.Count, ctx, span, out res);
+
+        res = 0;
+        return false;
+    }
 
     //MATCH ENTRY
-    internal int Matches(MatchContext ctx, TokenSpan span)
+    public int Matches(MatchContext ctx, TokenSpan span)
     {
         //MATCH LOOP
         int i = 0;
         int pattId = 0;
-        while (pattId < _patterns.Count)
+        while (pattId < _patts.Count)
         {
             //VERIFYING TOKEN
             var evalSpan = span.Skip(i);
             if (!ctx.HasTokenAtSpan(evalSpan)) return 0;
 
             //VERIFYING CHECK
-            var _pattern = _patterns[pattId];
+            var _pattern = _patts[pattId];
             int res = _pattern.Invoke(pattId, ctx, evalSpan);
             if (res == 0) return 0;
 
@@ -48,7 +72,7 @@ public class TokenPattern
     //DEFAULT PATTERNS
     public TokenPattern Token(byte type, string? val = null, string? captureTag = null)
     {
-        NewPattern((_, ctx, span) =>
+        AddPattern((_, ctx, span) =>
         {
             //MATCH
             var token = ctx.TokenAtSpan(span);
@@ -74,7 +98,7 @@ public class TokenPattern
 
     public TokenPattern Rule<R>(string? captureTag = null) where R : Rule
     {
-        NewPattern((_, ctx, span) =>
+        AddPattern((_, ctx, span) =>
         {
             var hash = ctx.Hash;
             ctx.NewHash();
@@ -87,17 +111,17 @@ public class TokenPattern
             }
 
             //RETURN
+            ctx.LoadHash(hash);
             if (captureTag != null)
                 ctx.StoreRuleVar(captureTag, inst);
 
-            ctx.LoadHash(hash);
             return inst.Span.Length;
         });
         return this;
     }
     public TokenPattern RuleClass<C>(string? captureTag = null) where C : RuleClass
     {
-        NewPattern((_, ctx, span) =>
+        AddPattern((_, ctx, span) =>
         {
             var hash = ctx.Hash;
             ctx.NewHash();
@@ -110,10 +134,10 @@ public class TokenPattern
             }
 
             //RETURN
+            ctx.LoadHash(hash);
             if (captureTag != null)
                 ctx.StoreRuleVar(captureTag, inst);
 
-            ctx.LoadHash(hash);
             return inst.Span.Length;
         });
         return this;

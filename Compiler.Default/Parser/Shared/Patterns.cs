@@ -1,13 +1,16 @@
 using DrzSharp.Compiler.Default.Lexer;
-using DrzSharp.Compiler.Lexer;
+using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Parser;
 
 namespace DrzSharp.Compiler.Default.Parser;
 
 public static class TokenPatterns
 {
-    public static TokenPattern TNewline(this TokenPattern inst, string? captureTag = null)
+    public static TokenPattern NEWLINE(this TokenPattern inst, string? captureTag = null)
     => inst.Token(TokenType.NEWLINE, null, captureTag);
+    public static TokenPattern OptNEWLINE(this TokenPattern inst, string? captureTag = null)
+    => inst.Optional(t => t.NEWLINE(captureTag));
+
     public static TokenPattern TOperator(this TokenPattern inst, string? val = null, string? captureTag = null)
     => inst.Token(TokenType.Operator, val, captureTag);
     public static TokenPattern TKeyword(this TokenPattern inst, string? val = null, string? captureTag = null)
@@ -44,41 +47,9 @@ public static class TokenPatterns
 
 public static class GroupPatterns
 {
-    public static TokenPattern Group(this TokenPattern inst, string? captureTag = null)
-    {
-        inst.NewPattern((id, ctx, span) =>
-        {
-            var length = 0;
-            //MATCH
-            while (ctx.HasTokenAtSpan(span))
-            {
-                span = span.Skip();
-                length++;
-
-                //EVAL ADJACENT PATTERNS
-                int res = -1;
-                int next = 0;
-                int nextId = id + 1;
-                while (nextId < inst.PatternCount && res < 0)
-                {
-                    res = inst.EvalPattern(nextId, ctx, span.Skip(next));
-                    next++;
-                    nextId++;
-                }
-                if (res > 0)
-                {
-                    length += next + res;
-                    break;
-                }
-            }
-            if (captureTag is not null) ctx.StoreVar(captureTag, span.With(length: length));
-            return length;
-        });
-        return inst;
-    }
     public static TokenPattern ClosedGroup(this TokenPattern inst, string? captureTag = null)
     {
-        inst.NewPattern((id, ctx, span) =>
+        inst.AddPattern((id, ctx, span) =>
         {
             var evalSpan = span;
             var openerStack = new Stack<byte>();
@@ -92,11 +63,8 @@ public static class GroupPatterns
                 {
                     int res = -1;
                     int next = 0;
-                    while (id + next + 1 < inst.PatternCount && res < 0)
-                    {
-                        res = inst.EvalPattern(id + next + 1, ctx, evalSpan.Skip(next));
+                    while (res < 0 && inst.TryEvalPattern(id + next + 1, ctx, evalSpan.Skip(next), out res))
                         next++;
-                    }
                     if (res > 0)
                     {
                         length += next - 1;
@@ -140,15 +108,98 @@ public static class GroupPatterns
 
 public static class UtilPatterns
 {
-    public static TokenPattern Sequence(this TokenPattern inst, Action<TokenPattern> mainPattern, Action<TokenPattern> linkPattern)
-    => inst;
+    public static TokenPattern Or(this TokenPattern inst, params Action<TokenPattern>[] patterns)
+    {
+        var patts = new TokenPattern[patterns.Length];
+        for (int i = 0; i < patts.Length; i++)
+        {
+            TokenPattern patt = new();
+            patts[i] = patt;
+            patterns[i](patt);
+        }
 
-    public static TokenPattern Or(this TokenPattern inst, params Action<TokenPattern>[] subPatterns)
-    => inst;
+        inst.AddPattern((_, ctx, span) =>
+        {
+            foreach (var patt in patts)
+            {
+                var iterCommit = ctx.Commit();
+                int len = patt.Matches(ctx, span);
+                if (len <= 0)
+                    ctx.Rollback(iterCommit);
+                else
+                    return len;
+            }
 
-    public static TokenPattern Optional(this TokenPattern inst, Action<TokenPattern> subPattern)
-    => inst;
+            return 0;
+        });
+        inst.AddSubPatterns(patts);
 
-    public static TokenPattern Repeat(this TokenPattern inst, Action<TokenPattern> subPattern, int min = 1, int? max = null)
-    => inst;
+        return inst;
+    }
+
+    public static TokenPattern Optional(this TokenPattern inst, Action<TokenPattern> optPattern)
+    {
+        TokenPattern patt = new();
+        optPattern(patt);
+
+        inst.AddPattern((_, ctx, span) =>
+        {
+            var commit = ctx.Commit();
+
+            var len = patt.Matches(ctx, span);
+            if (len <= 0)
+            {
+                ctx.Rollback(commit);
+                return -1;
+            }
+
+            return len;
+        });
+        inst.AddSubPattern(patt);
+
+        return inst;
+    }
+
+    public static TokenPattern Repeat(this TokenPattern inst, Action<TokenPattern> repPattern, int min = 1, int max = -1)
+    {
+        TokenPattern patt = new();
+        repPattern(patt);
+
+        inst.AddPattern((_, ctx, span) =>
+        {
+            var srtCommit = ctx.Commit();
+
+            int total = 0;
+            int count = 0;
+
+            var evalSpan = span;
+
+            while (max == -1 || count < max)
+            {
+                var iterCommit = ctx.Commit();
+                int len = patt.Matches(ctx, evalSpan);
+
+                if (len <= 0)
+                {
+                    ctx.Rollback(iterCommit);
+                    break;
+                }
+
+                total += len;
+                evalSpan = evalSpan.Skip(len);
+                count++;
+            }
+
+            if (count < min)
+            {
+                ctx.Rollback(srtCommit);
+                return 0;
+            }
+
+            return total > 0 ? total : -1;
+        });
+        inst.AddSubPattern(patt);
+
+        return inst;
+    }
 }

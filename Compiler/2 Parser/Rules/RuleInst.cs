@@ -22,6 +22,8 @@ public abstract class RuleInstance
 
     //EMIT
     internal TASTEmit EmitId;
+    protected internal bool BypassEmit = false;
+    
     internal void Emit(EmitContext ctx) => OnEmit(ctx);
     protected virtual void OnEmit(EmitContext ctx) { }
 }
