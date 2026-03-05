@@ -17,143 +17,48 @@ MODULE: <default>
 [009 Keyword] "int" (L3:C9 - L3:C12)
 [010 Keyword] "a" (L3:C13)
 [011 NEWLINE] (L4)
-[012 Keyword] "int" (L4:C9 - L4:C12)
-[013 Keyword] "b" (L4:C13)
-[014 NEWLINE] (L5)
-[015 Keyword] "int" (L5:C9 - L5:C12)
-[016 Keyword] "temp" (L5:C13 - L5:C17)
-[017 NEWLINE] (L6)
-[018 Braces Closer] "}" (L6:C5)
-[019 NEWLINE] (L7)
-[020 Keyword] "ldc" (L8:C5 - L8:C8)
-[021 Keyword] "i4" (L8:C9 - L8:C11)
-[022 Number] "0" (L8:C12)
-[023 NEWLINE] (L9)
-[024 Keyword] "stloc" (L9:C5 - L9:C10)
-[025 Keyword] "a" (L9:C11)
-[026 NEWLINE] (L10)
-[027 Keyword] "ldc" (L11:C5 - L11:C8)
-[028 Keyword] "i4" (L11:C9 - L11:C11)
-[029 Number] "1" (L11:C12)
-[030 NEWLINE] (L12)
-[031 Keyword] "stloc" (L12:C5 - L12:C10)
-[032 Keyword] "b" (L12:C11)
-[033 NEWLINE] (L13)
-[034 Keyword] "COMPARE" (L14:C5 - L14:C12)
-[035 Operator] ":" (L14:C12)
-[036 NEWLINE] (L15)
-[037 Keyword] "ldloc" (L15:C5 - L15:C10)
-[038 Keyword] "a" (L15:C11)
-[039 NEWLINE] (L16)
-[040 Keyword] "ldc" (L16:C5 - L16:C8)
-[041 Keyword] "i4" (L16:C9 - L16:C11)
-[042 Number] "100" (L16:C12 - L16:C15)
-[043 NEWLINE] (L17)
-[044 Keyword] "clt" (L17:C5 - L17:C8)
-[045 NEWLINE] (L18)
-[046 Keyword] "brfalse" (L18:C5 - L18:C12)
-[047 Keyword] "END" (L18:C13 - L18:C16)
-[048 NEWLINE] (L19)
-[049 Keyword] "ldloc" (L20:C5 - L20:C10)
-[050 Keyword] "a" (L20:C11)
-[051 NEWLINE] (L21)
-[052 Keyword] "print" (L21:C5 - L21:C10)
-[053 NEWLINE] (L22)
-[054 Keyword] "ldloc" (L23:C5 - L23:C10)
-[055 Keyword] "a" (L23:C11)
-[056 NEWLINE] (L24)
-[057 Keyword] "ldloc" (L24:C5 - L24:C10)
-[058 Keyword] "b" (L24:C11)
-[059 NEWLINE] (L25)
-[060 Keyword] "add" (L25:C5 - L25:C8)
-[061 NEWLINE] (L26)
-[062 Keyword] "stloc" (L26:C5 - L26:C10)
-[063 Keyword] "temp" (L26:C11 - L26:C15)
-[064 NEWLINE] (L27)
-[065 Keyword] "ldloc" (L28:C5 - L28:C10)
-[066 Keyword] "b" (L28:C11)
-[067 NEWLINE] (L29)
-[068 Keyword] "stloc" (L29:C5 - L29:C10)
-[069 Keyword] "a" (L29:C11)
-[070 NEWLINE] (L30)
-[071 Keyword] "ldloc" (L31:C5 - L31:C10)
-[072 Keyword] "temp" (L31:C11 - L31:C15)
-[073 NEWLINE] (L32)
-[074 Keyword] "stloc" (L32:C5 - L32:C10)
-[075 Keyword] "b" (L32:C11)
-[076 NEWLINE] (L33)
-[077 Keyword] "br" (L34:C5 - L34:C7)
-[078 Keyword] "COMPARE" (L34:C8 - L34:C15)
-[079 NEWLINE] (L35)
-[080 Keyword] "END" (L36:C5 - L36:C8)
-[081 Operator] ":" (L36:C8)
-[082 NEWLINE] (L37)
-[083 Keyword] "ret" (L37:C5 - L37:C8)
-[084 NEWLINE] (L38)
-[085 Braces Closer] "}" (L38:C1)
-[086 NEWLINE] (END)
+[012 Braces Closer] "}" (L4:C5)
+[013 NEWLINE] (L5)
+[014 Keyword] "ldc" (L6:C5 - L6:C8)
+[015 Keyword] "i4" (L6:C9 - L6:C11)
+[016 Number] "10" (L6:C12 - L6:C14)
+[017 NEWLINE] (L7)
+[018 Keyword] "stloc" (L7:C5 - L7:C10)
+[019 Keyword] "a" (L7:C11)
+[020 NEWLINE] (L8)
+[021 Keyword] "ldloc" (L9:C5 - L9:C10)
+[022 Keyword] "a" (L9:C11)
+[023 NEWLINE] (L10)
+[024 Keyword] "print" (L10:C5 - L10:C10)
+[025 NEWLINE] (L11)
+[026 Keyword] "ret" (L12:C5 - L12:C8)
+[027 NEWLINE] (L13)
+[028 Braces Closer] "}" (L13:C1)
+[029 NEWLINE] (END)
 
 >> COMPILER LOGS: NONE
 
 =============== PARSER DIAGNOSTICS ===============
 >> TAST (Abstract Stratified Token Tree): 
-VIRTUAL ROOT [000, 086]
+VIRTUAL ROOT [000, 029]
 <NEWLINE, ..., NEWLINE>
- ├─ <002> EntryPointRule [001 - 003, 085]
+ ├─ <002> EntryPointRule [001 - 003, 028]
  │  <Hash Prefix "#RUN", Keyword "ASM", Braces Opener "{", ..., Braces Closer "}">
- │   ├─ Entering ASMLogic <001> [004, 019, 023, 026, 030, 033, 036, 039, 043, 045, 048, 051, 053, 056, 059, 061, 064, 067, 070, 073, 076, 079, 082, 084]
- │   │  <NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE>
- │   │   ├─ <006> ASMLocalsRule [005 - 008, 011, 014, 017 - 018]
- │   │   │  <Operator ".", Keyword "locals", Braces Opener "{", NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, Braces Closer "}">
+ │   ├─ Entering ASMLogic <001> [004, 013, 017, 020, 023, 025, 027]
+ │   │  <NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE>
+ │   │   ├─ <004> ASMLocalsRule [005 - 008, 011 - 012]
+ │   │   │  <Operator ".", Keyword "locals", Braces Opener "{", NEWLINE, ..., NEWLINE, Braces Closer "}">
  │   │   │   ├─ <003> ASMVarDeclRule [009 - 010]
  │   │   │   │  <Keyword "int", Keyword "a">
- │   │   │   ├─ <004> ASMVarDeclRule [012 - 013]
- │   │   │   │  <Keyword "int", Keyword "b">
- │   │   │   ├─ <005> ASMVarDeclRule [015 - 016]
- │   │   │   │  <Keyword "int", Keyword "temp">
- │   │   ├─ <007> ASMLdcI4Rule [020 - 022]
- │   │   │  <Keyword "ldc", Keyword "i4", Number "0">
- │   │   ├─ <008> ASMVarUseRule [024 - 025]
+ │   │   ├─ <005> ASMLdcI4Rule [014 - 016]
+ │   │   │  <Keyword "ldc", Keyword "i4", Number "10">
+ │   │   ├─ <006> ASMVarUseRule [018 - 019]
  │   │   │  <Keyword "stloc", Keyword "a">
- │   │   ├─ <009> ASMLdcI4Rule [027 - 029]
- │   │   │  <Keyword "ldc", Keyword "i4", Number "1">
- │   │   ├─ <010> ASMVarUseRule [031 - 032]
- │   │   │  <Keyword "stloc", Keyword "b">
- │   │   ├─ <011> ASMLabelRule [034 - 035]
- │   │   │  <Keyword "COMPARE", Operator ":">
- │   │   ├─ <012> ASMVarUseRule [037 - 038]
+ │   │   ├─ <007> ASMVarUseRule [021 - 022]
  │   │   │  <Keyword "ldloc", Keyword "a">
- │   │   ├─ <013> ASMLdcI4Rule [040 - 042]
- │   │   │  <Keyword "ldc", Keyword "i4", Number "100">
- │   │   ├─ <014> ASMCompareRule [044]
- │   │   │  <Keyword "clt">
- │   │   ├─ <015> ASMBrRule [046 - 047]
- │   │   │  <Keyword "brfalse", Keyword "END">
- │   │   ├─ <016> ASMVarUseRule [049 - 050]
- │   │   │  <Keyword "ldloc", Keyword "a">
- │   │   ├─ <017> ASMPrintRule [052]
+ │   │   ├─ <008> ASMPrintRule [024]
  │   │   │  <Keyword "print">
- │   │   ├─ <018> ASMVarUseRule [054 - 055]
- │   │   │  <Keyword "ldloc", Keyword "a">
- │   │   ├─ <019> ASMVarUseRule [057 - 058]
- │   │   │  <Keyword "ldloc", Keyword "b">
- │   │   ├─ <020> ASMArithmeticRule [060]
- │   │   │  <Keyword "add">
- │   │   ├─ <021> ASMVarUseRule [062 - 063]
- │   │   │  <Keyword "stloc", Keyword "temp">
- │   │   ├─ <022> ASMVarUseRule [065 - 066]
- │   │   │  <Keyword "ldloc", Keyword "b">
- │   │   ├─ <023> ASMVarUseRule [068 - 069]
- │   │   │  <Keyword "stloc", Keyword "a">
- │   │   ├─ <024> ASMVarUseRule [071 - 072]
- │   │   │  <Keyword "ldloc", Keyword "temp">
- │   │   ├─ <025> ASMVarUseRule [074 - 075]
- │   │   │  <Keyword "stloc", Keyword "b">
- │   │   ├─ <026> ASMBrRule [077 - 078]
- │   │   │  <Keyword "br", Keyword "COMPARE">
- │   │   ├─ <027> ASMLabelRule [080 - 081]
- │   │   │  <Keyword "END", Operator ":">
- │   │   ├─ <028> ASMReturnRule [083]
+ │   │   ├─ <009> ASMReturnRule [026]
  │   │   │  <Keyword "ret">
 
 >> COMPILER LOGS: NONE
@@ -166,53 +71,15 @@ VIRTUAL ROOT
  │  [1] InitASMMethod
  │   ├─ From <003> ASMVarDeclRule
  │   │  [0] NewLoc
- │   ├─ From <004> ASMVarDeclRule
- │   │  [0] NewLoc
- │   ├─ From <005> ASMVarDeclRule
- │   │  [0] NewLoc
- │   ├─ From <007> ASMLdcI4Rule
+ │   ├─ From <005> ASMLdcI4Rule
  │   │  [0] LdcI4
- │   ├─ From <008> ASMVarUseRule
+ │   ├─ From <006> ASMVarUseRule
  │   │  [0] StLoc
- │   ├─ From <009> ASMLdcI4Rule
- │   │  [0] LdcI4
- │   ├─ From <010> ASMVarUseRule
- │   │  [0] StLoc
- │   ├─ From <011> ASMLabelRule
- │   │  [0] NewBr
- │   ├─ From <012> ASMVarUseRule
+ │   ├─ From <007> ASMVarUseRule
  │   │  [0] LdLoc
- │   ├─ From <013> ASMLdcI4Rule
- │   │  [0] LdcI4
- │   ├─ From <014> ASMCompareRule
- │   │  [0] Clt
- │   ├─ From <015> ASMBrRule
- │   │  [0] BrFalse
- │   ├─ From <016> ASMVarUseRule
- │   │  [0] LdLoc
- │   ├─ From <017> ASMPrintRule
+ │   ├─ From <008> ASMPrintRule
  │   │  [0] Print
- │   ├─ From <018> ASMVarUseRule
- │   │  [0] LdLoc
- │   ├─ From <019> ASMVarUseRule
- │   │  [0] LdLoc
- │   ├─ From <020> ASMArithmeticRule
- │   │  [0] Add
- │   ├─ From <021> ASMVarUseRule
- │   │  [0] StLoc
- │   ├─ From <022> ASMVarUseRule
- │   │  [0] LdLoc
- │   ├─ From <023> ASMVarUseRule
- │   │  [0] StLoc
- │   ├─ From <024> ASMVarUseRule
- │   │  [0] LdLoc
- │   ├─ From <025> ASMVarUseRule
- │   │  [0] StLoc
- │   ├─ From <026> ASMBrRule
- │   │  [0] Br
- │   ├─ From <027> ASMLabelRule
- │   │  [0] NewBr
- │   ├─ From <028> ASMReturnRule
+ │   ├─ From <009> ASMReturnRule
  │   │  [0] Ret
 
 >> COMPILER LOGS: NONE

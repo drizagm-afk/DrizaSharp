@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Reflection.Metadata;
 
-namespace DrzSharp.Compiler.Model;
+namespace DrzSharp.Compiler.Models;
 
 public static class InstanceKind
 {

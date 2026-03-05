@@ -1,4 +1,4 @@
-namespace DrzSharp.Compiler.Model;
+namespace DrzSharp.Compiler.Models;
 
 public static class VirtualDebugger
 {

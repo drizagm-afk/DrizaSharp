@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace DrzSharp.Compiler.Model;
+namespace DrzSharp.Compiler.Models;
 
 public class VirtualWorld
 {
