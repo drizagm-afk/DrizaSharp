@@ -52,8 +52,8 @@ public class EntryPoint : RuleInstance, IASMMethod
     }
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.EmitInstr(Virtual.EntryPoint(ctx));
-        ctx.EmitInstr(Virtual.InitASMMethod(ctx, _labelCount));
+        ctx.EmitInstr(Lowerer.Virtual.EntryPoint(ctx));
+        ctx.EmitInstr(Lowerer.Virtual.InitASMMethod(ctx, _labelCount));
 
         ctx.Emit(default, new EmitNode(1, Body));
     }

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using DrzSharp.Compiler.Virtual;
 
 namespace DrzSharp.Compiler;
 
@@ -23,6 +24,11 @@ public static partial class Compiler
         var proj = EvalProject(root, target);
         procTime.Add(("~EVALUATION", sw.Elapsed.TotalMilliseconds));
 
+        ShowProcessTime(procTime);
+
+        VirtualDebugger.Debug(proj);
+
+        /*
         //1. TOKENIZATION (LEXER)
         LexProject(proj);
         procTime.Add(("~LEXING", sw.Elapsed.TotalMilliseconds));
@@ -48,6 +54,7 @@ public static partial class Compiler
         var config = JsonSerializer.Deserialize<Diagnostics.Config>(json, opts);
 
         Debug(proj, config!);
+        */
     }
 
     public static void ShowProcessTime(List<(string, double)> procTime)
