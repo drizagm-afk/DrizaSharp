@@ -1,0 +1,89 @@
+"filename", "language", "Markdown", "XML", "JSON", "C#", "comment", "blank", "total"
+"c:\Driza\DrizaSharp\Compiler\Compiler.cs", "C#", 0, 0, 0, 49, 17, 18, 84
+"c:\Driza\DrizaSharp\Compiler\Context\Context.cs", "C#", 0, 0, 0, 21, 1, 5, 27
+"c:\Driza\DrizaSharp\Compiler\Context\Identifiers.cs", "C#", 0, 0, 0, 5, 0, 1, 6
+"c:\Driza\DrizaSharp\Compiler\Context\Loader.cs", "C#", 0, 0, 0, 112, 6, 22, 140
+"c:\Driza\DrizaSharp\Compiler\Context\Loader\01 Bind.cs", "C#", 0, 0, 0, 130, 24, 28, 182
+"c:\Driza\DrizaSharp\Compiler\Context\Loader\02 BindData.cs", "C#", 0, 0, 0, 290, 38, 51, 379
+"c:\Driza\DrizaSharp\Compiler\Context\Loader\03 Ruleset.cs", "C#", 0, 0, 0, 21, 6, 5, 32
+"c:\Driza\DrizaSharp\Compiler\Context\Loader\Loader.cs", "C#", 0, 0, 0, 25, 3, 4, 32
+"c:\Driza\DrizaSharp\Compiler\Default\Bindings.cs", "C#", 0, 0, 0, 9, 0, 1, 10
+"c:\Driza\DrizaSharp\Compiler\Default\Lexer\Bindings.cs", "C#", 0, 0, 0, 58, 4, 15, 77
+"c:\Driza\DrizaSharp\Compiler\Default\Lexer\Rules.cs", "C#", 0, 0, 0, 125, 3, 22, 150
+"c:\Driza\DrizaSharp\Compiler\Default\Parser\Bindings.cs", "C#", 0, 0, 0, 30, 2, 7, 39
+"c:\Driza\DrizaSharp\Compiler\Default\Parser\Patterns\Groups.cs", "C#", 0, 0, 0, 57, 4, 6, 67
+"c:\Driza\DrizaSharp\Compiler\Default\Parser\Patterns\Shortcuts.cs", "C#", 0, 0, 0, 9, 0, 2, 11
+"c:\Driza\DrizaSharp\Compiler\Default\Parser\Patterns\TokenTables.cs", "C#", 0, 0, 0, 52, 1, 9, 62
+"c:\Driza\DrizaSharp\Compiler\Default\Parser\Patterns\Tokens.cs", "C#", 0, 0, 0, 36, 4, 6, 46
+"c:\Driza\DrizaSharp\Compiler\Default\Parser\Realms.cs", "C#", 0, 0, 0, 7, 0, 2, 9
+"c:\Driza\DrizaSharp\Compiler\Default\Parser\Rules.cs", "C#", 0, 0, 0, 409, 11, 44, 464
+"c:\Driza\DrizaSharp\Compiler\Default\Parser\Tags.cs", "C#", 0, 0, 0, 7, 0, 2, 9
+"c:\Driza\DrizaSharp\Compiler\Diagnostics\Config.cs", "C#", 0, 0, 0, 0, 29, 0, 29
+"c:\Driza\DrizaSharp\Compiler\Diagnostics\Diagnostics.cs", "C#", 0, 0, 0, 53, 0, 5, 58
+"c:\Driza\DrizaSharp\Compiler\Diagnostics\Exceptions.cs", "C#", 0, 0, 0, 2, 0, 1, 3
+"c:\Driza\DrizaSharp\Compiler\Diagnostics\Render.cs", "C#", 0, 0, 0, 0, 521, 0, 521
+"c:\Driza\DrizaSharp\Compiler\Models\Source.cs", "C#", 0, 0, 0, 42, 0, 6, 48
+"c:\Driza\DrizaSharp\Compiler\Models\TASI.cs", "C#", 0, 0, 0, 207, 17, 37, 261
+"c:\Driza\DrizaSharp\Compiler\Models\TAST.cs", "C#", 0, 0, 0, 460, 32, 83, 575
+"c:\Driza\DrizaSharp\Compiler\Pipeline\01 Loader\01 Restore.cs", "C#", 0, 0, 0, 31, 3, 6, 40
+"c:\Driza\DrizaSharp\Compiler\Pipeline\01 Loader\02 Load.cs", "C#", 0, 0, 0, 19, 1, 4, 24
+"c:\Driza\DrizaSharp\Compiler\Pipeline\01 Loader\Process.cs", "C#", 0, 0, 0, 25, 2, 4, 31
+"c:\Driza\DrizaSharp\Compiler\Pipeline\02 Lexer\01 Lex\Context.cs", "C#", 0, 0, 0, 32, 3, 7, 42
+"c:\Driza\DrizaSharp\Compiler\Pipeline\02 Lexer\01 Lex\Phase.cs", "C#", 0, 0, 0, 55, 9, 13, 77
+"c:\Driza\DrizaSharp\Compiler\Pipeline\02 Lexer\Context.cs", "C#", 0, 0, 0, 15, 1, 2, 18
+"c:\Driza\DrizaSharp\Compiler\Pipeline\02 Lexer\Process.cs", "C#", 0, 0, 0, 20, 3, 6, 29
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\01 Match\Build\Context.cs", "C#", 0, 0, 0, 47, 0, 11, 58
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\01 Match\Build\Step.cs", "C#", 0, 0, 0, 35, 0, 7, 42
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\01 Match\Match\Context.cs", "C#", 0, 0, 0, 121, 13, 20, 154
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\01 Match\Match\Pattern\Definition.cs", "C#", 0, 0, 0, 48, 6, 10, 64
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\01 Match\Match\Pattern\Patterns.cs", "C#", 0, 0, 0, 140, 6, 29, 175
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\01 Match\Match\Step.cs", "C#", 0, 0, 0, 162, 21, 32, 215
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\01 Match\Match\View.cs", "C#", 0, 0, 0, 176, 9, 25, 210
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\01 Match\Phase.cs", "C#", 0, 0, 0, 16, 2, 3, 21
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\02 Bind\Phase.cs", "C#", 0, 0, 0, 30, 2, 6, 38
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\03 Validate\Context.cs", "C#", 0, 0, 0, 75, 4, 10, 89
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\03 Validate\Phase.cs", "C#", 0, 0, 0, 64, 3, 14, 81
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\04 Emit\Context.cs", "C#", 0, 0, 0, 68, 4, 13, 85
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\04 Emit\Phase.cs", "C#", 0, 0, 0, 41, 4, 7, 52
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\Context.cs", "C#", 0, 0, 0, 41, 6, 10, 57
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\Mutate\Context.cs", "C#", 0, 0, 0, 71, 5, 15, 91
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\Mutate\Step.cs", "C#", 0, 0, 0, 99, 9, 19, 127
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\Process.cs", "C#", 0, 0, 0, 26, 3, 7, 36
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\Semantics\Context.cs", "C#", 0, 0, 0, 10, 0, 4, 14
+"c:\Driza\DrizaSharp\Compiler\Pipeline\03 Parser\Semantics\Tags.cs", "C#", 0, 0, 0, 147, 13, 26, 186
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Context.cs", "C#", 0, 0, 0, 13, 0, 2, 15
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Instructions\Context.cs", "C#", 0, 0, 0, 76, 2, 9, 87
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Instructions\InstrList\Constants.cs", "C#", 0, 0, 0, 57, 5, 6, 68
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Instructions\InstrList\Flow.cs", "C#", 0, 0, 0, 51, 4, 9, 64
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Instructions\InstrList\Math.cs", "C#", 0, 0, 0, 59, 7, 7, 73
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Instructions\InstrList\Memory.cs", "C#", 0, 0, 0, 41, 3, 7, 51
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Instructions\InstrList\Special.cs", "C#", 0, 0, 0, 56, 6, 9, 71
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Instructions\Step.cs", "C#", 0, 0, 0, 118, 7, 10, 135
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Phase.cs", "C#", 0, 0, 0, 23, 1, 4, 28
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\01 Lower\Virtual\Step.cs", "C#", 0, 0, 0, 8, 0, 3, 11
+"c:\Driza\DrizaSharp\Compiler\Pipeline\04 Lowerer\Process.cs", "C#", 0, 0, 0, 24, 3, 6, 33
+"c:\Driza\DrizaSharp\Compiler\Project.cs", "C#", 0, 0, 0, 57, 0, 13, 70
+"c:\Driza\DrizaSharp\Compiler\Rules\Assembly.cs", "C#", 0, 0, 0, 21, 5, 9, 35
+"c:\Driza\DrizaSharp\Compiler\Rules\Bindings.cs", "C#", 0, 0, 0, 21, 0, 4, 25
+"c:\Driza\DrizaSharp\Compiler\Rules\Bindings\Lexer.cs", "C#", 0, 0, 0, 20, 0, 6, 26
+"c:\Driza\DrizaSharp\Compiler\Rules\Bindings\Parser.cs", "C#", 0, 0, 0, 80, 3, 25, 108
+"c:\Driza\DrizaSharp\Compiler\Rules\Context.cs", "C#", 0, 0, 0, 15, 0, 4, 19
+"c:\Driza\DrizaSharp\Compiler\Rules\Context\Lexer.cs", "C#", 0, 0, 0, 30, 3, 5, 38
+"c:\Driza\DrizaSharp\Compiler\Rules\Context\Parser.cs", "C#", 0, 0, 0, 76, 4, 11, 91
+"c:\Driza\DrizaSharp\Compiler\Rules\Definitions\Lexer.cs", "C#", 0, 0, 0, 13, 2, 2, 17
+"c:\Driza\DrizaSharp\Compiler\Rules\Definitions\Parser.cs", "C#", 0, 0, 0, 95, 12, 23, 130
+"c:\Driza\DrizaSharp\Compiler\Shared.cs", "C#", 0, 0, 0, 24, 2, 6, 32
+"c:\Driza\DrizaSharp\Compiler\Virtual\Assembly.cs", "C#", 0, 0, 0, 227, 22, 46, 295
+"c:\Driza\DrizaSharp\Compiler\Virtual\Assembly\Fields.cs", "C#", 0, 0, 0, 45, 7, 13, 65
+"c:\Driza\DrizaSharp\Compiler\Virtual\Assembly\Methods.cs", "C#", 0, 0, 0, 200, 16, 43, 259
+"c:\Driza\DrizaSharp\Compiler\Virtual\Assembly\Properties.cs", "C#", 0, 0, 0, 51, 6, 11, 68
+"c:\Driza\DrizaSharp\Compiler\Virtual\Assembly\Types.cs", "C#", 0, 0, 0, 254, 20, 49, 323
+"c:\Driza\DrizaSharp\Compiler\Virtual\Debugger.cs", "C#", 0, 0, 0, 65, 3, 13, 81
+"c:\Driza\DrizaSharp\Compiler\Virtual\World.cs", "C#", 0, 0, 0, 8, 1, 2, 11
+"c:\Driza\DrizaSharp\Compiler\Virtual\World\Usage.cs", "C#", 0, 0, 0, 111, 32, 26, 169
+"c:\Driza\DrizaSharp\DrizaSharp.csproj", "XML", 0, 11, 0, 0, 0, 4, 15
+"c:\Driza\DrizaSharp\Program.cs", "C#", 0, 0, 0, 3, 1, 1, 5
+"c:\Driza\DrizaSharp\Program.runtimeconfig.json", "JSON", 0, 0, 9, 0, 0, 0, 9
+"c:\Driza\DrizaSharp\README.md", "Markdown", 0, 0, 0, 0, 0, 1, 1
+"c:\Driza\DrizaSharp\dzdiag.config.json", "JSON", 0, 0, 15, 0, 0, 0, 15
+"Total", "-", 0, 11, 24, 5772, 1032, 1081, 7920

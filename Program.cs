@@ -2,4 +2,4 @@
 using DrzSharp.Compiler;
 
 Compiler.Bind();
-Compiler.Compile(@"C:\Driza\DrizaSharp", @"testfiles\Program.dz");
+Compiler.Compile(@"C:\Driza\DrizaSharp\testfiles\Program.dz");

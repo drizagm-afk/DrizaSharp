@@ -1,50 +1,63 @@
 using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using DrzSharp.Compiler.Virtual;
+using DrzSharp.Compiler.Lexer;
+using DrzSharp.Compiler.Loader;
+using DrzSharp.Compiler.Lowerer;
+using DrzSharp.Compiler.Parser;
 
 namespace DrzSharp.Compiler;
 
 public static partial class Compiler
 {
-    public static void Bind()
-    {
-        Stopwatch sw = Stopwatch.StartNew();
-        Default.Bindings.Bind();
-        sw.Stop();
-
-        Console.WriteLine($"BINDING TIME: {sw.Elapsed.TotalMilliseconds:F4}");
-    }
-    public static void Compile(string root, string target)
+    public static void Compile(string path)
     {
         Stopwatch sw = Stopwatch.StartNew();
         List<(string, double)> procTime = [];
 
-        //0. PROJECT EVALUATION
-        var proj = EvalProject(root, target);
-        procTime.Add(("~EVALUATION", sw.Elapsed.TotalMilliseconds));
+        //1 LOADER
+        var loader = Loader.Manager.NewProcess(path);
+        loader.Restore();
+        procTime.Add(("[LOADER] RESTORE", sw.Elapsed.TotalMilliseconds));
+
+        loader.Load();
+        procTime.Add(("[LOADER] LOAD", sw.Elapsed.TotalMilliseconds));
+
+        loader.EndProcess();
+
+        //2 LEXER
+        var lexer = Lexer.Manager.NewProcess(loader.Project);
+        lexer.Lex();
+        procTime.Add(("[LEXER] LEX", sw.Elapsed.TotalMilliseconds));
+
+        lexer.EndProcess();
+
+        //3 PARSER
+        var parser = Parser.Manager.NewProcess(loader.Project);
+        parser.Match();
+        procTime.Add(("[PARSER] MATCH", sw.Elapsed.TotalMilliseconds));
+
+        parser.Bind();
+        procTime.Add(("[PARSER] BIND", sw.Elapsed.TotalMilliseconds));
+
+        parser.Validate();
+        procTime.Add(("[PARSER] VALIDATE", sw.Elapsed.TotalMilliseconds));
+
+        parser.Emit();
+        procTime.Add(("[PARSER] EMIT", sw.Elapsed.TotalMilliseconds));
+
+        parser.EndProcess();
+
+        //4 LOWERER
+        var lowerer = Lowerer.Manager.NewProcess(loader.Project);
+        lowerer.Lower();
+        procTime.Add(("[LOWERER] LOWER", sw.Elapsed.TotalMilliseconds));
+
+        lowerer.EndProcess();
 
         ShowProcessTime(procTime);
-
-        VirtualDebugger.Debug(proj);
 
         /*
-        //1. TOKENIZATION (LEXER)
-        LexProject(proj);
-        procTime.Add(("~LEXING", sw.Elapsed.TotalMilliseconds));
+        VirtualDebugger.Debug(loader.Project.Assembly.Virtual);
 
-        //2. PARSING (PARSER)
-        ParseProject(proj);
-        procTime.Add(("~PARSING", sw.Elapsed.TotalMilliseconds));
-
-        //3. LOWERING (LOWERER)
-        LowerProject(proj);
-        procTime.Add(("~LOWERING", sw.Elapsed.TotalMilliseconds));
-
-        sw.Stop();
-        ShowProcessTime(procTime);
-
-        //DEBUG
         var opts = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
