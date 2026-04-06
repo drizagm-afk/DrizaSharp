@@ -34,9 +34,9 @@ public sealed partial class TAST(SourceText source)
         _tokens[id] = token;
         return id;
     }
-    public int NewToken(GlobalId type, int start, int length)
+    public int NewToken(int type, int start, int length)
     => AddTokenItem(new(_tokenCount, type, start, length));
-    public int NewToken(GlobalId type, int start, int length, string rephrase)
+    public int NewToken(int type, int start, int length, string rephrase)
     {
         var id = NewToken(type, start, length);
         _tokenRephrases[id] = rephrase;
@@ -90,14 +90,14 @@ public sealed partial class TAST(SourceText source)
 }
 
 //===== TOKEN =====
-public readonly struct Token(int id, GlobalId type, int start, int length)
+public readonly struct Token(int id, int type, int start, int length)
 {
     public readonly int Id = id;
-    public readonly GlobalId Type = type;
+    public readonly int Type = type;
     public readonly int Start = start;
     public readonly int Length = length;
 
-    public bool IsNull => Type == Tokens.NULL;
+    public bool IsNull => Type == Tokens.NULL_ID;
 }
 
 //=================
@@ -293,7 +293,7 @@ public sealed partial class TAST
 
         return ref _nodeInfos[nodeId];
     }
-    public void UpdateInfo(int nodeId, GlobalId? realmId = null, bool? isScoped = null, bool? isLinear = null)
+    public void UpdateInfo(int nodeId, int? realmId = null, bool? isScoped = null, bool? isLinear = null)
     {
         ref readonly var info = ref InfoAt(nodeId);
         _nodeInfos[nodeId] = new(realmId ?? info.RealmId, isScoped ?? info.IsScoped, isLinear ?? info.IsLinear);
@@ -540,9 +540,9 @@ public readonly struct TokenSpan
 }
 
 //===== NODE INFO =====
-public readonly struct TASTInfo(GlobalId realmId, bool isScoped = false, bool isLinear = true)
+public readonly struct TASTInfo(int realmId, bool isScoped = false, bool isLinear = true)
 {
-    public readonly GlobalId RealmId = realmId;
+    public readonly int RealmId = realmId;
     public readonly bool IsScoped = isScoped;
     public readonly bool IsLinear = isLinear;
 }

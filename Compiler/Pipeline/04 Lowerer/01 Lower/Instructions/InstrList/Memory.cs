@@ -15,7 +15,10 @@ public static class Locals
     internal static void Rule_DeclLocal(InstrContext ctx)
     {
         var vars = ctx.Variables;
-        if (vars.Count != ctx.ReadInt32())
+
+        var val = ctx.ReadInt32();
+        Console.WriteLine($"{vars.Count} : {val}");
+        if (vars.Count != val)
             throw new Exception();
 
         vars.Add(new(ctx.Module.TypeSystem.Int32));

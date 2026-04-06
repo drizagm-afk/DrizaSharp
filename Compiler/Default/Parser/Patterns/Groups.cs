@@ -12,7 +12,7 @@ public static class Groups
         patt.AddPattern((id, ctx, span) =>
         {
             var evalSpan = span;
-            var openerStack = new Stack<GlobalId>();
+            var openerStack = new Stack<int>();
             var length = 0;
 
             //MATCH
@@ -36,11 +36,11 @@ public static class Groups
 
                 //EVAL CLOSURE
                 var type = token.Type;
-                if (IsOpener(type)) openerStack.Push(type);
-                else if (IsCloser(type))
+                if (IsOpener(ctx, type)) openerStack.Push(type);
+                else if (IsCloser(ctx, type))
                 {
                     if (openerStack.Count <= 0) return 0;
-                    if (!ClosureMatches(openerStack.Pop(), type)) return 0;
+                    if (!ClosureMatches(ctx, openerStack.Pop(), type)) return 0;
                 }
 
                 //MOVE FORWARD
@@ -53,15 +53,25 @@ public static class Groups
         });
         return patt;
     }
-    private static bool IsOpener(GlobalId type)
-    => type == TokenType.OpParen || type == TokenType.OpBrack || type == TokenType.OpBrace;
-    private static bool IsCloser(GlobalId type)
-    => type == TokenType.ClParen || type == TokenType.ClBrack || type == TokenType.ClBrace;
-    private static bool ClosureMatches(GlobalId op, GlobalId cl)
+    private static bool IsOpener(Context ctx, int type)
+    => type == ctx.TokenType(TokenType.OpParen)
+    || type == ctx.TokenType(TokenType.OpBrack)
+    || type == ctx.TokenType(TokenType.OpBrace);
+    private static bool IsCloser(Context ctx, int type)
+    => type == ctx.TokenType(TokenType.ClParen)
+    || type == ctx.TokenType(TokenType.ClBrack)
+    || type == ctx.TokenType(TokenType.ClBrace);
+    private static bool ClosureMatches(Context ctx, int op, int cl)
     {
-        if (op == TokenType.OpParen && cl == TokenType.ClParen) return true;
-        if (op == TokenType.OpBrack && cl == TokenType.ClBrack) return true;
-        if (op == TokenType.OpBrace && cl == TokenType.ClBrace) return true;
+        if (op == ctx.TokenType(TokenType.OpParen)
+        && cl == ctx.TokenType(TokenType.ClParen))
+            return true;
+        if (op == ctx.TokenType(TokenType.OpBrack) 
+        && cl == ctx.TokenType(TokenType.ClBrack))
+            return true;
+        if (op == ctx.TokenType(TokenType.OpBrace) 
+        && cl == ctx.TokenType(TokenType.ClBrace))
+            return true;
         return false;
     }
 }

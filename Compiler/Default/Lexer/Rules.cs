@@ -58,16 +58,16 @@ public static class Ruleset
     public static void PrefixRule(LexContext ctx, ReadOnlySpan<char> content)
     {
         var prefix = content[0];
-        GlobalId prefixType = prefix switch
+        string? prefixType = prefix switch
         {
             '@' => TokenType.AtsignPrefix,
             '#' => TokenType.HashPrefix,
             '$' => TokenType.DollarPrefix,
-            _ => default
+            _ => null
         };
 
         //PREFIX EVAL
-        if (prefixType == default) return;
+        if (prefixType is null) return;
 
         //KEYWORD EVAL
         var i = 1;
@@ -87,9 +87,9 @@ public static class Ruleset
     public static void BoolRule(LexContext ctx, ReadOnlySpan<char> content)
     {
         if (content.StartsWith("true", StringComparison.Ordinal))
-            ctx.NewToken(TokenType.Bool, 4);
+            ctx.NewToken(TokenType.BoolLit, 4);
         else if (content.StartsWith("false", StringComparison.Ordinal))
-            ctx.NewToken(TokenType.Bool, 5);
+            ctx.NewToken(TokenType.BoolLit, 5);
     }
     public static void NumberRule(LexContext ctx, ReadOnlySpan<char> content)
     {
@@ -102,7 +102,7 @@ public static class Ruleset
             break;
         }
 
-        if (i > 0) ctx.NewToken(TokenType.Number, i);
+        if (i > 0) ctx.NewToken(TokenType.NumberLit, i);
     }
     public static void StringRule(LexContext ctx, ReadOnlySpan<char> content)
     {
@@ -119,7 +119,7 @@ public static class Ruleset
 
             if (c == prefix && content[i - 1] != '\\')
             {
-                ctx.NewToken(TokenType.String, i, str.ToString());
+                ctx.NewToken(TokenType.StringLit, i, str.ToString());
                 return;
             }
             str.Append(c);

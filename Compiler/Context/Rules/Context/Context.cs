@@ -1,6 +1,6 @@
 namespace DrzSharp.Compiler.Rules;
 
-internal static class RulesetExt
+internal static class RuleExt
 {
     //>>>> GLOBAL <<<<
     internal static Ruleset Ruleset(this DzProject proj)

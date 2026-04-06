@@ -24,6 +24,7 @@ public interface MatchContext : MatchView
     //RECURSIVE MATCHING
     public RuleInstance? MatchRule<R>(TokenSpan span) where R : Rule;
     public RuleInstance? MatchRuleClass<C>(TokenSpan span) where C : RuleClass;
+    public RuleInstance? MatchRealm(int realm, TokenSpan span);
 
     //PATTERN MATCHING
     public bool TryTokenAtSpan(TokenSpan span, out Token token);
@@ -130,6 +131,20 @@ public partial class ParserProcess : MatchContext
     => MatchRule(GetRule<R>(), span);
     public RuleInstance? MatchRuleClass<C>(TokenSpan span) where C : RuleClass
     => MatchRuleClass(GetRuleClassId<C>(), span);
+    public RuleInstance? MatchRealm(int realm, TokenSpan span)
+    {
+        foreach (var rule in Project.RulesPerRealm(Module, realm))
+        {
+            if (rule.IsAbstract) continue;
+
+            //MATCH
+            var inst = MatchRule(rule, span);
+
+            if (inst is not null)
+                return inst;
+        }
+        return null;
+    }
 
     //PATTERN MATCHING
     public bool TryTokenAtSpan(TokenSpan span, out Token token)

@@ -11,14 +11,14 @@ public partial class ParserProcess
         RuleInst = null;
     }
 
-    private int Nest(TokenSpan span, GlobalId? realmId, bool isScoped)
+    private int Nest(TokenSpan span, int? realmId, bool isScoped)
     {
         var slice = TAST.ToFlatSlice(span);
         var parentInfo = TAST.InfoAt(span.NodeId);
 
         return TAST.Nest(span.NodeId, slice.Start, slice.Length, new(realmId ?? parentInfo.RealmId, isScoped));
     }
-    public partial int NestSpan(TokenSpan span, GlobalId? realmId, bool isScoped)
+    public partial int NestSpan(TokenSpan span, int? realmId, bool isScoped)
     {
         if (TAST.TryGetNest(span, out var nestId))
             return nestId;

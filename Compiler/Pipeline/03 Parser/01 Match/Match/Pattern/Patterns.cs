@@ -5,7 +5,32 @@ namespace DrzSharp.Compiler.Parser;
 public partial class Pattern
 {
     //DEFAULT PATTERNS
-    public Pattern Token(GlobalId type, string? val = null, int? captureTag = null)
+    public Pattern Token(string tokenName, string? val = null, int? captureTag = null)
+    {
+        AddPattern((_, ctx, span) =>
+        {
+            //MATCH
+            var token = ctx.TokenAtSpan(span);
+            if (token.Type != ctx.TokenType(tokenName))
+                return 0;
+            if (val is not null)
+            {
+                var txt = ctx.GetTextSpan(token.Id);
+                if (txt.Length != val.Length)
+                    return 0;
+                if (!txt.StartsWith(val))
+                    return 0;
+            }
+
+            //VAR
+            if (captureTag is int tag)
+                ctx.StoreVar(tag, span.With(length: 1));
+
+            return 1;
+        });
+        return this;
+    }
+    public Pattern Token(int type, string? val = null, int? captureTag = null)
     {
         AddPattern((_, ctx, span) =>
         {
@@ -72,6 +97,52 @@ public partial class Pattern
             if (captureTag is int tag)
                 ctx.StoreRuleVar(tag, inst);
 
+            return inst.Span.Length;
+        });
+        return this;
+    }
+    public Pattern Realm(string realmName, int? captureTag = null)
+    {
+        AddPattern((_, ctx, span) =>
+        {
+            var hash = ctx.Hash;
+            ctx.NewHash();
+
+            var inst = ctx.MatchRealm(ctx.Realm(realmName), span);
+            if (inst is null)
+            {
+                ctx.LoadHash(hash);
+                return 0;
+            }
+
+            //RETURN
+            ctx.LoadHash(hash);
+            if (captureTag is int tag)
+                ctx.StoreRuleVar(tag, inst);
+            
+            return inst.Span.Length;
+        });
+        return this;
+    }
+    public Pattern Realm(int realm, int? captureTag = null)
+    {
+        AddPattern((_, ctx, span) =>
+        {
+            var hash = ctx.Hash;
+            ctx.NewHash();
+
+            var inst = ctx.MatchRealm(realm, span);
+            if (inst is null)
+            {
+                ctx.LoadHash(hash);
+                return 0;
+            }
+
+            //RETURN
+            ctx.LoadHash(hash);
+            if (captureTag is int tag)
+                ctx.StoreRuleVar(tag, inst);
+            
             return inst.Span.Length;
         });
         return this;

@@ -2,7 +2,7 @@ using DrzSharp.Compiler.Model;
 
 namespace DrzSharp.Compiler.Rules.Lexer;
 
-internal static class RulesetExt
+internal static class RuleExt
 {
     //>>>> TOKEN TYPES <<<<
     public static TokenTypeData TokenTypeAt(this DzProject proj, int id)

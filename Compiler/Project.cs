@@ -20,11 +20,6 @@ public class DzProject
 
     public VIR Virtual = new();
 
-    /*
-    public RAssembly Ruleset = new();
-    public ImmutableArray<int> Dependencies { get; internal set; }
-    */
-
     public ImmutableArray<DzModule> Modules { get; internal set; }
     public ImmutableArray<DzFile> Files { get; internal set; }
 

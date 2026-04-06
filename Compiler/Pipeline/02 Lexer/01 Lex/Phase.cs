@@ -19,7 +19,7 @@ public partial class LexerProcess
         File = file;
 
         //STARTING NEWLINE
-        NewToken(Tokens.NEWLINE, -1, 1);
+        NewToken(Tokens.NEWLINE_ID, -1, 1);
 
         //LOOP
         iter = 0;
@@ -30,8 +30,8 @@ public partial class LexerProcess
             //NEWLINE RULE
             if (c == '\n' || c == ';')
             {
-                if (LastToken().Type != Tokens.NEWLINE)
-                    NewToken(Tokens.NEWLINE, iter, 1);
+                if (LastToken().Type != Tokens.NEWLINE_ID)
+                    NewToken(Tokens.NEWLINE_ID, iter, 1);
 
                 iter++;
                 continue;
@@ -68,8 +68,8 @@ public partial class LexerProcess
         }
 
         //ENDING NEWLINE
-        if (LastToken().Type != Tokens.NEWLINE)
-            NewToken(Tokens.NEWLINE, -2, 1);
+        if (LastToken().Type != Tokens.NEWLINE_ID)
+            NewToken(Tokens.NEWLINE_ID, -2, 1);
 
         //BUILD FLAT-TAST
         TAST.BuildFlatTAST();

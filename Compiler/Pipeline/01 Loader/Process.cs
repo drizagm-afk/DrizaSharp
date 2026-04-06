@@ -11,10 +11,14 @@ public static class Manager
 public partial class LoaderProcess
 {
     public DzProject Project { get; internal set; }
+    private CompilationContext Context => CompilationContext.ContextAt(Project.Id);
+
     private ProjectDiagnostics GlobalDiagnostics => Project.LoaderDiagnostics;
 
     internal LoaderProcess(string path)
-    => Project = new DzProject(path, GetProjectType(path));
+    {
+        Project = new DzProject(CompilationContext.EnsureContext(path), path, GetProjectType(path));
+    }
     private static DzProjectType GetProjectType(string path)
     {
         return Path.GetExtension(path) switch

@@ -6,7 +6,7 @@ public static class Tokens
     public const string NULL = "\0";
     public const byte NULL_ID = 0;
 
-    public const string NEWLINE = "Newline";
+    public const string NEWLINE = "NEWLINE";
     public const byte NEWLINE_ID = 1;
 }
 public readonly struct TokenTypeData(string name, bool showValue, bool mustParse)

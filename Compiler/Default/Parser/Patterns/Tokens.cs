@@ -38,9 +38,9 @@ public static class Tokens
 
     //VALUES
     public static Pattern boolLit(this Pattern patt, string? val = null, int? captureTag = null)
-    => patt.Token(TokenType.Bool, val, captureTag);
+    => patt.Token(TokenType.BoolLit, val, captureTag);
     public static Pattern numberLit(this Pattern patt, string? val = null, int? captureTag = null)
-    => patt.Token(TokenType.Number, val, captureTag);
+    => patt.Token(TokenType.NumberLit, val, captureTag);
     public static Pattern stringLit(this Pattern patt, string? val = null, int? captureTag = null)
-    => patt.Token(TokenType.String, val, captureTag);
+    => patt.Token(TokenType.StringLit, val, captureTag);
 }

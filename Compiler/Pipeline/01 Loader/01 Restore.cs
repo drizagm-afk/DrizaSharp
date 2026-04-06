@@ -8,33 +8,38 @@ public partial class LoaderProcess
     public partial void Restore()
     {
         RestoreDependencies();
-        RestoreRuleset();
         RestoreModules();
+        RestoreRuleset();
     }
     public void RestoreDependencies()
     {
-        var builder = ImmutableArray.CreateBuilder<int>();
-
-        //MSCORELIB
-        Context.LazyLoadAssembly(@"C:\Driza\DrizaSharp\packages\System.Private.CoreLib.dll");
-        builder.Add(0);
-
-        Project.Dependencies = builder.MoveToImmutable();
+        //CORELIB
+        Context.LoadDependency(@"C:\Driza\DrizaSharp\packages\System.Private.CoreLib.dll");
     }
     public void RestoreModules()
     {
         var builder = ImmutableArray.CreateBuilder<DzModule>();
 
         //MAIN MODULE
-        DzModule mod = new(0, VAssembly.GlobalNspaceId);
-        builder.Add(mod);
+        builder.Add(RestoreModuleDependencies(0, VAssembly.GlobalNspaceId));
 
-        Project.Modules = builder.MoveToImmutable();
+        Project.Modules = builder.ToImmutable();
+    }
+    public DzModule RestoreModuleDependencies(int id, int nspaceId)
+    {
+        DzModule module = new(id, nspaceId);
+        var builder = ImmutableArray.CreateBuilder<GlobalId>();
+
+        //SELF DEPENDENCY
+        builder.Add(new(-1, nspaceId));
+
+        module.Dependencies = builder.ToImmutable();
+
+        return module;
     }
     public void RestoreRuleset()
     {
-        //RULES
-        Project.Ruleset = new();
-        Context.LoadRuleset(Project.Ruleset, -1, 0, "");
+        //RULESET
+        Context.BindRuleset("", -1, 0);
     }
 }

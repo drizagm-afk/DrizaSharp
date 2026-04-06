@@ -25,7 +25,7 @@ public partial class ParserProcess : ValidateContext
         RuleInst!.Validity = Validity.Invalid;
 
         var nodeId = RuleInst.NodeId;
-        Diagnostics.AddWarning(
+        Diagnostics.AddError(
             TAST.SourceSlice(nodeId),
             nodeId,
             message

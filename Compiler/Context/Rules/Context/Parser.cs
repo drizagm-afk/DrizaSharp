@@ -2,7 +2,7 @@ using DrzSharp.Compiler.Model;
 
 namespace DrzSharp.Compiler.Rules.Parser;
 
-public static class Ruleset
+public static class RuleExt
 {
     //>>>> REALMS <<<<
     public static RealmData RealmAt(this DzProject proj, int id)
@@ -49,7 +49,8 @@ public static class Ruleset
             for (int j = ruleIds.Count - 1; j >= 0; j--)
             {
                 var id = ruleIds[j];
-                yield return proj.GetRule(new(dep.AssemblyId, dep.LocalId, id));
+                var rule = proj.GetRule(new(dep.AssemblyId, dep.LocalId, id));
+                yield return rule;
             }
         }
     }

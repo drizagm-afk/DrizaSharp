@@ -1,9 +1,12 @@
 using DrzSharp.Compiler.Model;
+using DrzSharp.Compiler.Rules.Lexer;
 
 namespace DrzSharp.Compiler.Lexer;
 
 public interface Context
 {
+    public int TokenType(string tokenName);
+
     //TOKEN RESEARCH
     public bool TryTokenAt(int tokenId, out Token token);
     public bool HasTokenAt(int tokenId);
@@ -11,6 +14,10 @@ public interface Context
 }
 public partial class LexerProcess : Context
 {
+    public int TokenType(string tokenName)
+    => Project.TokenTypeId(tokenName);
+
+    //TOKEN RESEARCH
     public bool TryTokenAt(int tokenId, out Token token)
     => TAST.TryTokenAt(tokenId, out token);
     public bool HasTokenAt(int tokenId) => TAST.HasTokenAt(tokenId);

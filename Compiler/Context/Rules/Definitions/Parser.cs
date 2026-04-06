@@ -61,15 +61,15 @@ public abstract class RuleInstance
     protected virtual void OnBuildMutate(MutateContext ctx) { }
 
     //MUTATE
-    public bool Rewritten { get; internal set; }
-
-    internal void Rewrite(DrzSharp.Compiler.Parser.Context ctx) => OnRewrite(ctx);
-    protected virtual void OnRewrite(DrzSharp.Compiler.Parser.Context ctx)
+    public bool IsRewritten { get; internal set; }
+    internal void Rewrite(Context ctx) => OnRewrite(ctx);
+    protected virtual void OnRewrite(Context ctx)
     {
         BypassEmit = true;
     }
-    internal void Append(DrzSharp.Compiler.Parser.Context ctx, int appendId) => OnAppend(ctx, appendId);
-    protected virtual void OnAppend(DrzSharp.Compiler.Parser.Context ctx, int appendId)
+
+    internal void Append(Context ctx, int appendId) => OnAppend(ctx, appendId);
+    protected virtual void OnAppend(Context ctx, int appendId)
     {
         throw new NotSupportedException($"The Rule {RuleId} doesn't support Appending");
     }

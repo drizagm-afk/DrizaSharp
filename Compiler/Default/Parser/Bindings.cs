@@ -1,4 +1,3 @@
-using DrzSharp.Compiler.Parser;
 using DrzSharp.Compiler.Rules;
 
 namespace DrzSharp.Compiler.Default.Parser;
@@ -37,12 +36,12 @@ public static class Realms
 {
     internal static void Bind(ParserBinding ctx)
     {
-        ctx.AddRealm(ASMLogic);
         ctx.AddRealm(Logic);
+        ctx.AddRealm(ASMLogic);
     }
 
     public const string VIRTUAL = Model.Realms.VIRTUAL;
 
-    public const string ASMLogic = "ASMLogic";
     public const string Logic = "Logic";
+    public const string ASMLogic = "ASMLogic";
 }

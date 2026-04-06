@@ -7,12 +7,12 @@ internal partial class CompilationContext
 
     public static CompilationContext ContextAt(int id)
     => _contexts[id];
-    public static CompilationContext EnsureContext(string path)
+    public static int EnsureContext(string path)
     {
-        var ctx = new CompilationContext(_contexts.Count);
-        _contexts.Add(ctx);
+        var ctxId = _contexts.Count;
+        _contexts.Add(new CompilationContext(ctxId));
 
-        return ctx;
+        return ctxId;
     }
 
     //>>>> CONTEXT CREATION <<<<

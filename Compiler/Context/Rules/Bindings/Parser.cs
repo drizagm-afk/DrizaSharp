@@ -1,3 +1,4 @@
+using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Rules.Parser;
 
 namespace DrzSharp.Compiler.Rules;
@@ -31,9 +32,10 @@ internal partial class RulesetBinding : ParserBinding
     int ParserBinding.AddRealm(string realmName)
     {
         var realms = _ruleset._pRealms;
-
         int id = realms.Count;
+
         realms.Add(new(realmName));
+        _ruleset._pRealmsByKey[new(realmName)] = id;
 
         return id;
     }
@@ -51,7 +53,6 @@ internal partial class RulesetBinding : ParserBinding
 
         list.Add((true, ruleId));
     }
-
 
     C ParserBinding.BindRuleClass<C>(int realmId)
     {
@@ -115,7 +116,7 @@ internal partial class RulesetBinding : ParserBinding
         };
 
         rules.Add(rule);
-        BindRuleToRealm(realmId, id);
+        BindRuleToRealm(id, realmId);
 
         _ruleset._pRulesByType[typeof(R)] = rule;
 

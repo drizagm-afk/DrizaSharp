@@ -1,87 +1,259 @@
+==================== PROJECT =====================
+FILE:   C:\Driza\DrizaSharp\testfiles\Program.dz
+AUTHOR: devdriz
+==================================================
+
 //////////////////////////////////////////////////
 FILE:   C:\Driza\DrizaSharp\testfiles\Program.dz
-MODULE: <default>
+MODULE: <main>
 //////////////////////////////////////////////////
 
-=============== LEXER DIAGNOSTICS ================
->> BASE TOKENS: 
+===================== LEXER ======================
+>> TOKEN LIST: 
 [000 NEWLINE] (START)
 [001 Hash Prefix] "#RUN" (L1:C1 - L1:C5)
 [002 Keyword] "ASM" (L1:C6 - L1:C9)
-[003 Braces Opener] "{" (L1:C10)
+[003 Braces Opener] (L1:C10)
 [004 NEWLINE] (L2)
 [005 Operator] "." (L2:C5)
 [006 Keyword] "locals" (L2:C6 - L2:C12)
-[007 Braces Opener] "{" (L2:C13)
+[007 Braces Opener] (L2:C13)
 [008 NEWLINE] (L3)
-[009 Keyword] "int" (L3:C9 - L3:C12)
+[009 Keyword] "i32" (L3:C9 - L3:C12)
 [010 Keyword] "a" (L3:C13)
 [011 NEWLINE] (L4)
-[012 Braces Closer] "}" (L4:C5)
-[013 NEWLINE] (L5)
-[014 Keyword] "ldc" (L6:C5 - L6:C8)
-[015 Keyword] "i4" (L6:C9 - L6:C11)
-[016 Number] "10" (L6:C12 - L6:C14)
-[017 NEWLINE] (L7)
-[018 Keyword] "stloc" (L7:C5 - L7:C10)
-[019 Keyword] "a" (L7:C11)
-[020 NEWLINE] (L8)
-[021 Keyword] "ldloc" (L9:C5 - L9:C10)
-[022 Keyword] "a" (L9:C11)
-[023 NEWLINE] (L10)
-[024 Keyword] "print" (L10:C5 - L10:C10)
-[025 NEWLINE] (L11)
-[026 Keyword] "ret" (L12:C5 - L12:C8)
-[027 NEWLINE] (L13)
-[028 Braces Closer] "}" (L13:C1)
-[029 NEWLINE] (END)
+[012 Keyword] "i32" (L4:C9 - L4:C12)
+[013 Keyword] "b" (L4:C13)
+[014 NEWLINE] (L5)
+[015 Keyword] "i32" (L5:C9 - L5:C12)
+[016 Keyword] "temp" (L5:C13 - L5:C17)
+[017 NEWLINE] (L6)
+[018 Keyword] "i32" (L6:C9 - L6:C12)
+[019 Keyword] "count" (L6:C13 - L6:C18)
+[020 NEWLINE] (L7)
+[021 Braces Closer] (L7:C5)
+[022 NEWLINE] (L8)
+[023 Keyword] "ldc" (L9:C5 - L9:C8)
+[024 Operator] "." (L9:C8)
+[025 Keyword] "i4" (L9:C9 - L9:C11)
+[026 Number Literal] "0" (L9:C12)
+[027 NEWLINE] (L10)
+[028 Keyword] "stloc" (L10:C5 - L10:C10)
+[029 Keyword] "a" (L10:C11)
+[030 NEWLINE] (L11)
+[031 Keyword] "ldc" (L11:C5 - L11:C8)
+[032 Operator] "." (L11:C8)
+[033 Keyword] "i4" (L11:C9 - L11:C11)
+[034 Number Literal] "1" (L11:C12)
+[035 NEWLINE] (L12)
+[036 Keyword] "stloc" (L12:C5 - L12:C10)
+[037 Keyword] "b" (L12:C11)
+[038 NEWLINE] (L13)
+[039 Keyword] "ldc" (L14:C5 - L14:C8)
+[040 Operator] "." (L14:C8)
+[041 Keyword] "i4" (L14:C9 - L14:C11)
+[042 Number Literal] "10" (L14:C12 - L14:C14)
+[043 NEWLINE] (L15)
+[044 Keyword] "stloc" (L15:C5 - L15:C10)
+[045 Keyword] "count" (L15:C11 - L15:C16)
+[046 NEWLINE] (L16)
+[047 Keyword] "loop" (L17:C5 - L17:C9)
+[048 Operator] ":" (L17:C9)
+[049 NEWLINE] (L18)
+[050 Keyword] "ldloc" (L18:C5 - L18:C10)
+[051 Keyword] "a" (L18:C11)
+[052 NEWLINE] (L19)
+[053 Keyword] "print" (L19:C5 - L19:C10)
+[054 NEWLINE] (L20)
+[055 Keyword] "ldloc" (L21:C5 - L21:C10)
+[056 Keyword] "a" (L21:C11)
+[057 NEWLINE] (L22)
+[058 Keyword] "ldloc" (L22:C5 - L22:C10)
+[059 Keyword] "b" (L22:C11)
+[060 NEWLINE] (L23)
+[061 Keyword] "add" (L23:C5 - L23:C8)
+[062 NEWLINE] (L24)
+[063 Keyword] "stloc" (L24:C5 - L24:C10)
+[064 Keyword] "temp" (L24:C11 - L24:C15)
+[065 NEWLINE] (L25)
+[066 Keyword] "ldloc" (L26:C5 - L26:C10)
+[067 Keyword] "b" (L26:C11)
+[068 NEWLINE] (L27)
+[069 Keyword] "stloc" (L27:C5 - L27:C10)
+[070 Keyword] "a" (L27:C11)
+[071 NEWLINE] (L28)
+[072 Keyword] "ldloc" (L29:C5 - L29:C10)
+[073 Keyword] "temp" (L29:C11 - L29:C15)
+[074 NEWLINE] (L30)
+[075 Keyword] "stloc" (L30:C5 - L30:C10)
+[076 Keyword] "b" (L30:C11)
+[077 NEWLINE] (L31)
+[078 Keyword] "ldloc" (L32:C5 - L32:C10)
+[079 Keyword] "count" (L32:C11 - L32:C16)
+[080 NEWLINE] (L33)
+[081 Keyword] "ldc" (L33:C5 - L33:C8)
+[082 Operator] "." (L33:C8)
+[083 Keyword] "i4" (L33:C9 - L33:C11)
+[084 Number Literal] "1" (L33:C12)
+[085 NEWLINE] (L34)
+[086 Keyword] "sub" (L34:C5 - L34:C8)
+[087 NEWLINE] (L35)
+[088 Keyword] "ldloc" (L35:C5 - L35:C10)
+[089 Keyword] "count" (L35:C11 - L35:C16)
+[090 NEWLINE] (L36)
+[091 Keyword] "ldc" (L36:C5 - L36:C8)
+[092 Operator] "." (L36:C8)
+[093 Keyword] "i4" (L36:C9 - L36:C11)
+[094 Number Literal] "1" (L36:C12)
+[095 NEWLINE] (L37)
+[096 Keyword] "sub" (L37:C5 - L37:C8)
+[097 NEWLINE] (L38)
+[098 Keyword] "stloc" (L38:C5 - L38:C10)
+[099 Keyword] "count" (L38:C11 - L38:C16)
+[100 NEWLINE] (L39)
+[101 Keyword] "brtrue" (L39:C5 - L39:C11)
+[102 Keyword] "loop" (L39:C12 - L39:C16)
+[103 NEWLINE] (L40)
+[104 Keyword] "ret" (L41:C5 - L41:C8)
+[105 NEWLINE] (L42)
+[106 Braces Closer] (L42:C1)
+[107 NEWLINE] (END)
 
->> COMPILER LOGS: NONE
-
-=============== PARSER DIAGNOSTICS ===============
+===================== PARSER =====================
 >> TAST (Abstract Stratified Token Tree): 
-VIRTUAL ROOT [000, 029]
+VIRTUAL ROOT [000, 107]
 <NEWLINE, ..., NEWLINE>
- ├─ <002> EntryPointRule [001 - 003, 028]
- │  <Hash Prefix "#RUN", Keyword "ASM", Braces Opener "{", ..., Braces Closer "}">
- │   ├─ Entering ASMLogic <001> [004, 013, 017, 020, 023, 025, 027]
- │   │  <NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE>
- │   │   ├─ <004> ASMLocalsRule [005 - 008, 011 - 012]
- │   │   │  <Operator ".", Keyword "locals", Braces Opener "{", NEWLINE, ..., NEWLINE, Braces Closer "}">
+ ├─ <002> EntryPointRule [001 - 003, 106]
+ │  <Hash Prefix "#RUN", Keyword "ASM", Braces Opener, ..., Braces Closer>
+ │   ├─ Entering ASMLogic <001> [004, 022, 027, 030, 035, 038, 043, 046, 049, 052, 054, 057, 060, 062, 065, 068, 071, 074, 077, 080, 085, 087, 090, 095, 097, 100, 103, 105]
+ │   │  <NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE>
+ │   │   ├─ <007> ASMLocalsRule [005 - 008, 011, 014, 017, 020 - 021]
+ │   │   │  <Operator ".", Keyword "locals", Braces Opener, NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, Braces Closer>
  │   │   │   ├─ <003> ASMVarDeclRule [009 - 010]
- │   │   │   │  <Keyword "int", Keyword "a">
- │   │   ├─ <005> ASMLdcI4Rule [014 - 016]
- │   │   │  <Keyword "ldc", Keyword "i4", Number "10">
- │   │   ├─ <006> ASMVarUseRule [018 - 019]
+ │   │   │   │  <Keyword "i32", Keyword "a">
+ │   │   │   ├─ <004> ASMVarDeclRule [012 - 013]
+ │   │   │   │  <Keyword "i32", Keyword "b">
+ │   │   │   ├─ <005> ASMVarDeclRule [015 - 016]
+ │   │   │   │  <Keyword "i32", Keyword "temp">
+ │   │   │   ├─ <006> ASMVarDeclRule [018 - 019]
+ │   │   │   │  <Keyword "i32", Keyword "count">
+ │   │   ├─ <008> ASMLdcI4Rule [023 - 026]
+ │   │   │  <Keyword "ldc", Operator ".", Keyword "i4", Number Literal "0">
+ │   │   ├─ <009> ASMVarUseRule [028 - 029]
  │   │   │  <Keyword "stloc", Keyword "a">
- │   │   ├─ <007> ASMVarUseRule [021 - 022]
+ │   │   ├─ <010> ASMLdcI4Rule [031 - 034]
+ │   │   │  <Keyword "ldc", Operator ".", Keyword "i4", Number Literal "1">
+ │   │   ├─ <011> ASMVarUseRule [036 - 037]
+ │   │   │  <Keyword "stloc", Keyword "b">
+ │   │   ├─ <012> ASMLdcI4Rule [039 - 042]
+ │   │   │  <Keyword "ldc", Operator ".", Keyword "i4", Number Literal "10">
+ │   │   ├─ <013> ASMVarUseRule [044 - 045]
+ │   │   │  <Keyword "stloc", Keyword "count">
+ │   │   ├─ <014> ASMLabelRule [047 - 048]
+ │   │   │  <Keyword "loop", Operator ":">
+ │   │   ├─ <015> ASMVarUseRule [050 - 051]
  │   │   │  <Keyword "ldloc", Keyword "a">
- │   │   ├─ <008> ASMPrintRule [024]
+ │   │   ├─ <016> ASMPrintRule [053]
  │   │   │  <Keyword "print">
- │   │   ├─ <009> ASMReturnRule [026]
+ │   │   ├─ <017> ASMVarUseRule [055 - 056]
+ │   │   │  <Keyword "ldloc", Keyword "a">
+ │   │   ├─ <018> ASMVarUseRule [058 - 059]
+ │   │   │  <Keyword "ldloc", Keyword "b">
+ │   │   ├─ <019> ASMArithmeticRule [061]
+ │   │   │  <Keyword "add">
+ │   │   ├─ <020> ASMVarUseRule [063 - 064]
+ │   │   │  <Keyword "stloc", Keyword "temp">
+ │   │   ├─ <021> ASMVarUseRule [066 - 067]
+ │   │   │  <Keyword "ldloc", Keyword "b">
+ │   │   ├─ <022> ASMVarUseRule [069 - 070]
+ │   │   │  <Keyword "stloc", Keyword "a">
+ │   │   ├─ <023> ASMVarUseRule [072 - 073]
+ │   │   │  <Keyword "ldloc", Keyword "temp">
+ │   │   ├─ <024> ASMVarUseRule [075 - 076]
+ │   │   │  <Keyword "stloc", Keyword "b">
+ │   │   ├─ <025> ASMVarUseRule [078 - 079]
+ │   │   │  <Keyword "ldloc", Keyword "count">
+ │   │   ├─ <026> ASMLdcI4Rule [081 - 084]
+ │   │   │  <Keyword "ldc", Operator ".", Keyword "i4", Number Literal "1">
+ │   │   ├─ <027> ASMArithmeticRule [086]
+ │   │   │  <Keyword "sub">
+ │   │   ├─ <028> ASMVarUseRule [088 - 089]
+ │   │   │  <Keyword "ldloc", Keyword "count">
+ │   │   ├─ <029> ASMLdcI4Rule [091 - 094]
+ │   │   │  <Keyword "ldc", Operator ".", Keyword "i4", Number Literal "1">
+ │   │   ├─ <030> ASMArithmeticRule [096]
+ │   │   │  <Keyword "sub">
+ │   │   ├─ <031> ASMVarUseRule [098 - 099]
+ │   │   │  <Keyword "stloc", Keyword "count">
+ │   │   ├─ <032> ASMBrRule [101 - 102]
+ │   │   │  <Keyword "brtrue", Keyword "loop">
+ │   │   ├─ <033> ASMReturnRule [104]
  │   │   │  <Keyword "ret">
 
->> COMPILER LOGS: NONE
-
-============== LOWERER DIAGNOSTICS ===============
+==================== LOWERER =====================
 >> TASI (Abstract Stratified Instruction Tree): 
 VIRTUAL ROOT
  ├─ From <002> EntryPointRule
- │  [0] EntryPoint
- │  [1] InitASMMethod
+ │  [0] EnterMethod
  │   ├─ From <003> ASMVarDeclRule
- │   │  [0] NewLoc
- │   ├─ From <005> ASMLdcI4Rule
- │   │  [0] LdcI4
- │   ├─ From <006> ASMVarUseRule
- │   │  [0] StLoc
- │   ├─ From <007> ASMVarUseRule
- │   │  [0] LdLoc
- │   ├─ From <008> ASMPrintRule
+ │   │  [0] Local
+ │   ├─ From <004> ASMVarDeclRule
+ │   │  [0] Local
+ │   ├─ From <005> ASMVarDeclRule
+ │   │  [0] Local
+ │   ├─ From <006> ASMVarDeclRule
+ │   │  [0] Local
+ │   ├─ From <008> ASMLdcI4Rule
+ │   │  [0] LdcInt32
+ │   ├─ From <009> ASMVarUseRule
+ │   │  [0] StoreLocal
+ │   ├─ From <010> ASMLdcI4Rule
+ │   │  [0] LdcInt32
+ │   ├─ From <011> ASMVarUseRule
+ │   │  [0] StoreLocal
+ │   ├─ From <012> ASMLdcI4Rule
+ │   │  [0] LdcInt32
+ │   ├─ From <013> ASMVarUseRule
+ │   │  [0] StoreLocal
+ │   ├─ From <014> ASMLabelRule
+ │   │  [0] Label
+ │   ├─ From <015> ASMVarUseRule
+ │   │  [0] LoadLocal
+ │   ├─ From <016> ASMPrintRule
  │   │  [0] Print
- │   ├─ From <009> ASMReturnRule
- │   │  [0] Ret
-
->> COMPILER LOGS: NONE
+ │   ├─ From <017> ASMVarUseRule
+ │   │  [0] LoadLocal
+ │   ├─ From <018> ASMVarUseRule
+ │   │  [0] LoadLocal
+ │   ├─ From <019> ASMArithmeticRule
+ │   │  [0] Add
+ │   ├─ From <020> ASMVarUseRule
+ │   │  [0] StoreLocal
+ │   ├─ From <021> ASMVarUseRule
+ │   │  [0] LoadLocal
+ │   ├─ From <022> ASMVarUseRule
+ │   │  [0] StoreLocal
+ │   ├─ From <023> ASMVarUseRule
+ │   │  [0] LoadLocal
+ │   ├─ From <024> ASMVarUseRule
+ │   │  [0] StoreLocal
+ │   ├─ From <025> ASMVarUseRule
+ │   │  [0] LoadLocal
+ │   ├─ From <026> ASMLdcI4Rule
+ │   │  [0] LdcInt32
+ │   ├─ From <027> ASMArithmeticRule
+ │   │  [0] Sub
+ │   ├─ From <028> ASMVarUseRule
+ │   │  [0] LoadLocal
+ │   ├─ From <029> ASMLdcI4Rule
+ │   │  [0] LdcInt32
+ │   ├─ From <030> ASMArithmeticRule
+ │   │  [0] Sub
+ │   ├─ From <031> ASMVarUseRule
+ │   │  [0] StoreLocal
+ │   ├─ From <032> ASMBrRule
+ │   │  [0] BrTrue
+ │   ├─ From <033> ASMReturnRule
+ │   │  [0] Return
 
 

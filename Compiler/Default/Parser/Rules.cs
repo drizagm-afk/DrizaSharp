@@ -132,7 +132,7 @@ public class ASMVarDecl : RuleInstance, IVarDecl
             ctx.Abort($"The current ENVIRONMENT isn't a METHOD BODY");
 
         if (ctx.HasTag(Tags.VarDecl, VarName))
-            ctx.Abort($"The Var {VarName} is created more than once");
+            ctx.Abort($"The Var \"{VarName}\" is created more than once");
 
         //STORING VAR DECL TAG
         var method = (IMethod)methodInst;
@@ -185,7 +185,7 @@ public class ASMVarUse : RuleInstance
         var varName = ctx.GetText(_varName.Id);
 
         if (!ctx.TryResolveTag(Tags.VarDecl, varName, out var declInst))
-            ctx.Abort($"The Var {varName} is used before being created");
+            ctx.Abort($"The Var \"{varName}\" is used before being created");
 
         //GETTING VAR DECL ID
         var decl = (IVarDecl)declInst;
@@ -380,6 +380,7 @@ public class ASMLdcI4Rule : Rule<ASMLdcI4>
     {
         SetPattern(t => t
             .kw("ldc")
+            .oper(".")
             .kw("i4")
             .numberLit(captureTag: VALUE)
         );

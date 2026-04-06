@@ -1,3 +1,4 @@
+using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Rules.Lexer;
 
 namespace DrzSharp.Compiler.Rules;
@@ -21,9 +22,10 @@ internal partial class RulesetBinding : LexerBinding
     int LexerBinding.AddTokenType(string tokenName, bool showValue, bool mustParse)
     {
         var tokens = _ruleset._lTokentypes;
-
         int id = tokens.Count;
+
         tokens.Add(new(tokenName, showValue, mustParse));
+        _ruleset._lTokentypesByKey[new(tokenName)] = id;
 
         return id;
     }

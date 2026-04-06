@@ -47,7 +47,7 @@ public partial class ParserProcess : EmitContext
             new(RuleInst!.NodeId)
         );
 
-        var inner = _innerEmits.MoveToImmutable();
+        var inner = _innerEmits.ToImmutable();
         _instrCount = count;
 
         //EMIT NODES

@@ -7,10 +7,10 @@ namespace DrzSharp.Compiler.Parser;
 public interface MutateContext : Context
 {
     //TOKENS
-    public void AddToken(GlobalId type, string content);
-    public void AddToken(GlobalId type, string content, SourceSlice source);
-    public void AddToken(GlobalId type);
-    public void AddToken(GlobalId type, SourceSlice source);
+    public void AddToken(int type, string content);
+    public void AddToken(int type, string content, SourceSlice source);
+    public void AddToken(int type);
+    public void AddToken(int type, SourceSlice source);
 
     //NODE TOKENS
     public void AddNodeTokens(RuleInstance inst)
@@ -33,13 +33,13 @@ public interface SemanticMutateContext : MutateContext, SemanticView { }
 public partial class ParserProcess : SemanticMutateContext
 {
     private int _tokenCount;
-    public void AddToken(GlobalId type, string content)
+    public void AddToken(int type, string content)
     => AddToken(type, content, TAST.SourceSlice(RuleInst!.NodeId));
-    public void AddToken(GlobalId type, string content, SourceSlice source)
+    public void AddToken(int type, string content, SourceSlice source)
     => TAST.NewToken(type, source.Start, source.Length, content);
-    public void AddToken(GlobalId type)
+    public void AddToken(int type)
     => AddToken(type, TAST.SourceSlice(RuleInst!.NodeId));
-    public void AddToken(GlobalId type, SourceSlice source)
+    public void AddToken(int type, SourceSlice source)
     => TAST.NewToken(type, source.Start, source.Length);
 
     private ImmutableArray<int>.Builder _tokenNodes = ImmutableArray.CreateBuilder<int>();
@@ -47,7 +47,7 @@ public partial class ParserProcess : SemanticMutateContext
     => AddNodeTokens(nodeId, TAST.SourceSlice(RuleInst!.NodeId));
     public void AddNodeTokens(int nodeId, SourceSlice source)
     {
-        TAST.NewToken(Tokens.NULL, source.Start, source.Length);
+        TAST.NewToken(Tokens.NULL_ID, source.Start, source.Length);
         _tokenNodes.Add(nodeId);
     }
 
@@ -67,14 +67,14 @@ public partial class ParserProcess : SemanticMutateContext
         TAST.Rewrite(nodeId, new(_tokenCount, TAST.TokenCount - _tokenCount), _tokenNodes.MoveToImmutable());
         TAST.UpdateLinearity(nodeId);
 
-        RuleInst.Rewritten = true;
+        RuleInst.IsRewritten = true;
         ApplyMutate(nodeId, _evalRules.MoveToImmutable());
         RuleInst.Rewrite(this);
         ApplyRecompile(nodeId, false);
 
         _tokenCount = TAST.TokenCount;
     }
-    public void Append(int nodeId)
+    public void Append(int nodeId = -1)
     {
         if (nodeId < 0)
             nodeId = RuleInst!.NodeId;
@@ -83,7 +83,8 @@ public partial class ParserProcess : SemanticMutateContext
         TAST.UpdateLinearity(appendId);
 
         ApplyMutate(appendId, _evalRules.MoveToImmutable());
-        RuleInst!.Append(this, appendId);
+        if (TAST.TryGetApplyRule(nodeId, out var inst))
+            inst.Append(this, appendId);
         ApplyRecompile(appendId, true);
 
         _tokenCount = TAST.TokenCount;

@@ -65,7 +65,7 @@ public partial class ParserProcess
 
                 //REPORT
                 var token = TAST.TokenAt(node.Start + i);
-                if (Rules.Lexer.Ruleset.MustParse(Project, token.Type))
+                if (Rules.Lexer.RuleExt.TokenTypeAt(Project, token.Type).MustParse)
                     Diagnostics.ReportUnexpected(new(token.Start, token.Length), "Unexpected Tokens");
 
                 //NEXT
@@ -115,7 +115,7 @@ public partial class ParserProcess
             {
                 //REPORT
                 var token = TAST.TokenAt(node.Start + i);
-                if (Rules.Lexer.Ruleset.MustParse(Project, token.Type))
+                if (Rules.Lexer.RuleExt.TokenTypeAt(Project, token.Type).MustParse)
                     Diagnostics.ReportUnexpected(new(token.Start, token.Length), "Unexpected Tokens");
 
                 //NEXT

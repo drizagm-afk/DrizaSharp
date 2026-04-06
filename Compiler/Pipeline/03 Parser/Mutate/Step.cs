@@ -41,7 +41,7 @@ public partial class ParserProcess
             else if (_curPhase == Pass.Validate)
                 inst.ValidateMutate(this);
 
-            if (inst.Rewritten)
+            if (inst.IsRewritten)
                 return;
         }
 

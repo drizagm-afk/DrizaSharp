@@ -51,10 +51,10 @@ public partial class ParserProcess
             Diagnostics.ReportUnhandled(
                 TAST.SourceSlice(node),
                 inst.NodeId,
-                e.Message
+                $"({e.GetType().Name}) {e.Message}"
             );
         }
-        if (ValidateChildren(node.FirstChildId))
+        if (!ValidateChildren(node.FirstChildId))
             inst.Validity = Validity.Invalid;
 
         if (isScoped) ExitScope();

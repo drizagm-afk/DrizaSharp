@@ -11,7 +11,7 @@ public static class TokenTables
         {
             //MATCH
             var token = ctx.TokenAtSpan(span);
-            if (token.Type != TokenType.Keyword)
+            if (token.Type != ctx.TokenType(TokenType.Keyword))
                 return 0;
 
             for (int i = 0; i < vals.Length; i++)
@@ -25,7 +25,7 @@ public static class TokenTables
                     continue;
 
                 if (captureTag is int tag)
-                    ctx.StoreVar(tag, span.With(length: i));
+                    ctx.StoreVar(tag, span.With(length: i + 1));
                 return 1;
             }
             return 0;
@@ -35,12 +35,12 @@ public static class TokenTables
     }
 
     public static byte LoadTableVar(this MatchView view, int captureTag)
-    => (byte)view.LoadVar(captureTag).Length;
+    => (byte)(view.LoadVar(captureTag).Length - 1);
     public static bool TryLoadTableVar(this MatchView view, int captureTag, out byte val)
     {
         if (view.TryLoadVar(captureTag, out var span))
         {
-            val = (byte)span.Length;
+            val = (byte)(span.Length - 1);
             return true;
         }
         val = 0;

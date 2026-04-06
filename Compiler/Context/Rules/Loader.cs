@@ -2,7 +2,7 @@ namespace DrzSharp.Compiler;
 
 internal partial class CompilationContext
 {
-    internal void BindRuleset(int assemblyId, int nspaceId)
+    internal void BindRuleset(string path, int assemblyId, int nspaceId)
     {
         TryBindRuleset(assemblyId, nspaceId);
     }

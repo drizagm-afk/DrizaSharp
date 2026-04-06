@@ -129,7 +129,7 @@ public partial class ParserProcess : ITags
 
         if (_scope.TryGetValue(key, out var stack) && stack.Count > 0)
         {
-            nodeId = stack[^-1];
+            nodeId = stack[^1];
             return true;
         }
         nodeId = -1;
@@ -142,7 +142,7 @@ public partial class ParserProcess : ITags
         inst = null!;
         if (!TryFindTag(tag, tagDesc, out var nodeId) || !TAST.TryGetApplyRule(nodeId, out var rinst))
             return false;
-            
+        
         Debug.Assert(rinst is R);
         inst = (R)rinst;
         return true;
