@@ -4,7 +4,7 @@ using Mono.Cecil.Cil;
 
 namespace DrzSharp.Compiler.Lowerer;
 
-public static class Constant
+public static class Const
 {
     //>>>> INT 32 <<<<
     public static InstrType Int32(this EmitContext ctx, int value)
@@ -64,5 +64,14 @@ public static class Constant
     {
         var il = ctx.IL;
         il.Append(il.Create(OpCodes.Ldstr, ctx.ReadString()));
+    }
+
+    //>>>> NULL <<<<
+    public static InstrType Null(this EmitContext _)
+    => InstrType.Ldnull;
+    internal static void Rule_Null(InstrContext ctx)
+    {
+        var il = ctx.IL;
+        il.Append(il.Create(OpCodes.Ldnull));
     }
 }

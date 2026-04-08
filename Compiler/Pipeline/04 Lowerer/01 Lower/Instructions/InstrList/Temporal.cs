@@ -5,7 +5,7 @@ using Mono.Cecil.Cil;
 
 namespace DrzSharp.Compiler.Lowerer;
 
-public static class Special
+public static class Temporal
 {
     //>>>> ENTER METHOD <<<<
     public static InstrType EnterMethod(this EmitContext _, int labelCount, int localCount)
@@ -58,14 +58,5 @@ public static class Special
             typeof(Console).GetMethod("WriteLine", [typeof(int)])
         );
         il.Append(il.Create(OpCodes.Call, writeLineRef));
-    }
-
-    //>>>> RETURN <<<<
-    public static InstrType Return(this EmitContext _)
-    => InstrType.Return;
-    internal static void Rule_Return(InstrContext ctx)
-    {
-        var il = ctx.IL;
-        il.Append(il.Create(OpCodes.Ret));
     }
 }

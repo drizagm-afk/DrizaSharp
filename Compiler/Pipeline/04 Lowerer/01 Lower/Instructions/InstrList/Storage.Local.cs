@@ -4,15 +4,15 @@ using Mono.Cecil.Cil;
 
 namespace DrzSharp.Compiler.Lowerer;
 
-public static class Locals
+public static class Local
 {
     //>>>> DECL LOCAL <<<<
-    public static InstrType DeclLocal(this EmitContext ctx, int varId)
+    public static InstrType Declare(this EmitContext ctx, int varId)
     {
         (ctx as EmitInstrContext)!.WriteInt32(varId);
-        return InstrType.Local;
+        return InstrType.DeclLocal;
     }
-    internal static void Rule_DeclLocal(InstrContext ctx)
+    internal static void Rule_Declare(InstrContext ctx)
     {
         var vars = ctx.Variables;
 
@@ -25,12 +25,12 @@ public static class Locals
     }
 
     //>>>> LOAD LOCAL <<<<
-    public static InstrType LoadLocal(this EmitContext ctx, int varId)
+    public static InstrType Load(this EmitContext ctx, int varId)
     {
         (ctx as EmitInstrContext)!.WriteInt32(varId);
         return InstrType.LoadLocal;
     }
-    internal static void Rule_LoadLocal(InstrContext ctx)
+    internal static void Rule_Load(InstrContext ctx)
     {
         var localDef = ctx.Variables[ctx.ReadInt32()];
 
@@ -39,12 +39,12 @@ public static class Locals
     }
 
     //>>>> STORE LOCAL <<<<
-    public static InstrType StoreLocal(this EmitContext ctx, int varId)
+    public static InstrType Store(this EmitContext ctx, int varId)
     {
         (ctx as EmitInstrContext)!.WriteInt32(varId);
         return InstrType.StoreLocal;
     }
-    internal static void Rule_StoreLocal(InstrContext ctx)
+    internal static void Rule_Store(InstrContext ctx)
     {
         var localDef = ctx.Variables[ctx.ReadInt32()];
 

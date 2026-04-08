@@ -51,7 +51,7 @@ public class EntryPoint : RuleInstance, IASMMethod
     }
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(ctx.EnterMethod(_labelCount, _varCount));
+        ctx.AddInstr(Temporal.EnterMethod(ctx, _labelCount, _varCount));
         ctx.AddInnerEmit(Body);
         ctx.Emit();
     }
@@ -143,7 +143,7 @@ public class ASMVarDecl : RuleInstance, IVarDecl
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(ctx.DeclLocal(VarId));
+        ctx.AddInstr(Local.Declare(ctx, VarId));
         ctx.Emit();
     }
 }
@@ -197,8 +197,8 @@ public class ASMVarUse : RuleInstance
         ctx.AddInstr(
             oper switch
             {
-                LDLOC => ctx.LoadLocal(varId),
-                _ => ctx.StoreLocal(varId),
+                LDLOC => Local.Load(ctx, varId),
+                _ => Local.Store(ctx, varId),
             }
         );
         ctx.Emit();
@@ -241,7 +241,7 @@ public class ASMLabel : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(ctx.Label(labelId));
+        ctx.AddInstr(Branch.Label(ctx, labelId));
         ctx.Emit();
     }
 }
@@ -289,9 +289,9 @@ public class ASMBr : RuleInstance
         ctx.AddInstr(
             oper switch
             {
-                BR => ctx.Br(labelId),
-                BRTRUE => ctx.BrIfTrue(labelId),
-                _ => ctx.BrIfFalse(labelId)
+                BR => Branch.Br(ctx, labelId),
+                BRTRUE => Branch.BrIfTrue(ctx, labelId),
+                _ => Branch.BrIfFalse(ctx, labelId)
             }
         );
         ctx.Emit();
@@ -325,9 +325,9 @@ public class ASMCompare : RuleInstance
         ctx.AddInstr(
             oper switch
             {
-                CEQ => ctx.Equal(),
-                CGT => ctx.GreaterThan(),
-                _ => ctx.LessThan()
+                CEQ => Compare.Equal(ctx),
+                CGT => Compare.GreaterThan(ctx),
+                _ => Compare.LessThan(ctx)
             }
         );
         ctx.Emit();
@@ -362,10 +362,10 @@ public class ASMArithmetic : RuleInstance
         ctx.AddInstr(
             oper switch
             {
-                ADD => ctx.Add(),
-                SUB => ctx.Sub(),
-                MUL => ctx.Mul(),
-                _ => ctx.Div()
+                ADD => Arith.Add(ctx),
+                SUB => Arith.Sub(ctx),
+                MUL => Arith.Mul(ctx),
+                _ => Arith.Div(ctx)
             }
         );
         ctx.Emit();
@@ -396,7 +396,7 @@ public class ASMLdcI4 : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(ctx.Int32(int.Parse(ctx.GetText(val.Id))));
+        ctx.AddInstr(Const.Int32(ctx, int.Parse(ctx.GetText(val.Id))));
         ctx.Emit();
     }
 }
@@ -422,7 +422,7 @@ public class ASMLdstr : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(ctx.String(ctx.GetText(val.Id)));
+        ctx.AddInstr(Const.String(ctx, ctx.GetText(val.Id)));
         ctx.Emit();
     }
 }
@@ -441,7 +441,7 @@ public class ASMPrint : RuleInstance
 {
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(ctx.Print());
+        ctx.AddInstr(Temporal.Print(ctx));
         ctx.Emit();
     }
 }
@@ -459,7 +459,7 @@ public class ASMReturn : RuleInstance
 {
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(ctx.Return());
+        ctx.AddInstr(Flow.Return(ctx));
         ctx.Emit();
     }
 }

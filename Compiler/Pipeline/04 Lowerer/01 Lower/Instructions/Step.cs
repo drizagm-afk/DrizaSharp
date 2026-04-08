@@ -56,36 +56,35 @@ public partial class LowererProcess
         {
             //CONSTANTS
             case InstrType.LdcInt32:
-                Constant.Rule_Int32(this);
+                Const.Rule_Int32(this);
                 break;
             case InstrType.LdcInt64:
-                Constant.Rule_Int64(this);
+                Const.Rule_Int64(this);
                 break;
             case InstrType.LdcFloat32:
-                Constant.Rule_Float32(this);
+                Const.Rule_Float32(this);
                 break;
             case InstrType.LdcFloat64:
-                Constant.Rule_Float64(this);
+                Const.Rule_Float64(this);
                 break;
             case InstrType.Ldstr:
-                Constant.Rule_String(this);
+                Const.Rule_String(this);
+                break;
+            case InstrType.Ldnull:
+                Const.Rule_Null(this);
                 break;
 
-            //FLOW
-            case InstrType.Label:
-                Branches.Rule_Label(this);
-                break;
-            case InstrType.Br:
-                Branches.Rule_Br(this);
-                break;
-            case InstrType.BrTrue:
-                Branches.Rule_BrIfTrue(this);
-                break;
-            case InstrType.BrFalse:
-                Branches.Rule_BrIfFalse(this);
+            //STACK
+            case InstrType.Dup:
+                Stack.Rule_Dup(this);
                 break;
 
-            //MATH
+            case InstrType.Pop:
+                Stack.Rule_Pop(this);
+                break;
+
+            //>>>> MATH <<<<
+            //COMPARISON
             case InstrType.Equal:
                 Compare.Rule_Equal(this);
                 break;
@@ -96,39 +95,80 @@ public partial class LowererProcess
                 Compare.Rule_GreaterThan(this);
                 break;
 
+            //ARITHMETIC
             case InstrType.Add:
-                Arithmetic.Rule_Add(this);
+                Arith.Rule_Add(this);
                 break;
             case InstrType.Sub:
-                Arithmetic.Rule_Sub(this);
+                Arith.Rule_Sub(this);
                 break;
             case InstrType.Mul:
-                Arithmetic.Rule_Mul(this);
+                Arith.Rule_Mul(this);
                 break;
             case InstrType.Div:
-                Arithmetic.Rule_Div(this);
+                Arith.Rule_Div(this);
+                break;
+            case InstrType.Rem:
+                Arith.Rule_Rem(this);
                 break;
 
-            //MEMORY
-            case InstrType.Local:
-                Locals.Rule_DeclLocal(this);
+            //BITWISE
+            case InstrType.And:
+                Bitwise.Rule_And(this);
+                break;
+            case InstrType.Or:
+                Bitwise.Rule_Or(this);
+                break;
+            case InstrType.Xor:
+                Bitwise.Rule_Xor(this);
+                break;
+            case InstrType.Not:
+                Bitwise.Rule_Not(this);
+                break;
+            case InstrType.ShiftLeft:
+                Bitwise.Rule_ShiftLeft(this);
+                break;
+            case InstrType.ShiftRight:
+                Bitwise.Rule_ShiftRight(this);
+                break;
+
+            //>>>> STORAGE <<<<
+            //LOCALS
+            case InstrType.DeclLocal:
+                Local.Rule_Declare(this);
                 break;
             case InstrType.LoadLocal:
-                Locals.Rule_LoadLocal(this);
+                Local.Rule_Load(this);
                 break;
             case InstrType.StoreLocal:
-                Locals.Rule_StoreLocal(this);
+                Local.Rule_Store(this);
                 break;
 
-            //SPECIAL
+            //>>>> FLOW <<<<
+            case InstrType.Return:
+                Flow.Rule_Return(this);
+                break;
+
+            //BRANCHES
+            case InstrType.Label:
+                Branch.Rule_Label(this);
+                break;
+            case InstrType.Br:
+                Branch.Rule_Br(this);
+                break;
+            case InstrType.BrTrue:
+                Branch.Rule_BrIfTrue(this);
+                break;
+            case InstrType.BrFalse:
+                Branch.Rule_BrIfFalse(this);
+                break;
+
+            //>>>> TEMPORAL <<<<
             case InstrType.EnterMethod:
-                Special.Rule_EnterMethod(this);
+                Temporal.Rule_EnterMethod(this);
                 break;
             case InstrType.Print:
-                Special.Rule_Print(this);
-                break;
-            case InstrType.Return:
-                Special.Rule_Return(this);
+                Temporal.Rule_Print(this);
                 break;
         }
     }

@@ -131,16 +131,30 @@ public readonly struct Instr(InstrType type, int start, int length, SourceSlice 
 }
 public enum InstrType
 {
-    LdcInt32, LdcInt64, LdcFloat32, LdcFloat64, Ldstr, 
+    //CONSTANTS
+    LdcInt32, LdcInt64, LdcFloat32, LdcFloat64, Ldstr, Ldnull,
+    //STACK
+    Dup, Pop,
 
+    //>>>> MATH <<<<
+    //COMPARISON
+    Equal, GreaterThan, LessThan,
+    //ARITHMETIC
+    Add, Sub, Mul, Div, Rem,
+    //BITWISE
+    And, Or, Xor, Not, ShiftLeft, ShiftRight,
+
+    //>>>> STORAGE <<<<
+    //LOCALS
+    DeclLocal, LoadLocal, StoreLocal,
+
+    //>>>> FLOW <<<<
+    Return,
+    //BRANCHES
     Label, Br, BrTrue, BrFalse,
 
-    Equal, GreaterThan, LessThan,
-    Add, Sub, Mul, Div,
-
-    Local, LoadLocal, StoreLocal,
-
-    EnterMethod, Print, Return
+    //>>>> TEMPORAL <<<<
+    EnterMethod, Print,
 }
 
 //=================
