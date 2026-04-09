@@ -13,7 +13,7 @@ public class EntryPointRule : Rule<EntryPoint>
     public EntryPointRule()
     {
         SetPattern(t => t
-            .hashPx("#RUN").kw("ASM").obrace().CGroup(BODY).cbrace()
+            .hashPx("#Run").obrace().Body(BODY).cbrace()
         );
     }
     protected override void OnInstantiate(MatchView view, EntryPoint inst)
@@ -21,445 +21,316 @@ public class EntryPointRule : Rule<EntryPoint>
         inst._body = view.LoadVar(BODY);
     }
 }
-public class EntryPoint : RuleInstance, IASMMethod
+public class EntryPoint : RuleInstance
 {
     internal TokenSpan _body;
-    public int Body;
-
     protected override void OnNest(NestContext ctx)
     {
-        Body = ctx.NestSpan(_body, Realms.ASMLogic);
+        Body = ctx.NestSpan(_body, Realms.Logic);
     }
 
-    private int _varCount = 0;
-    public int NewVar() => _varCount++;
+    public int Body { get; private set; }
 
     private int _labelCount = 0;
-    private Dictionary<string, int> _labels = [];
-    public int NewLabel() => _labelCount++;
-    public int NewLabel(string name)
-    {
-        if (_labels.TryGetValue(name, out int id))
-            return id;
-
-        return _labels[name] = NewLabel();
-    }
-
+    public int AddLabel() => _labelCount++;
+    private int _localCount = 0;
+    public int AddLocal() => _localCount++;
     protected override void OnValidate(ValidateContext ctx)
     {
         ctx.StoreTag(Tags.MethodBody);
     }
+
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(Temporal.EnterMethod(ctx, _labelCount, _varCount));
+        ctx.AddInstr(Temporal.EnterMethod(ctx, _labelCount, _localCount));
         ctx.AddInnerEmit(Body);
+        ctx.AddInstr(Flow.Return(ctx));
         ctx.Emit();
     }
 }
 
-public interface IMethod
+//===== LOGIC =====
+public class VarDeclRule : Rule<VarDecl>
 {
-    public int NewVar();
-    public int NewLabel();
-}
-public interface IASMMethod : IMethod
-{
-    public int NewLabel(string name);
-}
-
-//===== ASM Locals =====
-public class ASMLocalsRule : Rule<ASMLocals>
-{
-    const int VARDECL = 0;
-    public ASMLocalsRule()
+    const int VARNAME = 0;
+    const int EXPR = 1;
+    public VarDeclRule()
     {
         SetPattern(t => t
-            .oper(".").kw("locals").obrace()
-            .OptNl().Repeat(t =>
-                t.Rule<ASMVarDeclRule>(VARDECL).OptNl()
-            ).OptNl()
-            .cbrace()
+            .kw(captureTag: VARNAME).oper(":=").RuleClass<ExprRule>(EXPR)
         );
     }
-    protected override void OnInstantiate(MatchView view, ASMLocals inst)
+    protected override void OnInstantiate(MatchView view, VarDecl inst)
     {
-        inst.vars = view.LoadRuleVars<ASMVarDecl>(VARDECL);
+        inst._varName = view.LoadTokenVar(VARNAME);
+        inst.Expr = view.LoadRuleVar<Expr>(EXPR);
     }
 }
-public class ASMLocals : RuleInstance
+public class VarDecl : RuleInstance
 {
-    internal ASMVarDecl[] vars = null!;
-    public ASMLocals() { BypassEmit = true; }
-
+    internal Token _varName;
     protected override void OnNest(NestContext ctx)
     {
-        ctx.NestRules(vars);
+        ctx.NestRule(Expr);
     }
-}
 
-public class ASMVarDeclRule : Rule<ASMVarDecl>
-{
-    const int VARTYPE = 0;
-    const int VARNAME = 1;
-    public ASMVarDeclRule()
-    {
-        SetPattern(t => t
-            .kw(captureTag: VARTYPE)
-            .kw(captureTag: VARNAME)
-        );
-    }
-    protected override void OnInstantiate(MatchView view, ASMVarDecl inst)
-    {
-        inst.varName = view.LoadTokenVar(VARNAME);
-        inst.varType = view.LoadTokenVar(VARTYPE);
-    }
-}
-public class ASMVarDecl : RuleInstance, IVarDecl
-{
-    internal Token varType;
-    internal Token varName;
+    public Expr Expr { get; internal set; } = null!;
 
     public int VarId { get; private set; }
-    public string VarName { get; private set; } = "";
-    public string VarType { get; private set; } = "";
-
+    public string VarName { get; private set; } = null!;
     protected override void OnValidate(ValidateContext ctx)
     {
-        VarName = ctx.GetText(varName.Id);
-        VarType = ctx.GetText(varType.Id);
-
-        if (!ctx.TryResolveTag(Tags.MethodBody, out var methodInst))
-            ctx.Abort($"The current ENVIRONMENT isn't a METHOD BODY");
-
-        if (ctx.HasTag(Tags.VarDecl, VarName))
-            ctx.Abort($"The Var \"{VarName}\" is created more than once");
-
-        //STORING VAR DECL TAG
-        var method = (IMethod)methodInst;
-        VarId = method.NewVar();
+        var entryPoint = ctx.ResolveTag<EntryPoint>(Tags.MethodBody);
+        VarId = entryPoint.AddLocal();
+        VarName = ctx.GetText(_varName.Id);
 
         ctx.StoreTag(Tags.VarDecl, VarName);
     }
-
     protected override void OnEmit(EmitContext ctx)
     {
         ctx.AddInstr(Local.Declare(ctx, VarId));
+        ctx.AddInnerEmit(Expr.NodeId);
+        ctx.AddInstr(Local.Store(ctx, VarId));
         ctx.Emit();
     }
 }
-public interface IVarDecl
-{
-    public int VarId { get; }
-    public string VarName { get; }
-    public string VarType { get; }
-}
 
-public class ASMVarUseRule : Rule<ASMVarUse>
+public class RepeatStmtRule : Rule<RepeatStmt>
 {
-    const int TABLE = 0;
-    const int VARNAME = 1;
-    public ASMVarUseRule()
+    const int EXPR = 0;
+    const int BODY = 1;
+    public RepeatStmtRule()
     {
         SetPattern(t => t
-            .KwTable(TABLE, "ldloc", "stloc")
-            .kw(captureTag: VARNAME)
+            .kw("repeat").oparen().RuleClass<ExprRule>(EXPR).cparen().obrace().Body(BODY).cbrace()
         );
     }
-    protected override void OnInstantiate(MatchView view, ASMVarUse inst)
+    protected override void OnInstantiate(MatchView view, RepeatStmt inst)
     {
-        inst.oper = view.LoadTableVar(TABLE);
-        inst._varName = view.LoadTokenVar(VARNAME);
+        inst.Expr = view.LoadRuleVar<Expr>(EXPR);
+        inst._body = view.LoadVar(BODY);
     }
 }
-public class ASMVarUse : RuleInstance
+public class RepeatStmt : RuleInstance
+{
+    internal TokenSpan _body;
+    protected override void OnNest(NestContext ctx)
+    {
+        Body = ctx.NestSpan(_body);
+        ctx.NestRule(Expr);
+    }
+
+    public Expr Expr { get; internal set; } = null!;
+    public int Body { get; private set; }
+
+    private int _varCount;
+    private int _labelStart;
+    private int _labelEnd;
+    protected override void OnValidate(ValidateContext ctx)
+    {
+        var entryPoint = ctx.ResolveTag<EntryPoint>(Tags.MethodBody);
+        _varCount = entryPoint.AddLocal();
+        _labelStart = entryPoint.AddLabel();
+        _labelEnd = entryPoint.AddLabel();
+    }
+    protected override void OnEmit(EmitContext ctx)
+    {
+        ctx.AddInstr(Local.Declare(ctx, _varCount));
+        ctx.AddInnerEmit(Expr.NodeId);
+        ctx.AddInstr(Local.Store(ctx, _varCount));
+
+        ctx.AddInstr(Branch.Label(ctx, _labelStart));
+        ctx.AddInstr(Local.Load(ctx, _varCount));
+        ctx.AddInstr(Const.Int32(ctx, 0));
+        ctx.AddInstr(Compare.GreaterThan(ctx));
+        ctx.AddInstr(Branch.GotoIfFalse(ctx, _labelEnd));
+        ctx.AddInnerEmit(Body);
+
+        ctx.AddInstr(Local.Load(ctx, _varCount));
+        ctx.AddInstr(Const.Int32(ctx, 1));
+        ctx.AddInstr(Arith.Sub(ctx));
+        ctx.AddInstr(Local.Store(ctx, _varCount));
+        ctx.AddInstr(Branch.Goto(ctx, _labelStart));
+        ctx.AddInstr(Branch.Label(ctx, _labelEnd));
+
+        ctx.Emit();
+    }
+}
+
+public class VarSetRule : Rule<VarSet>
+{
+    const int VARNAME = 0;
+    const int EXPR = 1;
+    public VarSetRule()
+    {
+        SetPattern(t => t
+            .kw(captureTag: VARNAME).oper("=").RuleClass<ExprRule>(EXPR)
+        );
+    }
+    protected override void OnInstantiate(MatchView view, VarSet inst)
+    {
+        inst._varName = view.LoadTokenVar(VARNAME);
+        inst.Expr = view.LoadRuleVar<Expr>(EXPR);
+    }
+}
+public class VarSet : RuleInstance
 {
     internal Token _varName;
-    private int varId;
+    protected override void OnNest(NestContext ctx)
+    {
+        ctx.NestRule(Expr);
+    }
 
-    const byte LDLOC = 0;
-    const byte STLOC = 1;
-    internal byte oper;
+    public Expr Expr { get; internal set; } = null!;
 
+    private int _varId;
     protected override void OnValidate(ValidateContext ctx)
     {
-        var varName = ctx.GetText(_varName.Id);
-
-        if (!ctx.TryResolveTag(Tags.VarDecl, varName, out var declInst))
-            ctx.Abort($"The Var \"{varName}\" is used before being created");
-
-        //GETTING VAR DECL ID
-        var decl = (IVarDecl)declInst;
-        varId = decl.VarId;
+        var decl = ctx.ResolveTag<VarDecl>(Tags.VarDecl, ctx.GetText(_varName.Id));
+        _varId = decl.VarId;
     }
-
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(
-            oper switch
-            {
-                LDLOC => Local.Load(ctx, varId),
-                _ => Local.Store(ctx, varId),
-            }
-        );
+        ctx.AddInstr(InstrType.None);
+        ctx.AddInnerEmit(Expr.NodeId);
+        ctx.AddInstr(Local.Store(ctx, _varId));
         ctx.Emit();
     }
 }
 
-//===== ASM Branches =====
-public class ASMLabelRule : Rule<ASMLabel>
+public class PrintRule : Rule<Print>
 {
-    const int LABELNAME = 0;
-    public ASMLabelRule()
+    const int EXPR = 0;
+    public PrintRule()
     {
         SetPattern(t => t
-            .kw(captureTag: LABELNAME)
-            .oper(":")
+            .kw("print").oparen().RuleClass<ExprRule>(EXPR).cparen()
         );
     }
-    protected override void OnInstantiate(MatchView view, ASMLabel inst)
+    protected override void OnInstantiate(MatchView view, Print inst)
     {
-        inst._labelName = view.LoadTokenVar(LABELNAME);
+        inst.Expr = view.LoadRuleVar<Expr>(EXPR);
     }
 }
-public class ASMLabel : RuleInstance
+public class Print : RuleInstance
 {
-    internal Token _labelName;
-    private string labelName = "";
-    private int labelId;
-
-    protected override void OnValidate(ValidateContext ctx)
+    protected override void OnNest(NestContext ctx)
     {
-        labelName = ctx.GetText(_labelName.Id);
-
-        if (!ctx.TryResolveTag(Tags.MethodBody, out var methodInst))
-            ctx.Abort($"The current ENVIRONMENT isn't a METHOD BODY");
-
-        //STORING VAR DECL TAG
-        var method = (IASMMethod)methodInst;
-        labelId = method.NewLabel(labelName);
+        ctx.NestRule(Expr);
     }
+
+    public Expr Expr { get; internal set; } = null!;
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(Branch.Label(ctx, labelId));
-        ctx.Emit();
-    }
-}
-
-public class ASMBrRule : Rule<ASMBr>
-{
-    const int TABLE = 0;
-    const int LABELNAME = 1;
-    public ASMBrRule()
-    {
-        SetPattern(t => t
-            .KwTable(TABLE, "br", "brtrue", "brfalse")
-            .kw(captureTag: LABELNAME)
-        );
-    }
-    protected override void OnInstantiate(MatchView view, ASMBr inst)
-    {
-        inst.oper = view.LoadTableVar(TABLE);
-        inst._labelName = view.LoadTokenVar(LABELNAME);
-    }
-}
-public class ASMBr : RuleInstance
-{
-    internal Token _labelName;
-    private int labelId;
-
-    const byte BR = 0;
-    const byte BRTRUE = 1;
-    const byte BRFALSE = 2;
-    internal byte oper;
-
-    protected override void OnValidate(ValidateContext ctx)
-    {
-        var labelName = ctx.GetText(_labelName.Id);
-
-        if (!ctx.TryResolveTag(Tags.MethodBody, out var methodInst))
-            ctx.Abort($"The current ENVIRONMENT isn't a METHOD BODY");
-
-        //LOADING LABEL DECL TAG
-        var method = (IASMMethod)methodInst;
-        labelId = method.NewLabel(labelName);
-    }
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(
-            oper switch
-            {
-                BR => Branch.Br(ctx, labelId),
-                BRTRUE => Branch.BrIfTrue(ctx, labelId),
-                _ => Branch.BrIfFalse(ctx, labelId)
-            }
-        );
-        ctx.Emit();
-    }
-}
-
-//===== ASM Comparisons =====
-public class ASMCompareRule : Rule<ASMCompare>
-{
-    const int TABLE = 0;
-    public ASMCompareRule()
-    {
-        SetPattern(t => t
-            .KwTable(TABLE, "ceq", "cgt", "clt")
-        );
-    }
-    protected override void OnInstantiate(MatchView view, ASMCompare inst)
-    {
-        inst.oper = view.LoadTableVar(TABLE);
-    }
-}
-public class ASMCompare : RuleInstance
-{
-    const byte CEQ = 0;
-    const byte CGT = 1;
-    const byte CLT = 2;
-    internal byte oper;
-
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(
-            oper switch
-            {
-                CEQ => Compare.Equal(ctx),
-                CGT => Compare.GreaterThan(ctx),
-                _ => Compare.LessThan(ctx)
-            }
-        );
-        ctx.Emit();
-    }
-}
-
-//===== ASM Arithmetic =====
-public class ASMArithmeticRule : Rule<ASMArithmetic>
-{
-    const int TABLE = 0;
-    public ASMArithmeticRule()
-    {
-        SetPattern(t => t
-            .KwTable(TABLE, "add", "sub", "mul", "div")
-        );
-    }
-    protected override void OnInstantiate(MatchView view, ASMArithmetic inst)
-    {
-        inst.oper = view.LoadTableVar(TABLE);
-    }
-}
-public class ASMArithmetic : RuleInstance
-{
-    const byte ADD = 0;
-    const byte SUB = 1;
-    const byte MUL = 2;
-    const byte DIV = 3;
-    internal byte oper;
-
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(
-            oper switch
-            {
-                ADD => Arith.Add(ctx),
-                SUB => Arith.Sub(ctx),
-                MUL => Arith.Mul(ctx),
-                _ => Arith.Div(ctx)
-            }
-        );
-        ctx.Emit();
-    }
-}
-
-//===== ASM Constants =====
-public class ASMLdcI4Rule : Rule<ASMLdcI4>
-{
-    const int VALUE = 0;
-    public ASMLdcI4Rule()
-    {
-        SetPattern(t => t
-            .kw("ldc")
-            .oper(".")
-            .kw("i4")
-            .numberLit(captureTag: VALUE)
-        );
-    }
-    protected override void OnInstantiate(MatchView view, ASMLdcI4 inst)
-    {
-        inst.val = view.LoadTokenVar(VALUE);
-    }
-}
-public class ASMLdcI4 : RuleInstance
-{
-    internal Token val;
-
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(Const.Int32(ctx, int.Parse(ctx.GetText(val.Id))));
-        ctx.Emit();
-    }
-}
-
-public class ASMLdstrRule : Rule<ASMLdstr>
-{
-    const int VALUE = 0;
-    public ASMLdstrRule()
-    {
-        SetPattern(t => t
-            .kw("ldstr")
-            .stringLit(captureTag: VALUE)
-        );
-    }
-    protected override void OnInstantiate(MatchView view, ASMLdstr inst)
-    {
-        inst.val = view.LoadTokenVar(VALUE);
-    }
-}
-public class ASMLdstr : RuleInstance
-{
-    internal Token val;
-
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(Const.String(ctx, ctx.GetText(val.Id)));
-        ctx.Emit();
-    }
-}
-
-//===== ASM Methods =====
-public class ASMPrintRule : Rule<ASMPrint>
-{
-    public ASMPrintRule()
-    {
-        SetPattern(t => t
-            .kw("print")
-        );
-    }
-}
-public class ASMPrint : RuleInstance
-{
-    protected override void OnEmit(EmitContext ctx)
-    {
+        ctx.AddInstr(InstrType.None);
+        ctx.AddInnerEmit(Expr.NodeId);
         ctx.AddInstr(Temporal.Print(ctx));
         ctx.Emit();
     }
 }
 
-public class ASMReturnRule : Rule<ASMReturn>
+//===== EXPRESSIONS =====
+public class ExprRule : RuleClass<Expr> { }
+public class Expr : RuleInstance { }
+
+public class MonoExprRule : RuleClass<MonoExpr> { }
+public class MonoExpr : Expr { }
+
+public class ChainExprRule : RuleClass<ChainExpr> { }
+public class ChainExpr : Expr { }
+
+//===== MONO EXPRESSIONS =====
+public class VarGetRule : Rule<VarGet>
 {
-    public ASMReturnRule()
+    const int VARNAME = 0;
+    public VarGetRule()
     {
         SetPattern(t => t
-            .kw("ret")
+            .kw(captureTag: VARNAME)
         );
     }
+    protected override void OnInstantiate(MatchView view, VarGet inst)
+    {
+        inst._varName = view.LoadTokenVar(VARNAME);
+    }
 }
-public class ASMReturn : RuleInstance
+public class VarGet : MonoExpr
 {
+    internal Token _varName;
+
+    private int _varId;
+    protected override void OnValidate(ValidateContext ctx)
+    {
+        var decl = ctx.ResolveTag<VarDecl>(Tags.VarDecl, ctx.GetText(_varName.Id));
+        _varId = decl.VarId;
+    }
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(Flow.Return(ctx));
+        ctx.AddInstr(Local.Load(ctx, _varId));
+        ctx.Emit();
+    }
+}
+
+public class NumberLitRule : Rule<NumberLit>
+{
+    const int VALUE = 0;
+    public NumberLitRule()
+    {
+        SetPattern(t => t
+            .numberLit(captureTag: VALUE)
+        );
+    }
+    protected override void OnInstantiate(MatchView view, NumberLit inst)
+    {
+        inst._value = view.LoadTokenVar(VALUE);
+    }
+}
+public class NumberLit : MonoExpr
+{
+    internal Token _value;
+
+    protected override void OnEmit(EmitContext ctx)
+    {
+        ctx.AddInstr(Const.Int32(ctx, int.Parse(ctx.GetText(_value.Id))));
+        ctx.Emit();
+    }
+}
+
+//===== CHAIN EXPRESSIONS =====
+public class OperExprRule : Rule<OperExpr>
+{
+    const int LEFT = 0;
+    const int RIGHT = 1;
+    public OperExprRule()
+    {
+        SetPattern(t => t
+            .RuleClass<MonoExprRule>(LEFT).oper("+").RuleClass<MonoExprRule>(RIGHT)
+        );
+    }
+    protected override void OnInstantiate(MatchView view, OperExpr inst)
+    {
+        inst.Left = view.LoadRuleVar<MonoExpr>(LEFT);
+        inst.Right = view.LoadRuleVar<MonoExpr>(RIGHT);
+    }
+}
+public class OperExpr : ChainExpr
+{
+    protected override void OnNest(NestContext ctx)
+    {
+        ctx.NestRule(Left);
+        ctx.NestRule(Right);
+    }
+
+    public MonoExpr Left { get; internal set; } = null!;
+    public MonoExpr Right { get; internal set; } = null!;
+
+    protected override void OnEmit(EmitContext ctx)
+    {
+        ctx.AddInstr(InstrType.None);
+        ctx.AddInnerEmit(Left.NodeId);
+        ctx.AddInnerEmit(Right.NodeId);
+        ctx.AddInstr(Arith.Add(ctx));
         ctx.Emit();
     }
 }

@@ -21,12 +21,12 @@ public static class Branch
     }
 
     //>>>> BRANCH <<<<
-    public static InstrType Br(this EmitContext ctx, int labelId)
+    public static InstrType Goto(this EmitContext ctx, int labelId)
     {
         (ctx as EmitInstrContext)!.WriteInt32(labelId);
         return InstrType.Br;
     }
-    internal static void Rule_Br(InstrContext ctx)
+    internal static void Rule_Goto(InstrContext ctx)
     {
         var labelDef = ctx.Labels[ctx.ReadInt32()];
 
@@ -35,12 +35,12 @@ public static class Branch
     }
 
     //>>>> BRANCH IF TRUE <<<<
-    public static InstrType BrIfTrue(this EmitContext ctx, int labelId)
+    public static InstrType GotoIfTrue(this EmitContext ctx, int labelId)
     {
         (ctx as EmitInstrContext)!.WriteInt32(labelId);
         return InstrType.BrTrue;
     }
-    internal static void Rule_BrIfTrue(InstrContext ctx)
+    internal static void Rule_GotoIfTrue(InstrContext ctx)
     {
         var labelDef = ctx.Labels[ctx.ReadInt32()];
 
@@ -49,12 +49,12 @@ public static class Branch
     }
 
     //>>>> BRANCH IF FALSE <<<<
-    public static InstrType BrIfFalse(this EmitContext ctx, int labelId)
+    public static InstrType GotoIfFalse(this EmitContext ctx, int labelId)
     {
         (ctx as EmitInstrContext)!.WriteInt32(labelId);
         return InstrType.BrFalse;
     }
-    internal static void Rule_BrIfFalse(InstrContext ctx)
+    internal static void Rule_GotoIfFalse(InstrContext ctx)
     {
         var labelDef = ctx.Labels[ctx.ReadInt32()];
 

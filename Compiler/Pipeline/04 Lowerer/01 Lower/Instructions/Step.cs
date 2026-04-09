@@ -154,13 +154,13 @@ public partial class LowererProcess
                 Branch.Rule_Label(this);
                 break;
             case InstrType.Br:
-                Branch.Rule_Br(this);
+                Branch.Rule_Goto(this);
                 break;
             case InstrType.BrTrue:
-                Branch.Rule_BrIfTrue(this);
+                Branch.Rule_GotoIfTrue(this);
                 break;
             case InstrType.BrFalse:
-                Branch.Rule_BrIfFalse(this);
+                Branch.Rule_GotoIfFalse(this);
                 break;
 
             //>>>> TEMPORAL <<<<
@@ -169,6 +169,9 @@ public partial class LowererProcess
                 break;
             case InstrType.Print:
                 Temporal.Rule_Print(this);
+                break;
+
+            default:
                 break;
         }
     }

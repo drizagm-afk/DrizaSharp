@@ -5,6 +5,8 @@ namespace DrzSharp.Compiler.Default.Patterns;
 
 public static class Groups
 {
+    public static Pattern Body(this Pattern patt, int? captureTag = null)
+    => patt.ClosedGroup(captureTag);
     public static Pattern CGroup(this Pattern patt, int? captureTag = null)
     => patt.ClosedGroup(captureTag);
     public static Pattern ClosedGroup(this Pattern patt, int? captureTag = null)

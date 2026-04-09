@@ -14,6 +14,25 @@ public static class Bindings
         //VIRTUAL
         ctx.BindRule<EntryPointRule>(Realms.VIRTUAL);
 
+        //LOGIC
+        ctx.BindRule<VarDeclRule>(Realms.Logic);
+        ctx.BindRule<RepeatStmtRule>(Realms.Logic);
+        ctx.BindRule<VarSetRule>(Realms.Logic);
+        ctx.BindRule<PrintRule>(Realms.Logic);
+
+        ctx.BindRuleClass<ExprRule>(Realms.Logic);
+        ctx.BindRuleClass<MonoExprRule, ExprRule>();
+        ctx.BindRuleClass<ChainExprRule, ExprRule>();
+
+        ctx.BindRule<VarGetRule, MonoExprRule>(isAbstract: true);
+        ctx.BindRule<NumberLitRule, MonoExprRule>(isAbstract: true);
+
+        ctx.BindRule<OperExprRule, ChainExprRule>(isAbstract: true);
+
+        /*
+        //VIRTUAL
+        ctx.BindRule<EntryPointRule>(Realms.VIRTUAL);
+
         //ASM LOGIC
         ctx.BindRule<ASMLocalsRule>(Realms.ASMLogic);
         ctx.BindRule<ASMVarDeclRule>(Realms.ASMLogic, true);
@@ -30,6 +49,7 @@ public static class Bindings
 
         ctx.BindRule<ASMPrintRule>(Realms.ASMLogic);
         ctx.BindRule<ASMReturnRule>(Realms.ASMLogic);
+        */
     }
 }
 public static class Realms

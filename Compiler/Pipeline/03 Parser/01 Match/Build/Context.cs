@@ -7,13 +7,13 @@ public interface NestContext : Context
 {
     public void SetScoped(bool isScoped = true);
 
-    public int NestSpan(TokenSpan span, string? realmName = null, bool isScoped = false)
+    public int NestSpan(TokenSpan span, string? realmName, bool isScoped = false)
     => NestSpan(span, TryRealm(realmName), isScoped);
     public int NestSpan(TokenSpan span, int? realmId = null, bool isScoped = false);
-    public bool TryNestSpan(TokenSpan span, out int nestId, string? realmName = null, bool isScoped = false)
+    public bool TryNestSpan(TokenSpan span, out int nestId, string? realmName, bool isScoped = false)
     => TryNestSpan(span, out nestId, TryRealm(realmName), isScoped);
     public bool TryNestSpan(TokenSpan span, out int nestId, int? realmId = null, bool isScoped = false);
-    public int[] NestSpans(TokenSpan[] spans, string? realmName = null, bool isScoped = false)
+    public int[] NestSpans(TokenSpan[] spans, string? realmName, bool isScoped = false)
     => NestSpans(spans, TryRealm(realmName), isScoped);
     public int[] NestSpans(TokenSpan[] spans, int? realmId = null, bool isScoped = false);
 

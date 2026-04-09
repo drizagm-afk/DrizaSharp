@@ -131,6 +131,8 @@ public readonly struct Instr(InstrType type, int start, int length, SourceSlice 
 }
 public enum InstrType
 {
+    None,
+    
     //CONSTANTS
     LdcInt32, LdcInt64, LdcFloat32, LdcFloat64, Ldstr, Ldnull,
     //STACK
