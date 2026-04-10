@@ -9,6 +9,7 @@ internal partial class CompilationContext
 {
     //>>>> STATIC: CACHED ASSEMBLIES <<<<
     private static readonly List<VAssembly> _assemblies = [];
+    public static IEnumerable<VAssembly> Assemblies => _assemblies;
     public static VAssembly AssemblyAt(int id)
     => _assemblies[id];
     private static VAssembly AddAssembly(AssemblyDefinition definition, AssemblyHash hash)
@@ -35,6 +36,14 @@ internal partial class CompilationContext
 
     //>>>> DEPENDENCIES <<<<
     private readonly List<int> _deps = [];
+    public IEnumerable<VAssembly> Dependencies
+    {
+        get
+        {
+            foreach (var dep in _deps)
+                yield return AssemblyAt(dep);
+        }
+    }
     public VAssembly DependencyAt(int id)
     => AssemblyAt(_deps[id]);
     private int AddDependency(VAssembly vasm)

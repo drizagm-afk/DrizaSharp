@@ -46,8 +46,7 @@ public partial class Render
     //>>>> PROJECT DEBUG <<<<
     private DzProject Project = null!;
 
-    private bool renderInConsole;
-    private StringBuilder Stream = null!;
+    private StringBuilder? Stream = null;
     internal ConsoleColor Color
     {
         get => Console.ForegroundColor;
@@ -58,11 +57,11 @@ public partial class Render
 
     public void DebugProject(DzProject project)
     {
+        const String path = @"C:\Driza\DrizaSharp\Diagnostics";
         Project = project;
 
-        //ENTRIES
-        renderInConsole = true;
-
+        //ENTRIES (CONSOLE)
+        Stream = null;
         PrintProjectHeader();
         foreach (var file in project.Files)
         {
@@ -72,11 +71,14 @@ public partial class Render
             DebugFileEntries();
         }
 
-        //STRUCTURES
-        renderInConsole = false;
+        //STRUCTURES (FILES)
+        Directory.CreateDirectory(path);
 
         Stream = new();
         PrintProjectHeader();
+
+        DebugVIR();
+        WriteLine();
         foreach (var file in project.Files)
         {
             File = file;
@@ -84,26 +86,38 @@ public partial class Render
 
             DebugFileStructures();
         }
-        System.IO.File.WriteAllText(@"C:\Driza\DrizaSharp\.dzdiag", Stream.ToString());
+
+        System.IO.File.WriteAllText(Path.Combine(path, ".dzdiag"), Stream.ToString());
+
+        //STRUCTURES (DEPENDENCIES)
+        foreach(var dep in CompilationContext.ContextAt(project.Id).Dependencies)
+        {
+            Stream = new();
+            PrintProjectHeader();
+
+            DebugVirtual(dep);
+
+            System.IO.File.WriteAllText(Path.Combine(path, $"{dep.Name}.dzdiag"), Stream.ToString());
+        }
     }
 
     internal void WriteLine(string? value = null)
     {
-        if (renderInConsole)
+        if (Stream is null)
             Console.WriteLine(value);
         else
             Stream.AppendLine(value);
     }
     internal void Write(string? value)
     {
-        if (renderInConsole)
+        if (Stream is null)
             Console.Write(value);
         else
             Stream.Append(value);
     }
     internal void Write(char value)
     {
-        if (renderInConsole)
+        if (Stream is null)
             Console.Write(value);
         else
             Stream.Append(value);

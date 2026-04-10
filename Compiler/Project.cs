@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using DrzSharp.Compiler.Diagnostics;
 using DrzSharp.Compiler.Model;
+using DrzSharp.Compiler.Virtual;
 
 namespace DrzSharp.Compiler;
 

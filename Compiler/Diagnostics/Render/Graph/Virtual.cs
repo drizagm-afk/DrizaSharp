@@ -1,0 +1,184 @@
+using DrzSharp.Compiler.Model;
+using DrzSharp.Compiler.Virtual;
+
+namespace DrzSharp.Compiler.Diagnostics;
+
+public partial class Render
+{
+    private void DebugVIR()
+    => DebugVirtual(Project.Virtual);
+    private void DebugVirtual(VAssembly asm)
+    {
+        VIR? vir = asm as VIR;
+
+        PrintSectionHeader("VIRTUAL");
+        if (vir is not null)
+            WriteLine(">> VIR (Virtual Intermediate Representation): ");
+        else
+            WriteLine($">> {asm.Name}: ");
+
+        //LOOP
+        bool[] debuggedNodes = new bool[asm.NodeCount];
+        void debug(int nodeId, int tabs)
+        => debugNode(asm.NodeAt(nodeId), tabs);
+        void debugNode(in VNode node, int tabs)
+        {
+            var info = asm.ReadInfoAt(node.Id);
+            if (vir is null && info is VMember minfo && minfo.IsCompilerGenerated)
+                return;
+
+            if (debuggedNodes[node.Id])
+                return;
+
+            debuggedNodes[node.Id] = true;
+
+            //HELPERS
+            string generics(IVReadOnlyInfo info)
+            {
+                if (info is IReadGeneric gen && gen.GenericArity > 0)
+                {
+                    string[] genParams = new string[gen.GenericArity];
+                    for (int i = 0; i < gen.GenericArity; i++)
+                        genParams[i] = gen.GenericParams[i].Name;
+
+                    return $"<{string.Join(", ", genParams)}>";
+                }
+                return "";
+            }
+            string parameters(IVReadOnlyMethodBase method)
+            {
+                var paramCount = method.Params.Length;
+                string[] methodParams = new string[paramCount];
+                for (int i = 0; i < paramCount; i++)
+                {
+                    var param = method.Params[i];
+                    methodParams[i] += $"{param.Name}: {UsageToString(param.Type)}";
+                }
+                return $"({string.Join(", ", methodParams)})";
+            }
+
+            //LOGIC
+            string header;
+            switch (info)
+            {
+                case VNspace nspace:
+                    header = nspace.Name;
+                    break;
+                case VType type:
+                    header = $"{type.Name}{generics(type)}";
+                    break;
+                //FIELDS
+                case VField field:
+                    header = $"{field.Name}: {UsageToString(field.Type)}";
+                    break;
+                //PROPERTIES
+                case VProperty property:
+                    bool hasSetter = property.Setter >= 0;
+                    bool hasGetter = property.Getter >= 0;
+
+                    header = $"{property.Name}: {UsageToString(property.Type)} {{ {"set".If(hasSetter)}{", ".If(hasSetter && hasGetter)}{"get".If(hasGetter)} }}";
+                    if (hasSetter)
+                        debug(property.Setter, tabs + 1);
+                    if (hasGetter)
+                        debug(property.Getter, tabs + 1);
+                    break;
+                //METHODS
+                case VMethod method:
+                    header = $"{method.Name}{generics(method)}{parameters(method)}: {UsageToString(method.ReturnType)}";
+                    break;
+                case VCtor ctor:
+                    header = $"{parameters(ctor)}";
+                    break;
+                case VAccessor accessor:
+                    header = $"{parameters(accessor)}";
+                    break;
+                default:
+                    return;
+            }
+
+            string kind = node.Id == 0 ? "GLOBAL NSPACE" : node.Kind switch
+            {
+                VKind.Nspace => "NSPACE",
+
+                VKind.Type => "TYPE",
+                VKind.Interface => "INTERFACE",
+
+                VKind.Field => "FIELD",
+                VKind.Property => "PROPERTY",
+
+                VKind.Method => "METHOD",
+                VKind.Ctor => "CTOR",
+                VKind.Accessor => "ACCESSOR",
+                _ => "NON-SUPPORTED"
+            };
+
+            if (node.Kind != VKind.Nspace && vir is VIR VIR)
+                PrintGConn($"[{kind}] {header} from <000>", tabs);
+            else
+                PrintGConn($"[{kind}] {header}", tabs);
+
+            //DEBUG CHILDREN
+            int childId = node.FirstChildId;
+            while (childId >= 0)
+            {
+                ref readonly var child = ref asm.NodeAt(childId);
+                debugNode(child, tabs + 1);
+
+                childId = child.NextSiblingId;
+            }
+        }
+        debug(VAssembly.GlobalNspaceId, 0);
+    }
+
+    string OuterToString(VAssembly asm, int id)
+    {
+        var outerId = asm.NodeAt(id).ParentId;
+        if (outerId > 0)
+            return $"{OuterToString(asm, outerId)}{asm.ReadInfoAt(outerId).Name}.";
+
+        return "";
+    }
+    private string UsageToString(UType utype)
+    {
+        switch (utype)
+        {
+            case UDeclType declType:
+                var asm = AsmAt(declType.DeclId.AssemblyId);
+                var name = asm.ReadInfoAt(declType.DeclId.LocalId).Name;
+
+                IEnumerable<string> debugArgs()
+                {
+                    foreach (var arg in declType.Args)
+                        yield return UsageToString(arg);
+                }
+                if (declType.Args.Length > 0)
+                    name += $"<{string.Join(", ", debugArgs())}>";
+
+                if (declType.Parent is UType parent)
+                    return $"{UsageToString(parent)}.{name}";
+
+                return $"{OuterToString(asm, declType.DeclId.LocalId)}{name}";
+            case UGenType genType:
+                return (InfoAt(genType.DeclId) as IReadGeneric)!.GenericParams[genType.ParamId].Name;
+            case UArrayType arrayType:
+                return $"{UsageToString(arrayType.Type)}[{",".Repeat(arrayType.Rank)}]";
+            case UPointerType ptrType:
+                return $"{UsageToString(ptrType.Type)}&";
+            case UUnsafePointerType unsafePtrType:
+                return $"{UsageToString(unsafePtrType.Type)}*";
+            case UVoidType:
+                return "void";
+            default:
+                return "<INVALID>";
+        }
+    }
+    private IVReadOnlyInfo InfoAt(GlobalId globalId)
+    => AsmAt(globalId.AssemblyId).ReadInfoAt(globalId.LocalId);
+    private VAssembly AsmAt(int asmId)
+    {
+        if (asmId < 0)
+            return Project.Virtual;
+
+        return CompilationContext.AssemblyAt(asmId);
+    }
+}

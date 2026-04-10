@@ -307,12 +307,12 @@ internal static partial class VirtualLoader
             case SentinelType senT:
                 return ResolveReference(vctx, senT.ElementType, vmethod);
             case FunctionPointerType:
-                return UContext.GetPointerType(UVoidType.Type);
+                return UContext.GetUnsafePointerType(UVoidType.Type);
             //TYPES
             case ByReferenceType refT:
-                return UContext.GetRefType(ResolveReference(vctx, refT.ElementType, vmethod));
+                return UContext.GetPointerType(ResolveReference(vctx, refT.ElementType, vmethod));
             case PointerType ptrT:
-                return UContext.GetPointerType(ResolveReference(vctx, ptrT.ElementType, vmethod));
+                return UContext.GetUnsafePointerType(ResolveReference(vctx, ptrT.ElementType, vmethod));
             case ArrayType aryT:
                 return UContext.GetArrayType(ResolveReference(vctx, aryT.ElementType, vmethod), aryT.Rank);
             case GenericParameter genP:

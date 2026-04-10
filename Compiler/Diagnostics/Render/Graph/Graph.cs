@@ -1,5 +1,3 @@
-using DrzSharp.Compiler.Model;
-
 namespace DrzSharp.Compiler.Diagnostics;
 
 public partial class Render

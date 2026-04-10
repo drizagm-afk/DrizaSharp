@@ -17,7 +17,6 @@ public static class Local
         var vars = ctx.Variables;
 
         var val = ctx.ReadInt32();
-        Console.WriteLine($"{vars.Count} : {val}");
         if (vars.Count != val)
             throw new Exception();
 

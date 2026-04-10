@@ -1,0 +1,160 @@
+==================== PROJECT =====================
+FILE:   C:\Driza\DrizaSharp\Program.dz
+AUTHOR: devdriz
+==================================================
+
+==================== VIRTUAL =====================
+>> VIR (Virtual Intermediate Representation): 
+[GLOBAL NSPACE] 
+
+//////////////////////////////////////////////////
+FILE:   C:\Driza\DrizaSharp\Program.dz
+MODULE: <main>
+//////////////////////////////////////////////////
+
+===================== LEXER ======================
+>> TOKEN LIST: 
+[000 NEWLINE] (START)
+[001 Hash Prefix] "#Run" (L1:C1 - L1:C5)
+[002 Braces Opener] (L1:C6)
+[003 NEWLINE] (L2)
+[004 Keyword] "a" (L2:C5)
+[005 Operator] ":=" (L2:C7 - L2:C9)
+[006 Number Literal] "0" (L2:C10)
+[007 NEWLINE] (L3)
+[008 Keyword] "b" (L3:C5)
+[009 Operator] ":=" (L3:C7 - L3:C9)
+[010 Number Literal] "1" (L3:C10)
+[011 NEWLINE] (L4)
+[012 Keyword] "repeat" (L5:C5 - L5:C11)
+[013 Parentheses Opener] (L5:C12)
+[014 Number Literal] "10" (L5:C13 - L5:C15)
+[015 Parentheses Closer] (L5:C15)
+[016 Braces Opener] (L5:C17)
+[017 NEWLINE] (L6)
+[018 Keyword] "temp" (L6:C9 - L6:C13)
+[019 Operator] ":=" (L6:C14 - L6:C16)
+[020 Keyword] "a" (L6:C17)
+[021 NEWLINE] (L7)
+[022 Keyword] "a" (L7:C9)
+[023 Operator] "=" (L7:C11)
+[024 Keyword] "b" (L7:C13)
+[025 NEWLINE] (L8)
+[026 Keyword] "b" (L8:C9)
+[027 Operator] "=" (L8:C11)
+[028 Keyword] "temp" (L8:C13 - L8:C17)
+[029 Operator] "+" (L8:C18)
+[030 Keyword] "b" (L8:C20)
+[031 NEWLINE] (L9)
+[032 Keyword] "print" (L9:C9 - L9:C14)
+[033 Parentheses Opener] (L9:C14)
+[034 Keyword] "a" (L9:C15)
+[035 Parentheses Closer] (L9:C16)
+[036 NEWLINE] (L10)
+[037 Braces Closer] (L10:C5)
+[038 NEWLINE] (L11)
+[039 Braces Closer] (L11:C1)
+[040 NEWLINE] (END)
+
+===================== PARSER =====================
+>> TAST (Abstract Stratified Token Tree): 
+VIRTUAL ROOT [000, 040]
+<NEWLINE, ..., NEWLINE>
+ ├─ <002> EntryPointRule [001 - 002, 039]
+ │  <Hash Prefix "#Run", Braces Opener, ..., Braces Closer>
+ │   ├─ Entering Logic <001> [003, 007, 011, 038]
+ │   │  <NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE>
+ │   │   ├─ <004> VarDeclRule [004 - 005]
+ │   │   │  <Keyword "a", Operator ":=", ...>
+ │   │   │   ├─ <003> NumberLitRule [006]
+ │   │   │   │  <Number Literal "0">
+ │   │   ├─ <006> VarDeclRule [008 - 009]
+ │   │   │  <Keyword "b", Operator ":=", ...>
+ │   │   │   ├─ <005> NumberLitRule [010]
+ │   │   │   │  <Number Literal "1">
+ │   │   ├─ <009> RepeatStmtRule [012 - 013, 015 - 016, 037]
+ │   │   │  <Keyword "repeat", Parentheses Opener, ..., Parentheses Closer, Braces Opener, ..., Braces Closer>
+ │   │   │   ├─ <008> NumberLitRule [014]
+ │   │   │   │  <Number Literal "10">
+ │   │   │   ├─ <007> [017, 021, 025, 031, 036]
+ │   │   │   │  <NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE, ..., NEWLINE>
+ │   │   │   │   ├─ <011> VarDeclRule [018 - 019]
+ │   │   │   │   │  <Keyword "temp", Operator ":=", ...>
+ │   │   │   │   │   ├─ <010> VarGetRule [020]
+ │   │   │   │   │   │  <Keyword "a">
+ │   │   │   │   ├─ <013> VarSetRule [022 - 023]
+ │   │   │   │   │  <Keyword "a", Operator "=", ...>
+ │   │   │   │   │   ├─ <012> VarGetRule [024]
+ │   │   │   │   │   │  <Keyword "b">
+ │   │   │   │   ├─ <017> VarSetRule [026 - 027]
+ │   │   │   │   │  <Keyword "b", Operator "=", ...>
+ │   │   │   │   │   ├─ <016> OperExprRule [029]
+ │   │   │   │   │   │  <..., Operator "+", ...>
+ │   │   │   │   │   │   ├─ <014> VarGetRule [028]
+ │   │   │   │   │   │   │  <Keyword "temp">
+ │   │   │   │   │   │   ├─ <015> VarGetRule [030]
+ │   │   │   │   │   │   │  <Keyword "b">
+ │   │   │   │   ├─ <019> PrintRule [032 - 033, 035]
+ │   │   │   │   │  <Keyword "print", Parentheses Opener, ..., Parentheses Closer>
+ │   │   │   │   │   ├─ <018> VarGetRule [034]
+ │   │   │   │   │   │  <Keyword "a">
+
+==================== LOWERER =====================
+>> TASI (Abstract Stratified Instruction Tree): 
+VIRTUAL ROOT
+ ├─ From <002> EntryPointRule
+ │  [0] EnterMethod
+ │   ├─ From <004> VarDeclRule
+ │   │  [0] DeclLocal
+ │   │   ├─ From <003> NumberLitRule
+ │   │   │  [0] LdcInt32
+ │   │  [1] StoreLocal
+ │   ├─ From <006> VarDeclRule
+ │   │  [0] DeclLocal
+ │   │   ├─ From <005> NumberLitRule
+ │   │   │  [0] LdcInt32
+ │   │  [1] StoreLocal
+ │   ├─ From <009> RepeatStmtRule
+ │   │  [0] DeclLocal
+ │   │   ├─ From <008> NumberLitRule
+ │   │   │  [0] LdcInt32
+ │   │  [1] StoreLocal
+ │   │  [2] Label
+ │   │  [3] LoadLocal
+ │   │  [4] LdcInt32
+ │   │  [5] GreaterThan
+ │   │  [6] BrFalse
+ │   │   ├─ From <011> VarDeclRule
+ │   │   │  [0] DeclLocal
+ │   │   │   ├─ From <010> VarGetRule
+ │   │   │   │  [0] LoadLocal
+ │   │   │  [1] StoreLocal
+ │   │   ├─ From <013> VarSetRule
+ │   │   │  [0] None
+ │   │   │   ├─ From <012> VarGetRule
+ │   │   │   │  [0] LoadLocal
+ │   │   │  [1] StoreLocal
+ │   │   ├─ From <017> VarSetRule
+ │   │   │  [0] None
+ │   │   │   ├─ From <016> OperExprRule
+ │   │   │   │  [0] None
+ │   │   │   │   ├─ From <014> VarGetRule
+ │   │   │   │   │  [0] LoadLocal
+ │   │   │   │   ├─ From <015> VarGetRule
+ │   │   │   │   │  [0] LoadLocal
+ │   │   │   │  [1] Add
+ │   │   │  [1] StoreLocal
+ │   │   ├─ From <019> PrintRule
+ │   │   │  [0] None
+ │   │   │   ├─ From <018> VarGetRule
+ │   │   │   │  [0] LoadLocal
+ │   │   │  [1] Print
+ │   │  [7] LoadLocal
+ │   │  [8] LdcInt32
+ │   │  [9] Sub
+ │   │  [10] StoreLocal
+ │   │  [11] Br
+ │   │  [12] Label
+ │  [1] Return
+
+

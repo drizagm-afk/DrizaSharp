@@ -83,29 +83,6 @@ public class UArrayType : UType
 //>>>> BY REFERENCE TYPE <<<<
 public static partial class UContext
 {
-    private static readonly Dictionary<RefTypeKey, URefType> _refTypes = [];
-    public static URefType GetRefType(UType type)
-    {
-        RefTypeKey key = new(type);
-        if (_refTypes.TryGetValue(key, out var u))
-            return u;
-
-        return _refTypes[key] = new(type);
-    }
-}
-
-readonly record struct RefTypeKey
-(UType Type);
-public class URefType : UType
-{
-    public readonly UType Type;
-    internal URefType(UType type)
-    { Type = type; }
-}
-
-//>>>> POINTER TYPE <<<<
-public static partial class UContext
-{
     private static readonly Dictionary<PointerTypeKey, UPointerType> _pointerTypes = [];
     public static UPointerType GetPointerType(UType type)
     {
@@ -123,6 +100,29 @@ public class UPointerType : UType
 {
     public readonly UType Type;
     internal UPointerType(UType type)
+    { Type = type; }
+}
+
+//>>>> POINTER TYPE <<<<
+public static partial class UContext
+{
+    private static readonly Dictionary<UnsafePointerTypeKey, UUnsafePointerType> _unsafePointerTypes = [];
+    public static UUnsafePointerType GetUnsafePointerType(UType type)
+    {
+        UnsafePointerTypeKey key = new(type);
+        if (_unsafePointerTypes.TryGetValue(key, out var u))
+            return u;
+
+        return _unsafePointerTypes[key] = new(type);
+    }
+}
+
+readonly record struct UnsafePointerTypeKey
+(UType Type);
+public class UUnsafePointerType : UType
+{
+    public readonly UType Type;
+    internal UUnsafePointerType(UType type)
     { Type = type; }
 }
 

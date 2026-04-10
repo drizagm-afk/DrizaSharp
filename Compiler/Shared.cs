@@ -20,6 +20,9 @@ public static class Ext
     public static string Repeat(this char value, int count)
     => new(value, count);
 
+    public static string If(this string value, bool condition)
+    => condition ? value : string.Empty;
+
     //LIST
     public static T RemoveLast<T>(this List<T> list)
     {
