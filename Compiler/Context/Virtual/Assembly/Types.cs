@@ -3,52 +3,54 @@ using Mono.Cecil;
 
 namespace DrzSharp.Compiler.Virtual;
 
-public partial interface IVReadOnlyAssembly
+public partial interface VAssembly
 {
     //===== TYPE =====
     public bool IsComposableType(int typeId);
 
-    public bool TryReadTypeBase(int outerId, GenericId typeName, out IVReadOnlyTypeBase rinfo);
-    public VTypeBase ReadTypeBase(int outerId, GenericId typeName);
+    public bool TryReadTypeMember(int outerId, GenName typeName, out VTypeMember read);
+    public VTypeMember ReadTypeMember(int outerId, GenName typeName);
 
     //**VTYPE**
-    public bool TryReadType(int outerId, GenericId typeName, out IVReadOnlyType rinfo);
+    public bool TryReadType(int outerId, GenName typeName, out VType read);
 
     //**VINTERFACE**
-    public bool TryReadInterface(int outerId, GenericId interfaceName, out IVReadOnlyInterface rinfo);
+    public bool TryReadInterface(int outerId, GenName interfaceName, out VInterface read);
 
     //===== TYPE MEMBERS =====
-    public bool TryReadMemberList(int typeId, string memberName, out IReadOnlyList<int> memberList);
-    public bool TryReadGenericMemberList(int typeId, GenericId memberName, out IReadOnlyList<int> memberList);
+    public bool TryReadMembers(int typeId, string memberName, out IReadOnlyList<int> members);
+    public IReadOnlyList<int> ReadMembers(int typeId, string memberName);
+    public bool TryReadMembers(int typeId, GenName memberName, out IReadOnlyList<int> members);
+    public IReadOnlyList<int> ReadMembers(int typeId, GenName memberName);
 
     //===== FIND TYPE =====
-    public bool TryFindType(out int typeId, params ImmutableArray<GenericId> nameList);
+    public bool TryFindType(out int typeId, params ImmutableArray<GenName> nameList);
 }
-public partial class VAssembly
+public partial class VAssemblyEdit
 {
     //===== TYPE =====
     public bool IsComposableType(int typeId)
     => KindOf(typeId) is VKind.Type or VKind.Interface;
 
-    private static VKind KindOfType<T>() where T : VTypeBase
+    private static VKind KindOfType<T>() where T : VTypeMember
     {
         var type = typeof(T);
-        if (type == typeof(VType))
+        if (type == typeof(VTypeEdit))
             return VKind.Type;
-        if (type == typeof(VInterface))
+        if (type == typeof(VInterfaceEdit))
             return VKind.Interface;
 
         throw new Exception("UNSUPPORTED TYPE");
     }
-    private static T NewOfType<T>(GenericId typeName, bool isNested) where T : VTypeBase
+    private static T NewOfType<T>(GenName typeName, bool isNested) where T : VTypeMemberEdit
     {
-        VTypeBase construct()
+        VTypeMember construct()
         {
             var type = typeof(T);
-            if (type == typeof(VType))
-                return new VType(typeName, isNested);
-            if (type == typeof(VInterface))
-                return new VInterface(typeName, isNested);
+            if (type == typeof(VTypeEdit))
+                return new VTypeEdit(typeName, isNested);
+            if (type == typeof(VInterfaceEdit))
+                return new VInterfaceEdit(typeName, isNested);
 
             throw new Exception("UNSUPPORTED TYPE");
         }
@@ -56,159 +58,135 @@ public partial class VAssembly
         return (T)construct();
     }
 
-    private bool TryReadTypeBase<T>(int outerId, GenericId typeName, out T rinfo) where T : IVReadOnlyTypeBase
+    private bool TryReadTypeMember<T>(int outerId, GenName typeName, out T read) where T : VTypeMember
     {
-        rinfo = default!;
+        read = default!;
 
         //LOGIC
         var kind = KindOf(outerId);
         VTypeContainer outer;
         if (kind == VKind.Nspace)
-            outer = ReadInfoAt<VNspace>(outerId);
+            outer = ReadAt<VNspace>(outerId);
         else if (kind == VKind.Type)
-            outer = ReadInfoAt<VType>(outerId);
+            outer = ReadAt<VType>(outerId);
         else
             return false;
 
-        return outer.Types.TryGetValue(typeName, out int nodeId) && TryReadInfoAt(nodeId, out rinfo);
+        return outer.Types.TryGetValue(typeName, out int nodeId) && TryReadAt(nodeId, out read);
     }
-    private bool TryEditTypeBase<T>(int outerId, GenericId typeName, out T info) where T : VTypeBase
+    private bool TryEditTypeMember<T>(int outerId, GenName typeName, out T edit) where T : VTypeMemberEdit
     {
-        info = null!;
-        return TryReadTypeBase(outerId, typeName, out T rinfo) && TryEdit(rinfo, out info);
+        edit = null!;
+        return TryReadTypeMember(outerId, typeName, out T read) && Edit(read, out edit);
     }
-    private T ReadTypeBase<T>(int outerId, GenericId typeName, string md) where T : VTypeBase
+    private T ReadTypeMember<T>(int outerId, GenName typeName, string md) where T : VTypeMember
     {
         var kind = KindOf(outerId);
         VTypeContainer outer;
         if (kind == VKind.Nspace)
-            outer = ReadInfoAt<VNspace>(outerId);
+            outer = ReadAt<VNspace>(outerId);
         else if (kind == VKind.Type)
-            outer = ReadInfoAt<VType>(outerId);
+            outer = ReadAt<VType>(outerId);
         else
             throw new Exception($"A NON-NAMESPACE AND NON-CLASS TYPE CAN'T CONTAIN NESTED TYPES: outerId={outerId} {md}");
 
-        if (!outer.Types.TryGetValue(typeName, out int nodeId) || !TryReadInfoAt(nodeId, out T rinfo))
+        if (!outer.Types.TryGetValue(typeName, out int nodeId) || !TryReadAt(nodeId, out T read))
             throw new Exception($"THE TYPE DOESN'T EXIST: outerId={outerId} {md}");
 
-        return rinfo;
+        return read;
     }
-    private T EditTypeBase<T>(int outerId, GenericId typeName, string md) where T : VTypeBase
+    private T EditTypeMember<T>(int outerId, GenName typeName, string md) where T : VTypeMemberEdit
     {
-        var rinfo = ReadTypeBase<T>(outerId, typeName, md);
-        return Edit<T>(rinfo, md);
+        var read = ReadTypeMember<T>(outerId, typeName, md);
+        return Edit<T>(read);
     }
-    private T AddTypeBase<T>(int outerId, GenericId typeName, string md) where T : VTypeBase
+    private T AddTypeMember<T>(int outerId, GenName typeName, string md) where T : VTypeMemberEdit
     {
         var kind = KindOf(outerId);
 
-        T info;
-        VTypeContainer outer;
+        T edit;
+        VTypeContainerEdit outer;
         if (kind == VKind.Nspace)
         {
-            outer = Edit<VNspace>(outerId, $"nspaceId={outerId} {md}");
-            info = NewOfType<T>(typeName, false);
+            outer = EditAt<VNspaceEdit>(outerId);
+            edit = NewOfType<T>(typeName, false);
         }
         else if (kind == VKind.Type)
         {
-            outer = Edit<VType>(outerId, $"outerTypeId={outerId} {md}");
-            info = NewOfType<T>(typeName, true);
+            outer = EditAt<VTypeEdit>(outerId);
+            edit = NewOfType<T>(typeName, true);
         }
         else
             throw new Exception($"CANNOT CREATE A NEW TYPE INSIDE A NON-NAMESPACE AND NON-CLASS TYPE: outerId={outerId} {md}");
 
-        outer.TypesMut[typeName] = AddNode(KindOfType<T>(), info, outerId);
-        return info;
+        outer.TypesMut[typeName] = AddNode(KindOfType<T>(), edit, outerId);
+        return edit;
     }
 
-    public bool TryReadTypeBase(int outerId, GenericId typeName, out IVReadOnlyTypeBase rinfo)
-    => TryReadTypeBase<IVReadOnlyTypeBase>(outerId, typeName, out rinfo);
-    public bool TryEditTypeBase(int outerId, GenericId typeName, out VTypeBase info)
-    => TryEditTypeBase<VTypeBase>(outerId, typeName, out info);
-    public VTypeBase ReadTypeBase(int outerId, GenericId typeName)
-    => ReadTypeBase<VTypeBase>(outerId, typeName, $"typeBaseName={typeName}");
-    public VTypeBase EditTypeBase(int outerId, GenericId typeName)
-    => EditTypeBase<VTypeBase>(outerId, typeName, $"typeBaseName={typeName}");
+    public bool TryReadTypeMember(int outerId, GenName typeName, out VTypeMember read)
+    => TryReadTypeMember<VTypeMember>(outerId, typeName, out read);
+    public bool TryEditTypeMember(int outerId, GenName typeName, out VTypeMemberEdit edit)
+    => TryEditTypeMember<VTypeMemberEdit>(outerId, typeName, out edit);
+    public VTypeMember ReadTypeMember(int outerId, GenName typeName)
+    => ReadTypeMember<VTypeMember>(outerId, typeName, $"typeBaseName={typeName}");
+    public VTypeMemberEdit EditTypeMember(int outerId, GenName typeName)
+    => EditTypeMember<VTypeMemberEdit>(outerId, typeName, $"typeBaseName={typeName}");
 
     //**VTYPE**
-    public bool TryReadType(int outerId, GenericId typeName, out IVReadOnlyType rinfo)
-    => TryReadTypeBase(outerId, typeName, out rinfo);
-    public bool TryEditType(int outerId, GenericId typeName, out VType info)
-    => TryEditTypeBase(outerId, typeName, out info);
-    public VType AddType(int outerId, GenericId typeName)
-    => AddTypeBase<VType>(outerId, typeName, $"typeName={typeName}");
+    public bool TryReadType(int outerId, GenName typeName, out VType read)
+    => TryReadTypeMember(outerId, typeName, out read);
+    public bool TryEditType(int outerId, GenName typeName, out VTypeEdit edit)
+    => TryEditTypeMember(outerId, typeName, out edit);
+    public VTypeEdit AddType(int outerId, GenName typeName)
+    => AddTypeMember<VTypeEdit>(outerId, typeName, $"typeName={typeName}");
 
     //**VINTERFACE**
-    public bool TryReadInterface(int outerId, GenericId interfaceName, out IVReadOnlyInterface rinfo)
-    => TryReadTypeBase(outerId, interfaceName, out rinfo);
-    public bool TryEditInterface(int outerId, GenericId interfaceName, out VInterface info)
-    => TryEditTypeBase(outerId, interfaceName, out info);
-    public VInterface AddInterface(int outerId, GenericId interfaceName)
-    => AddTypeBase<VInterface>(outerId, interfaceName, $"interfaceName={interfaceName}");
+    public bool TryReadInterface(int outerId, GenName interfaceName, out VInterface read)
+    => TryReadTypeMember(outerId, interfaceName, out read);
+    public bool TryEditInterface(int outerId, GenName interfaceName, out VInterfaceEdit edit)
+    => TryEditTypeMember(outerId, interfaceName, out edit);
+    public VInterfaceEdit AddInterface(int outerId, GenName interfaceName)
+    => AddTypeMember<VInterfaceEdit>(outerId, interfaceName, $"interfaceName={interfaceName}");
 
     //===== TYPE MEMBERS =====
-    public bool TryReadMemberList(int typeId, string memberName, out IReadOnlyList<int> memberList)
+    public bool TryReadMembers(int typeId, string memberName, out IReadOnlyList<int> members)
     {
-        memberList = null!;
-        if (!TryReadInfoAt(typeId, out VComposableType type))
-            return false;
-
-        if (type.Members.TryGetValue(memberName, out var list))
-        {
-            memberList = list;
-            return true;
-        }
-        return false;
+        members = ReadMembers(typeId, memberName);
+        return members.Count > 0;
     }
-    public bool TryEditMemberList(int typeId, string memberName, out List<int> memberList)
+    public IReadOnlyList<int> ReadMembers(int typeId, string memberName)
     {
-        memberList = null!;
-        if (!TryEditInfoAt<VComposableType>(typeId, out var type))
-            return false;
-
-        if (!type.MembersMut.TryGetValue(memberName, out var list))
-            list = type.MembersMut[memberName] = [];
-
-        memberList = list;
-        return true;
+        if (TryReadAt(typeId, out VComposableType type)
+        && type.Members.TryGetValue(memberName, out var list))
+            return list;
+        
+        return Empty.IdList;
     }
-    public List<int> EditMemberList(int typeId, string memberName)
+    private List<int> EditMembers(int typeId, string memberName)
     {
-        var type = Edit<VComposableType>(typeId, $"typeId={typeId} memberName={memberName}");
+        var type = EditAt<VComposableTypeEdit>(typeId);
         if (type.MembersMut.TryGetValue(memberName, out var list))
             return list;
 
         return type.MembersMut[memberName] = [];
     }
 
-    public bool TryReadGenericMemberList(int typeId, GenericId memberName, out IReadOnlyList<int> memberList)
+    public bool TryReadMembers(int typeId, GenName memberName, out IReadOnlyList<int> members)
     {
-        memberList = null!;
-        if (!TryReadInfoAt(typeId, out VComposableType type))
-            return false;
-
-        if (type.GenericMembers.TryGetValue(memberName, out var list))
-        {
-            memberList = list;
-            return true;
-        }
-        return false;
+        members = ReadMembers(typeId, memberName);
+        return members.Count > 0;
     }
-    public bool TryEditGenericMemberList(int typeId, GenericId memberName, out List<int> memberList)
+    public IReadOnlyList<int> ReadMembers(int typeId, GenName memberName)
     {
-        memberList = null!;
-        if (!TryEditInfoAt<VComposableType>(typeId, out var type))
-            return false;
-
-        if (!type.GenericMembersMut.TryGetValue(memberName, out var list))
-            list = type.GenericMembersMut[memberName] = [];
-
-        memberList = list;
-        return true;
+        if (TryReadAt(typeId, out VComposableType type)
+        && type.GenericMembers.TryGetValue(memberName, out var list))
+            return list;
+        
+        return Empty.IdList;
     }
-    public List<int> EditGenericMemberList(int typeId, GenericId memberName)
+    private List<int> EditMembers(int typeId, GenName memberName)
     {
-        var type = Edit<VComposableType>(typeId, $"typeId={typeId} genericMemberName={memberName}");
+        var type = EditAt<VComposableTypeEdit>(typeId);
         if (type.GenericMembersMut.TryGetValue(memberName, out var list))
             return list;
 
@@ -216,8 +194,8 @@ public partial class VAssembly
     }
 
     //===== FIND TYPE =====
-    readonly Dictionary<ImmutableArray<GenericId>, int> _typesFound = [];
-    public bool TryFindType(out int typeId, params ImmutableArray<GenericId> nameList)
+    readonly Dictionary<ImmutableArray<GenName>, int> _typesFound = [];
+    public bool TryFindType(out int typeId, params ImmutableArray<GenName> nameList)
     {
         if (_typesFound.TryGetValue(nameList, out typeId))
             return true;
@@ -232,7 +210,7 @@ public partial class VAssembly
             {
                 if (TryReadNspace(nspaceId, name.Name, out var nspace))
                     nspaceId = nspace.Id;
-                else if (TryReadTypeBase<VTypeBase>(nspaceId, name, out var type))
+                else if (TryReadTypeMember<VTypeMember>(nspaceId, name, out var type))
                 {
                     typeId = type.Id;
                     nspaceId = -1;
@@ -241,7 +219,7 @@ public partial class VAssembly
             }
             else
             {
-                if (!TryReadTypeBase<VTypeBase>(typeId, name, out var type))
+                if (!TryReadTypeMember<VTypeMember>(typeId, name, out var type))
                     return false;
 
                 typeId = type.Id;
@@ -257,15 +235,15 @@ public partial class VAssembly
 }
 
 //>>>> VTYPE <<<<
-public interface IVReadOnlyTypeBase : IVReadOnlyMember, IReadVisibility
+public interface VTypeMember : VMember, IVisibility
 {
     public bool IsNested { get; }
 }
-public abstract class VTypeBase : VMember, IVReadOnlyTypeBase, IVisibility
+public abstract class VTypeMemberEdit : VMemberEdit, VTypeMember, IVisibilityEdit
 {
     public bool IsNested { get; }
 
-    internal VTypeBase(string name, bool isNested) : base(name)
+    internal VTypeMemberEdit(string name, bool isNested) : base(name)
     { IsNested = isNested; }
 
     //METADATA
@@ -276,7 +254,7 @@ public abstract class VTypeBase : VMember, IVReadOnlyTypeBase, IVisibility
 }
 
 //COMPOSABLE TYPE: Type with members (Class, Struct, Interface)
-public interface IVReadOnlyComposableType : IVReadOnlyTypeBase, IReadGeneric
+public interface VComposableType : VTypeMember, IGeneric
 {
     //METADATA
     public ImmutableArray<UDeclType> Interfaces { get; }
@@ -284,44 +262,44 @@ public interface IVReadOnlyComposableType : IVReadOnlyTypeBase, IReadGeneric
     //SCHEME
     public IReadOnlyCollection<int> Ctors { get; }
     public IReadOnlyDictionary<string, List<int>> Members { get; }
-    public IReadOnlyDictionary<GenericId, List<int>> GenericMembers { get; }
+    public IReadOnlyDictionary<GenName, List<int>> GenericMembers { get; }
 }
-public abstract class VComposableType : VTypeBase, IVReadOnlyComposableType, IGeneric
+public abstract class VComposableTypeEdit : VTypeMemberEdit, VComposableType, IGenericEdit
 {
     public int GenericArity { get; }
 
-    internal VComposableType(GenericId name, bool isNested) : base(name.Name, isNested)
+    internal VComposableTypeEdit(GenName name, bool isNested) : base(name.Name, isNested)
     { GenericArity = name.GenericArity; }
 
     //METADATA
     public ImmutableArray<UDeclType> Interfaces { get; set; }
-    public ImmutableArray<VGenericParam> GenericParams { get; set; }
+    public ImmutableArray<VGenParam> GenericParams { get; set; }
 
     //SCHEME
     List<int>? _ctors;
     public List<int> CtorsMut { get => _ctors ??= []; }
-    public IReadOnlyCollection<int> Ctors => _ctors ?? EmptyDict.Ctors;
+    public IReadOnlyCollection<int> Ctors => _ctors ?? Empty.IdList;
 
     Dictionary<string, List<int>>? _members;
     public Dictionary<string, List<int>> MembersMut { get => _members ??= []; }
-    public IReadOnlyDictionary<string, List<int>> Members => _members ?? EmptyDict.Names;
+    public IReadOnlyDictionary<string, List<int>> Members => _members ?? Empty.IdListByName;
 
-    Dictionary<GenericId, List<int>>? _genericMembers;
-    public Dictionary<GenericId, List<int>> GenericMembersMut { get => _genericMembers ??= []; }
-    public IReadOnlyDictionary<GenericId, List<int>> GenericMembers => _genericMembers ?? EmptyDict.GenericNames;
+    Dictionary<GenName, List<int>>? _genericMembers;
+    public Dictionary<GenName, List<int>> GenericMembersMut { get => _genericMembers ??= []; }
+    public IReadOnlyDictionary<GenName, List<int>> GenericMembers => _genericMembers ?? Empty.IdListByGenName;
 }
 
 //DEFAULT TYPE
-public interface IVReadOnlyType : IVReadOnlyComposableType, IVReadOnlyTypeContainer, IReadAbstract, IReadSealed
+public interface VType : VComposableType, VTypeContainer, IAbstract, ISealed
 {
     //METADATA
     public UType? Base { get; }
 
     public VTypeLayout Layout { get; }
 }
-public sealed class VType : VComposableType, IVReadOnlyType, VTypeContainer, IAbstract, ISealed
+public sealed class VTypeEdit : VComposableTypeEdit, VType, VTypeContainerEdit, IAbstractEdit, ISealedEdit
 {
-    internal VType(GenericId name, bool isNested) : base(name, isNested) { }
+    internal VTypeEdit(GenName name, bool isNested) : base(name, isNested) { }
 
     //METADATA
     public UType? Base { get; set; } = null;
@@ -331,14 +309,16 @@ public sealed class VType : VComposableType, IVReadOnlyType, VTypeContainer, IAb
     public bool IsSealed { get; set; }
 
     //SCHEME
-    Dictionary<GenericId, int>? _types;
-    public Dictionary<GenericId, int> TypesMut { get => _types ??= []; }
-    public IReadOnlyDictionary<GenericId, int> Types => _types ?? EmptyDict.Types;
+    Dictionary<GenName, int>? _types;
+    public Dictionary<GenName, int> TypesMut { get => _types ??= []; }
+    public IReadOnlyDictionary<GenName, int> Types => _types ?? Empty.IdByGenName;
 }
 public enum VTypeLayout
 { AUTO, SEQUENTIAL, EXPLICIT }
 
 //INTERFACE
-public interface IVReadOnlyInterface : IVReadOnlyComposableType { }
-public sealed class VInterface : VComposableType, IVReadOnlyInterface
-{ internal VInterface(GenericId name, bool isNested) : base(name, isNested) { } }
+public interface VInterface : VComposableType { }
+public sealed class VInterfaceEdit : VComposableTypeEdit, VInterface
+{
+    internal VInterfaceEdit(GenName name, bool isNested) : base(name, isNested) { }
+}

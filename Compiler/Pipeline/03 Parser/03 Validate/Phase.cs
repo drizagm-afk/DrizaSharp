@@ -8,9 +8,10 @@ public partial class ParserProcess
     //>>>> VALIDATE PROJECT <<<<
     public partial void Validate()
     {
+        _curPass = Pass.Validate;
         foreach (var file in Project.Files)
             Validate(file);
-        Mutate(Pass.Validate);
+        Mutate();
     }
 
     //>>>> VALIDATE FILE <<<<

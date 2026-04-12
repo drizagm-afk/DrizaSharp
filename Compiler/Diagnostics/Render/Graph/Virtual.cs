@@ -6,7 +6,7 @@ namespace DrzSharp.Compiler.Diagnostics;
 public partial class Render
 {
     private void DebugVIR()
-    => DebugVirtual(Project.Virtual);
+    => DebugVirtual(Project.VIR);
     private void DebugVirtual(VAssembly asm)
     {
         VIR? vir = asm as VIR;
@@ -23,7 +23,7 @@ public partial class Render
         => debugNode(asm.NodeAt(nodeId), tabs);
         void debugNode(in VNode node, int tabs)
         {
-            var info = asm.ReadInfoAt(node.Id);
+            var info = asm.ReadAt(node.Id);
             if (vir is null && info is VMember minfo && minfo.IsCompilerGenerated)
                 return;
 
@@ -33,9 +33,9 @@ public partial class Render
             debuggedNodes[node.Id] = true;
 
             //HELPERS
-            string generics(IVReadOnlyInfo info)
+            string generics(VInfo info)
             {
-                if (info is IReadGeneric gen && gen.GenericArity > 0)
+                if (info is IGeneric gen && gen.GenericArity > 0)
                 {
                     string[] genParams = new string[gen.GenericArity];
                     for (int i = 0; i < gen.GenericArity; i++)
@@ -45,7 +45,7 @@ public partial class Render
                 }
                 return "";
             }
-            string parameters(IVReadOnlyMethodBase method)
+            string parameters(VMethodMember method)
             {
                 var paramCount = method.Params.Length;
                 string[] methodParams = new string[paramCount];
@@ -127,14 +127,14 @@ public partial class Render
                 childId = child.NextSiblingId;
             }
         }
-        debug(VAssembly.GlobalNspaceId, 0);
+        debug(VAssemblyEdit.GlobalNspaceId, 0);
     }
 
     string OuterToString(VAssembly asm, int id)
     {
         var outerId = asm.NodeAt(id).ParentId;
         if (outerId > 0)
-            return $"{OuterToString(asm, outerId)}{asm.ReadInfoAt(outerId).Name}.";
+            return $"{OuterToString(asm, outerId)}{asm.ReadAt(outerId).Name}.";
 
         return "";
     }
@@ -143,8 +143,8 @@ public partial class Render
         switch (utype)
         {
             case UDeclType declType:
-                var asm = AsmAt(declType.DeclId.AssemblyId);
-                var name = asm.ReadInfoAt(declType.DeclId.LocalId).Name;
+                var asm = Project.AssemblyAt(declType.DeclId.AssemblyId);
+                var name = asm.ReadAt(declType.DeclId.LocalId).Name;
 
                 IEnumerable<string> debugArgs()
                 {
@@ -159,7 +159,7 @@ public partial class Render
 
                 return $"{OuterToString(asm, declType.DeclId.LocalId)}{name}";
             case UGenType genType:
-                return (InfoAt(genType.DeclId) as IReadGeneric)!.GenericParams[genType.ParamId].Name;
+                return (InfoAt(genType.DeclId) as IGeneric)!.GenericParams[genType.ParamId].Name;
             case UArrayType arrayType:
                 return $"{UsageToString(arrayType.Type)}[{",".Repeat(arrayType.Rank)}]";
             case UPointerType ptrType:
@@ -172,13 +172,6 @@ public partial class Render
                 return "<INVALID>";
         }
     }
-    private IVReadOnlyInfo InfoAt(GlobalId globalId)
-    => AsmAt(globalId.AssemblyId).ReadInfoAt(globalId.LocalId);
-    private VAssembly AsmAt(int asmId)
-    {
-        if (asmId < 0)
-            return Project.Virtual;
-
-        return CompilationContext.AssemblyAt(asmId);
-    }
+    private VInfo InfoAt(GlobalId globalId)
+    => Project.AssemblyAt(globalId.AssemblyId).ReadAt(globalId.LocalId);
 }

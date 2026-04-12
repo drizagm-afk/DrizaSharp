@@ -4,13 +4,10 @@ public partial class Render
 {
     private bool DebugEntries<T>(Stage stage, GroupDiagnostics<T> diag) where T : struct
     {
-        Write(">> COMPILER ENTRIES: ");
         if (diag.Reports.Count <= 0)
-        {
-            WriteLine("NONE\n");
             return false;
-        }
-        WriteLine();
+
+        WriteLine(">> COMPILER ENTRIES: ");
 
         //>>>> RENDER LOGIC <<<<
         List<DiagnosticEntry<T>> unhandledEntries = [];

@@ -1,3 +1,4 @@
+/*
 using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Rules.Parser;
 using DrzSharp.Compiler.Parser;
@@ -13,7 +14,7 @@ public class EntryPointRule : Rule<EntryPoint>
     public EntryPointRule()
     {
         SetPattern(t => t
-            .kw("Algoritmo").Body(BODY).kw("FinAlgoritmo")
+            .hashPx("#Run").obrace().Body(BODY).cbrace()
         );
     }
     protected override void OnInstantiate(MatchView view, EntryPoint inst)
@@ -102,7 +103,7 @@ public class IfStmtRule : Rule<IfStmt>
     public IfStmtRule()
     {
         SetPattern(t => t
-            .kw("Si").RuleClass<ExprRule>(EXPR).kw("Entonces").Body(BODY).kw("FinSi")
+            .kw("if").oparen().RuleClass<ExprRule>(EXPR).cparen().obrace().Body(BODY).cbrace()
         );
     }
     protected override void OnInstantiate(MatchView view, IfStmt inst)
@@ -147,7 +148,7 @@ public class RepeatStmtRule : Rule<RepeatStmt>
     public RepeatStmtRule()
     {
         SetPattern(t => t
-            .kw("Repetir").RuleClass<ExprRule>(EXPR).kw("Veces").Body(BODY).kw("FinRepetir")
+            .kw("repeat").oparen().RuleClass<ExprRule>(EXPR).cparen().obrace().Body(BODY).cbrace()
         );
     }
     protected override void OnInstantiate(MatchView view, RepeatStmt inst)
@@ -202,67 +203,6 @@ public class RepeatStmt : RuleInstance
     }
 }
 
-public class ForStmtRule : Rule<ForStmt>
-{
-    const int VARNAME = 0;
-    const int ENTRE1 = 1;
-    const int ENTRE2 = 2;
-    const int BODY = 3;
-    public ForStmtRule()
-    {
-        SetPattern(t => t
-            .kw("Repetir").kw(captureTag: VARNAME).kw("Entre")
-            .RuleClass<ExprRule>(ENTRE1).oper("..").RuleClass<ExprRule>(ENTRE2)
-            .Body(BODY).kw("FinRepetir")
-        );
-    }
-    protected override void OnInstantiate(MatchView view, ForStmt inst)
-    {
-        inst._varName = view.LoadTokenVar(VARNAME);
-        inst._entre1 = view.LoadRuleVar<Expr>(ENTRE1);
-        inst._entre2 = view.LoadRuleVar<Expr>(ENTRE2);
-        inst._body = view.LoadVar(BODY);
-    }
-}
-public class ForStmt : RuleInstance
-{
-    internal Token _varName;
-    internal Expr _entre1 = null!;
-    internal Expr _entre2 = null!;
-    internal TokenSpan _body;
-    internal int Body;
-
-    protected override void OnNest(NestContext ctx)
-    {
-        ctx.NestRule(_entre1);
-        ctx.NestRule(_entre2);
-        Body = ctx.NestSpan(_body);
-    }
-
-    private int _varCount;
-    private int _labelStart;
-    private int _labelEnd;
-    protected override void OnValidate(ValidateContext ctx)
-    {
-        var entryPoint = ctx.ResolveTag<EntryPoint>(Tags.MethodBody);
-        _varCount = entryPoint.AddLocal();
-        _labelStart = entryPoint.AddLabel();
-        _labelEnd = entryPoint.AddLabel();
-    }
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(Local.Declare(ctx, _varCount));
-        ctx.AddInnerEmit(_entre1.NodeId);
-        ctx.AddInstr(Const.Int32(ctx, 1));
-        ctx.AddInstr(Arith.Add(ctx));
-        ctx.AddInstr(Local.Store(ctx, _varCount));
-
-        ctx.AddInstr(Branch.Label(ctx, _labelStart));
-        ctx.AddInstr(Local.Load(ctx, _varCount));
-        //ctx.AddInstr();
-    }
-}
-
 public class VarSetRule : Rule<VarSet>
 {
     const int VARNAME = 0;
@@ -310,7 +250,7 @@ public class PrintRule : Rule<Print>
     public PrintRule()
     {
         SetPattern(t => t
-            .kw("Escribir").RuleClass<ExprRule>(EXPR)
+            .kw("print").oparen().RuleClass<ExprRule>(EXPR).cparen()
         );
     }
     protected override void OnInstantiate(MatchView view, Print inst)
@@ -514,112 +454,4 @@ public class MulExpr : ChainExpr
         ctx.Emit();
     }
 }
-
-public class GreaterExprRule : Rule<GreaterExpr>
-{
-    const int LEFT = 0;
-    const int RIGHT = 1;
-    public GreaterExprRule()
-    {
-        SetPattern(t => t
-            .RuleClass<MonoExprRule>(LEFT).oper(">").RuleClass<MonoExprRule>(RIGHT)
-        );
-    }
-    protected override void OnInstantiate(MatchView view, GreaterExpr inst)
-    {
-        inst.Left = view.LoadRuleVar<MonoExpr>(LEFT);
-        inst.Right = view.LoadRuleVar<MonoExpr>(RIGHT);
-    }
-}
-public class GreaterExpr : ChainExpr
-{
-    protected override void OnNest(NestContext ctx)
-    {
-        ctx.NestRule(Left);
-        ctx.NestRule(Right);
-    }
-
-    public MonoExpr Left { get; internal set; } = null!;
-    public MonoExpr Right { get; internal set; } = null!;
-
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(InstrType.None);
-        ctx.AddInnerEmit(Left.NodeId);
-        ctx.AddInnerEmit(Right.NodeId);
-        ctx.AddInstr(Compare.GreaterThan(ctx));
-        ctx.Emit();
-    }
-}
-public class LessExprRule : Rule<LessExpr>
-{
-    const int LEFT = 0;
-    const int RIGHT = 1;
-    public LessExprRule()
-    {
-        SetPattern(t => t
-            .RuleClass<MonoExprRule>(LEFT).oper("<").RuleClass<MonoExprRule>(RIGHT)
-        );
-    }
-    protected override void OnInstantiate(MatchView view, LessExpr inst)
-    {
-        inst.Left = view.LoadRuleVar<MonoExpr>(LEFT);
-        inst.Right = view.LoadRuleVar<MonoExpr>(RIGHT);
-    }
-}
-public class LessExpr : ChainExpr
-{
-    protected override void OnNest(NestContext ctx)
-    {
-        ctx.NestRule(Left);
-        ctx.NestRule(Right);
-    }
-
-    public MonoExpr Left { get; internal set; } = null!;
-    public MonoExpr Right { get; internal set; } = null!;
-
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(InstrType.None);
-        ctx.AddInnerEmit(Left.NodeId);
-        ctx.AddInnerEmit(Right.NodeId);
-        ctx.AddInstr(Compare.LessThan(ctx));
-        ctx.Emit();
-    }
-}
-public class EqualExprRule : Rule<EqualExpr>
-{
-    const int LEFT = 0;
-    const int RIGHT = 1;
-    public EqualExprRule()
-    {
-        SetPattern(t => t
-            .RuleClass<MonoExprRule>(LEFT).oper("==").RuleClass<MonoExprRule>(RIGHT)
-        );
-    }
-    protected override void OnInstantiate(MatchView view, EqualExpr inst)
-    {
-        inst.Left = view.LoadRuleVar<MonoExpr>(LEFT);
-        inst.Right = view.LoadRuleVar<MonoExpr>(RIGHT);
-    }
-}
-public class EqualExpr : ChainExpr
-{
-    protected override void OnNest(NestContext ctx)
-    {
-        ctx.NestRule(Left);
-        ctx.NestRule(Right);
-    }
-
-    public MonoExpr Left { get; internal set; } = null!;
-    public MonoExpr Right { get; internal set; } = null!;
-
-    protected override void OnEmit(EmitContext ctx)
-    {
-        ctx.AddInstr(InstrType.None);
-        ctx.AddInnerEmit(Left.NodeId);
-        ctx.AddInnerEmit(Right.NodeId);
-        ctx.AddInstr(Compare.Equal(ctx));
-        ctx.Emit();
-    }
-}
+*/

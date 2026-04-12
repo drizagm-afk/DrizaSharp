@@ -7,9 +7,10 @@ public partial class ParserProcess
     //>>>> MATCH PROJECT <<<<
     public partial void Match()
     {
+        _curPass = Pass.Build;
         foreach (var file in Project.Files)
             Match(file);
-        Mutate(Pass.Build);
+        Mutate();
     }
 
     //>>>> MATCH FILE <<<<

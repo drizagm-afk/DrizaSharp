@@ -15,31 +15,31 @@ internal static partial class VirtualLoader
         BindNspaceData(vctx, vctx.Asm.ReadGlobalNspace());
     }
 
-    private static void LoadContainedTypes(VirtualContext vctx, IVReadOnlyTypeContainer container)
+    private static void LoadContainedTypes(VirtualContext vctx, VTypeContainer container)
     {
         foreach (var (_, typeId) in container.Types)
         {
             var kind = vctx.Asm.KindOf(typeId);
 
             if (kind == VKind.Type)
-                BindTypeData(vctx, vctx.Asm.EditInfoAt<VType>(typeId));
+                BindTypeData(vctx, vctx.Asm.EditAt<VTypeEdit>(typeId));
             else if (kind == VKind.Interface)
-                BindInterfaceData(vctx, vctx.Asm.EditInfoAt<VInterface>(typeId));
+                BindInterfaceData(vctx, vctx.Asm.EditAt<VInterfaceEdit>(typeId));
         }
     }
-    private static void BindNspaceData(VirtualContext vctx, IVReadOnlyNspace vnspace)
+    private static void BindNspaceData(VirtualContext vctx, VNspace vnspace)
     {
         LoadContainedTypes(vctx, vnspace);
 
         foreach (var (_, vnspaceId) in vnspace.Nspaces)
-            BindNspaceData(vctx, vctx.Asm.ReadInfoAt<IVReadOnlyNspace>(vnspaceId));
+            BindNspaceData(vctx, vctx.Asm.ReadAt<VNspace>(vnspaceId));
     }
 
     //>>>> BIND TYPE DATA <<<<
-    private static void LoadGenericParams(VirtualContext vctx, IGeneric vgeneric, Collection<GenericParameter> generics, VMethod? vmethod = null)
+    private static void LoadGenericParams(VirtualContext vctx, IGenericEdit vgeneric, Collection<GenericParameter> generics, VMethod? vmethod = null)
     {
         //GENERIC PARAMETERS
-        var genBuilder = ImmutableArray.CreateBuilder<VGenericParam>(generics.Count);
+        var genBuilder = ImmutableArray.CreateBuilder<VGenParam>(generics.Count);
         foreach (var genParam in generics)
         {
             //CONSTRAINTS
@@ -61,7 +61,7 @@ internal static partial class VirtualLoader
         }
         vgeneric.GenericParams = genBuilder.MoveToImmutable();
     }
-    private static TypeDefinition BindBaseTypeData(VTypeBase vtype)
+    private static TypeDefinition BindMemberTypeData(VTypeMemberEdit vtype)
     {
         var type = vtype.Definition;
 
@@ -82,7 +82,7 @@ internal static partial class VirtualLoader
 
         return type;
     }
-    private static void BindComposableTypeData(VirtualContext vctx, VComposableType vtype)
+    private static void BindComposableTypeData(VirtualContext vctx, VComposableTypeEdit vtype)
     {
         var type = vtype.Definition;
 
@@ -98,7 +98,7 @@ internal static partial class VirtualLoader
 
         //MEMBERS
         foreach (var ctorId in vtype.Ctors)
-            BindCtorData(vctx, vctx.Asm.EditInfoAt<VCtor>(ctorId));
+            BindCtorData(vctx, vctx.Asm.EditAt<VCtorEdit>(ctorId));
         foreach (var (_, memberIds) in vtype.Members)
         {
             foreach (var memberId in memberIds)
@@ -106,13 +106,13 @@ internal static partial class VirtualLoader
                 var kind = vctx.Asm.KindOf(memberId);
                 //FIELDS
                 if (kind == VKind.Field)
-                    BindFieldData(vctx, vctx.Asm.EditInfoAt<VField>(memberId));
+                    BindFieldData(vctx, vctx.Asm.EditAt<VFieldEdit>(memberId));
                 //PROPERTIES
                 else if (kind == VKind.Property)
-                    BindPropertyData(vctx, vctx.Asm.EditInfoAt<VProperty>(memberId));
+                    BindPropertyData(vctx, vctx.Asm.EditAt<VPropertyEdit>(memberId));
                 //METHODS
                 else if (kind == VKind.Accessor)
-                    BindAccessorData(vctx, vctx.Asm.EditInfoAt<VAccessor>(memberId));
+                    BindAccessorData(vctx, vctx.Asm.EditAt<VAccessorEdit>(memberId));
             }
         }
         foreach (var (_, genericMemberIds) in vtype.GenericMembers)
@@ -121,13 +121,13 @@ internal static partial class VirtualLoader
             {
                 var kind = vctx.Asm.KindOf(genericMemberId);
                 if (kind == VKind.Method)
-                    BindMethodData(vctx, vctx.Asm.EditInfoAt<VMethod>(genericMemberId));
+                    BindMethodData(vctx, vctx.Asm.EditAt<VMethodEdit>(genericMemberId));
             }
         }
     }
-    private static void BindTypeData(VirtualContext vctx, VType vtype)
+    private static void BindTypeData(VirtualContext vctx, VTypeEdit vtype)
     {
-        var type = BindBaseTypeData(vtype);
+        var type = BindMemberTypeData(vtype);
 
         //BASE
         if (type.BaseType != null)
@@ -149,14 +149,14 @@ internal static partial class VirtualLoader
         BindComposableTypeData(vctx, vtype);
         LoadContainedTypes(vctx, vtype);
     }
-    private static void BindInterfaceData(VirtualContext vctx, VInterface vinterface)
+    private static void BindInterfaceData(VirtualContext vctx, VInterfaceEdit vinterface)
     {
-        BindBaseTypeData(vinterface);
+        BindMemberTypeData(vinterface);
         BindComposableTypeData(vctx, vinterface);
     }
 
     //>>>> LOAD FIELD <<<<
-    private static FieldDefinition BindBaseFieldData(VirtualContext vctx, VFieldBase vfield)
+    private static FieldDefinition BindMemberFieldData(VirtualContext vctx, VFieldMemberEdit vfield)
     {
         var field = vfield.Definition;
 
@@ -180,16 +180,16 @@ internal static partial class VirtualLoader
 
         return field;
     }
-    private static void BindFieldData(VirtualContext vctx, VField vfield)
+    private static void BindFieldData(VirtualContext vctx, VFieldEdit vfield)
     {
-        var field = BindBaseFieldData(vctx, vfield);
+        var field = BindMemberFieldData(vctx, vfield);
 
         //ATTRIBUTES
         vfield.IsStatic = field.IsStatic;
     }
 
     //>>>> LOAD PROPERTY <<<<
-    private static PropertyDefinition BindBasePropertyData(VirtualContext vctx, VPropertyBase vproperty)
+    private static PropertyDefinition BindMemberPropertyData(VirtualContext vctx, VPropertyMemberEdit vproperty)
     {
         var property = vproperty.Definition;
 
@@ -198,13 +198,13 @@ internal static partial class VirtualLoader
 
         return property;
     }
-    private static void BindPropertyData(VirtualContext vctx, VProperty vproperty)
+    private static void BindPropertyData(VirtualContext vctx, VPropertyEdit vproperty)
     {
-        BindBasePropertyData(vctx, vproperty);
+        BindMemberPropertyData(vctx, vproperty);
     }
 
     //>>>> LOAD METHOD <<<<
-    private static MethodDefinition BindBaseMethodData(VirtualContext vctx, VMethodBase vmethod)
+    private static MethodDefinition BindMemberMethodData(VirtualContext vctx, VMethodMemberEdit vmethod)
     {
         var method = vmethod.Definition;
 
@@ -244,7 +244,7 @@ internal static partial class VirtualLoader
 
         return method;
     }
-    private static void LoadReturnType<T>(VirtualContext vctx, T vmethod) where T : VMethodBase, IReturnable
+    private static void LoadReturnType<T>(VirtualContext vctx, T vmethod) where T : VMethodMemberEdit, IReturnableEdit
     {
         var method = vmethod.Definition;
 
@@ -255,9 +255,9 @@ internal static partial class VirtualLoader
         else
             vmethod.ReturnType = ResolveReference(vctx, ret, vmethod);
     }
-    private static void BindMethodData(VirtualContext vctx, VMethod vmethod)
+    private static void BindMethodData(VirtualContext vctx, VMethodEdit vmethod)
     {
-        var method = BindBaseMethodData(vctx, vmethod);
+        var method = BindMemberMethodData(vctx, vmethod);
 
         //GENERICS
         LoadGenericParams(vctx, vmethod, method.GenericParameters, vmethod);
@@ -270,16 +270,16 @@ internal static partial class VirtualLoader
         vmethod.IsAbstract = method.IsAbstract;
         vmethod.IsVirtual = method.IsVirtual;
     }
-    private static void BindCtorData(VirtualContext vctx, VCtor vctor)
+    private static void BindCtorData(VirtualContext vctx, VCtorEdit vctor)
     {
-        var method = BindBaseMethodData(vctx, vctor);
+        var method = BindMemberMethodData(vctx, vctor);
 
         //ATTRIBUTES
         vctor.IsStatic = method.IsStatic;
     }
-    private static void BindAccessorData(VirtualContext vctx, VAccessor vaccessor)
+    private static void BindAccessorData(VirtualContext vctx, VAccessorEdit vaccessor)
     {
-        var method = BindBaseMethodData(vctx, vaccessor);
+        var method = BindMemberMethodData(vctx, vaccessor);
 
         //RETURN TYPE
         LoadReturnType(vctx, vaccessor);
@@ -293,7 +293,7 @@ internal static partial class VirtualLoader
     //=======================
     //   REFERENCE RESOLVER
     //=======================
-    private static UType ResolveReference(VirtualContext vctx, TypeReference typeRef, VMethodBase? vmethod = null)
+    private static UType ResolveReference(VirtualContext vctx, TypeReference typeRef, VMethodMember? vmethod = null)
     {
         switch (typeRef)
         {
@@ -329,7 +329,7 @@ internal static partial class VirtualLoader
                 return ResolveDefinition(vctx, typeRef, vmethod);
         }
     }
-    private static UDeclType ResolveDefinition(VirtualContext vctx, TypeReference typeRef, VMethodBase? vmethod = null)
+    private static UDeclType ResolveDefinition(VirtualContext vctx, TypeReference typeRef, VMethodMember? vmethod = null)
     {
         var decl = typeRef.DeclaringType;
         UDeclType? parent = decl is not null ? ResolveDefinition(vctx, decl, vmethod) : null;
@@ -346,7 +346,7 @@ internal static partial class VirtualLoader
             return UContext.GetDeclType(DefinitionToTypeId(vctx, typeRef), parent);
     }
 
-    private static VAssembly DefinitionToAssembly(VirtualContext vctx, TypeReference typeRef)
+    private static VAssemblyEdit DefinitionToAssembly(VirtualContext vctx, TypeReference typeRef)
     {
         DependencyName name;
         if (typeRef.Scope is AssemblyNameReference asmRef)
@@ -360,21 +360,21 @@ internal static partial class VirtualLoader
     }
     private static GlobalId DefinitionToTypeId(VirtualContext vctx, TypeReference typeRef)
     {
-        (VAssembly vasm, int localId) ResolveOuter(TypeReference typeRef)
+        (VAssemblyEdit vasm, int localId) ResolveOuter(TypeReference typeRef)
         {
-            VAssembly vasm;
+            VAssemblyEdit vasm;
             var declRef = typeRef.DeclaringType;
 
             if (declRef is not null)
             {
                 (vasm, int localId) = ResolveOuter(declRef);
-                return (vasm, vasm.ReadTypeBase(localId, GenericNameOf(typeRef.Name)).Id);
+                return (vasm, vasm.ReadTypeMember(localId, GenericNameOf(typeRef.Name)).Id);
             }
 
             vasm = DefinitionToAssembly(vctx, typeRef);
             var vnspace = NspaceOf(vasm, typeRef.Namespace);
 
-            return (vasm, vasm.ReadTypeBase(vnspace.Id, GenericNameOf(typeRef.Name)).Id);
+            return (vasm, vasm.ReadTypeMember(vnspace.Id, GenericNameOf(typeRef.Name)).Id);
         }
         var (vasm, localId) = ResolveOuter(typeRef);
         return new(vasm.Id, localId);

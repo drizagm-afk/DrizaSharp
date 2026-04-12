@@ -1,4 +1,5 @@
 using System.Text;
+using DrzSharp.Compiler.Virtual;
 
 namespace DrzSharp.Compiler;
 
@@ -31,6 +32,22 @@ public static class Ext
 
         return last;
     }
+}
+
+//>>>> EMPTY COLLECTIONS <<<<
+public static class Empty
+{
+    //>>>> VIRTUAL <<<<
+    public static readonly IReadOnlyDictionary<string, int> IdByName = new Dictionary<string, int>(0);
+    public static readonly IReadOnlyDictionary<string, List<int>> IdListByName = new Dictionary<string, List<int>>(0);
+
+    public static readonly IReadOnlyDictionary<GenName, int> IdByGenName = new Dictionary<GenName, int>(0);
+    public static readonly IReadOnlyDictionary<GenName, List<int>> IdListByGenName = new Dictionary<GenName, List<int>>(0);
+    
+    public static readonly IReadOnlyList<int> IdList = new List<int>(0);
+
+    //>>>> COMMON <<<<
+    public static readonly IReadOnlyList<string> StringList = new List<string>(0);
 }
 
 //>>>> SLICE <<<<

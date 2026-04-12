@@ -75,14 +75,14 @@ public abstract class RuleInstance
     }
 
     //BIND
-    internal void Bind(SemanticContext ctx) => OnBind(ctx);
-    protected virtual void OnBind(SemanticContext ctx) { }
+    internal void Bind(BindContext ctx) => OnBind(ctx);
+    protected virtual void OnBind(BindContext ctx) { }
     internal void BindMutate(SemanticMutateContext ctx) => OnBindMutate(ctx);
     protected virtual void OnBindMutate(SemanticMutateContext ctx) { }
 
     //BIND DATA
-    internal void BindData(SemanticContext ctx) => OnBindData(ctx);
-    protected virtual void OnBindData(SemanticContext ctx) { }
+    internal void BindData(BindDataContext ctx) => OnBindData(ctx);
+    protected virtual void OnBindData(BindDataContext ctx) { }
     internal void BindDataMutate(SemanticMutateContext ctx) => OnBindDataMutate(ctx);
     protected virtual void OnBindDataMutate(SemanticMutateContext ctx) { }
 

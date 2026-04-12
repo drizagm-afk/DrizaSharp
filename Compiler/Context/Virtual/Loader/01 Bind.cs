@@ -16,12 +16,12 @@ internal static partial class VirtualLoader
     }
 
     //>>>> BIND TYPE <<<<
-    private static bool IsTypeGenerated(VTypeBase vtype, TypeDefinition type)
+    private static bool IsTypeGenerated(VTypeMemberEdit vtype, TypeDefinition type)
     {
         vtype.Definition = type;
         return vtype.IsCompilerGenerated = IsCompilerGenerated(type.Name);
     }
-    private static void BindMembers(VirtualContext vctx, VComposableType vtype)
+    private static void BindMembers(VirtualContext vctx, VComposableTypeEdit vtype)
     {
         var type = vtype.Definition;
 
@@ -70,7 +70,7 @@ internal static partial class VirtualLoader
     }
 
     //>>>> BIND FIELD <<<<
-    private static void BindFieldBase(VFieldBase vfield, FieldDefinition field)
+    private static void BindFieldMemberEdit(VFieldMemberEdit vfield, FieldDefinition field)
     {
         vfield.Definition = field;
     }
@@ -84,11 +84,11 @@ internal static partial class VirtualLoader
 
         //===== BASE FIELD =====
         var vfield = vctx.Asm.AddField(typeId, name);
-        BindFieldBase(vfield, field);
+        BindFieldMemberEdit(vfield, field);
     }
 
     //>>>> BIND PROPERTY <<<<
-    private static void BindPropertyBase(VirtualContext vctx, int typeId, VPropertyBase vproperty, PropertyDefinition property)
+    private static void BindPropertyMemberEdit(VirtualContext vctx, int typeId, VPropertyMemberEdit vproperty, PropertyDefinition property)
     {
         vproperty.Definition = property;
 
@@ -111,11 +111,11 @@ internal static partial class VirtualLoader
 
         //===== BASE PROPERTY =====
         var vproperty = vctx.Asm.AddProperty(typeId, name);
-        BindPropertyBase(vctx, typeId, vproperty, property);
+        BindPropertyMemberEdit(vctx, typeId, vproperty, property);
     }
 
     //>>>> BIND METHOD <<<<
-    private static void BindMethodBase(VMethodBase vmethod, MethodDefinition method)
+    private static void BindMethodMemberEdit(VMethodMemberEdit vmethod, MethodDefinition method)
     {
         vmethod.Definition = method;
     }
@@ -136,17 +136,17 @@ internal static partial class VirtualLoader
 
         //===== BASE METHOD =====
         var vmethod = vctx.Asm.AddMethod(typeId, GenericNameOf(name));
-        BindMethodBase(vmethod, method);
+        BindMethodMemberEdit(vmethod, method);
     }
     private static void BindCtor(VirtualContext vctx, int typeId, MethodDefinition method)
     {
         var vCtor = vctx.Asm.AddCtor(typeId);
-        BindMethodBase(vCtor, method);
+        BindMethodMemberEdit(vCtor, method);
     }
     private static int BindAccessor(VirtualContext vctx, int typeId, int sourceId, MethodDefinition method)
     {
         var vAccessor = vctx.Asm.AddAccessor(typeId, sourceId, method.Name);
-        BindMethodBase(vAccessor, method);
+        BindMethodMemberEdit(vAccessor, method);
 
         return vAccessor.Id;
     }
@@ -154,7 +154,7 @@ internal static partial class VirtualLoader
     //=======================
     //     NAME RESOLVER
     //=======================
-    private static VNspace NspaceOf(VAssembly vasm, string nspaceFullName)
+    private static VNspace NspaceOf(VAssemblyEdit vasm, string nspaceFullName)
     {
         VNspace vnspace = vasm.EditGlobalNspace();
         if (nspaceFullName != string.Empty)
@@ -164,16 +164,16 @@ internal static partial class VirtualLoader
         }
         return vnspace;
     }
-    private static GenericId GenericNameOf(string name)
+    private static GenName GenericNameOf(string name)
     {
         var index = name.IndexOf('`');
         if (index < 0)
-            return new GenericId(name);
+            return new GenName(name);
 
         var str = name[..index];
         var arity = int.Parse(name[(index + 1)..]);
 
-        return new GenericId(str, arity);
+        return new GenName(str, arity);
     }
     private static bool IsCompilerGenerated(string name)
     => name.Length <= 0 || name[0] == '<';

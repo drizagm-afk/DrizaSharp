@@ -13,6 +13,8 @@ public static class Manager
 public partial class ParserProcess
 {
     public DzProject Project { get; internal set; }
+    
+    private VIR VIR => Project.VIR;
     private ProjectDiagnostics GlobalDiagnostics => Project.ParserDiagnostics;
 
     internal ParserProcess(DzProject project)

@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using DrzSharp.Compiler.Default.Parser;
 using DrzSharp.Compiler.Rules.Lexer;
 using DrzSharp.Compiler.Rules.Parser;
 

@@ -92,7 +92,7 @@ public partial class LowererProcess
                 Compare.Rule_GreaterThan(this);
                 break;
             case InstrType.LessThan:
-                Compare.Rule_GreaterThan(this);
+                Compare.Rule_LessThan(this);
                 break;
 
             //ARITHMETIC

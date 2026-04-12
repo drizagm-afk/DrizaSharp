@@ -3,56 +3,57 @@ using Mono.Cecil;
 
 namespace DrzSharp.Compiler.Virtual;
 
-public partial interface IVReadOnlyAssembly
+public partial interface VAssembly
 {
     public int Id { get; }
     public string Name { get; }
 
-    public IVReadOnlyNspace ReadGlobalNspace();
+    public VNspace ReadGlobalNspace();
 
     //**NODES**
+    public int NodeCount { get; }
     //NODE AT
     public ref readonly VNode NodeAt(int nodeId);
     public VKind KindOf(int nodeId);
     public bool IsKind(int nodeId, VKind kind);
 
     //INFO AT
-    public IVReadOnlyInfo ReadInfoAt(int nodeId);
-    public T ReadInfoAt<T>(int nodeId) where T : IVReadOnlyInfo;
-    public bool TryReadInfoAt<T>(int nodeId, out T rinfo) where T : IVReadOnlyInfo;
+    public VInfo ReadAt(int nodeId);
+    public T ReadAt<T>(int nodeId) where T : VInfo;
+    public bool TryReadAt<T>(int nodeId, out T read) where T : VInfo;
 
     //**VNSPACE**
-    public bool TryReadNspace(int outerNspaceId, string nspaceName, out IVReadOnlyNspace rinfo);
+    public bool TryReadNspace(int outerId, string name, out VNspace read);
 }
-public partial class VAssembly : IVReadOnlyAssembly
+public partial class VAssemblyEdit : VAssembly
 {
     public int Id { get; }
     public string Name => Definition.Name.Name;
 
     public const int GlobalNspaceId = 0;
-    public IVReadOnlyNspace ReadGlobalNspace()
-    => ReadInfoAt<VNspace>(GlobalNspaceId);
-    public VNspace EditGlobalNspace()
-    => EditInfoAt<VNspace>(GlobalNspaceId);
+    public VNspace ReadGlobalNspace()
+    => ReadAt<VNspace>(GlobalNspaceId);
+    public VNspaceEdit EditGlobalNspace()
+    => EditAt<VNspaceEdit>(GlobalNspaceId);
 
     internal AssemblyDefinition Definition = null!;
     internal AssemblyHash Hash = default;
 
     //**NODES**
-    internal VAssembly(int id)
+    internal VAssemblyEdit(int id)
     {
         Id = id;
-        NewNode(VKind.Nspace, new VNspace(""));
+        NewNode(VKind.Nspace, new VNspaceEdit(""));
     }
 
     private VNode[] _nodes = new VNode[128];
-    private VInfo[] _nodeInfos = new VInfo[128];
+    private VInfoEdit[] _nodeInfos = new VInfoEdit[128];
     private int _nodeCount = 0;
     public int NodeCount => _nodeCount;
 
-    private int NewNode(VKind kind, VInfo info, int parentId = -1, int nextSiblingId = -1)
+    private int NewNode(VKind kind, VInfoEdit edit, int parentId = -1, int nextSiblingId = -1)
     {
-        var id = info.Id = _nodeCount++;
+        var id = edit.Id = _nodeCount++;
 
         var len = _nodes.Length;
 
@@ -62,14 +63,14 @@ public partial class VAssembly : IVReadOnlyAssembly
             Array.Resize(ref _nodeInfos, len * 2);
         }
         _nodes[id] = new(id, kind, parentId, -1, nextSiblingId);
-        _nodeInfos[id] = info;
+        _nodeInfos[id] = edit;
         return id;
     }
-    private int AddNode(VKind kind, VInfo info, int parentId = 0)
+    private int AddNode(VKind kind, VInfoEdit edit, int parentId = 0)
     {
         ref readonly var parent = ref NodeAt(parentId);
 
-        var id = NewNode(kind, info, parentId, parent.FirstChildId);
+        var id = NewNode(kind, edit, parentId, parent.FirstChildId);
 
         //UPDATING PARENT
         _nodes[parentId] = new(
@@ -88,94 +89,73 @@ public partial class VAssembly : IVReadOnlyAssembly
     => KindOf(nodeId) == kind;
 
     //INFO AT
-    private T Edit<T>(int nodeId, string md) where T : VInfo
-    => Edit<T>(ReadInfoAt(nodeId), md);
-    private static T Edit<T>(IVReadOnlyInfo rinfo, string md) where T : VInfo
-    {
-        if (rinfo is not T info)
-            throw new Exception($"VIRTUAL NODE IS NOT {typeof(T).Name.ToUpper()[1..]}: {md}");
-
-        return info;
-    }
-    private static bool TryEdit<T>(IVReadOnlyInfo rinfo, out T info) where T : VInfo
-    {
-        info = null!;
-        if (rinfo is not T einfo)
-            return false;
-
-        info = einfo;
-        return true;
-    }
-
-    public IVReadOnlyInfo ReadInfoAt(int nodeId)
+    public VInfo ReadAt(int nodeId)
     => _nodeInfos[nodeId];
-    public T ReadInfoAt<T>(int nodeId) where T : IVReadOnlyInfo
-    => (T)ReadInfoAt(nodeId);
-    public bool TryReadInfoAt<T>(int nodeId, out T rinfo) where T : IVReadOnlyInfo
+    public T ReadAt<T>(int nodeId) where T : VInfo
+    => (T)ReadAt(nodeId);
+    public bool TryReadAt<T>(int nodeId, out T read) where T : VInfo
     {
-        rinfo = default!;
+        read = default!;
         if (_nodeInfos[nodeId] is not T eInfo)
             return false;
 
-        rinfo = eInfo;
+        read = eInfo;
         return true;
     }
 
-    public VInfo EditInfoAt(int nodeId)
+    public VInfoEdit EditAt(int nodeId)
     => _nodeInfos[nodeId];
-    public T EditInfoAt<T>(int nodeId) where T : VInfo
+    public T EditAt<T>(int nodeId) where T : VInfoEdit
     => (T)_nodeInfos[nodeId];
-    public bool TryEditInfoAt<T>(int nodeId, out T info) where T : VInfo
+    public bool TryEditAt<T>(int nodeId, out T edit) where T : VInfoEdit
     {
-        info = null!;
+        edit = default!;
         if (_nodeInfos[nodeId] is not T eInfo)
             return false;
 
-        info = eInfo;
+        edit = eInfo;
+        return true;
+    }
+
+    private static T Edit<T>(VInfo read) where T : VInfoEdit
+    => (T)read;
+    private static bool Edit<T>(VInfo read, out T edit) where T : VInfoEdit
+    {
+        edit = (T)read;
         return true;
     }
 
     //**VNSPACE**
-    public bool TryReadNspace(int outerNspaceId, string nspaceName, out IVReadOnlyNspace rinfo)
+    public bool TryReadNspace(int outerId, string nspaceName, out VNspace read)
     {
-        var outer = ReadInfoAt<VNspace>(outerNspaceId);
+        var outer = ReadAt<VNspace>(outerId);
         if (outer.Nspaces.TryGetValue(nspaceName, out int nodeId))
         {
-            rinfo = ReadInfoAt<VNspace>(nodeId);
+            read = ReadAt<VNspace>(nodeId);
             return true;
         }
-        rinfo = null!;
+        read = null!;
         return false;
     }
-    public bool TryEditNspace(int outerNspaceId, string nspaceName, out VNspace info)
+    public bool TryEditNspace(int outerId, string nspaceName, out VNspaceEdit edit)
     {
-        info = null!;
-        return TryReadNspace(outerNspaceId, nspaceName, out var rinfo) && TryEdit(rinfo, out info);
+        edit = null!;
+        return TryReadNspace(outerId, nspaceName, out var read) && Edit(read, out edit);
     }
 
-    public VNspace EnsureNspace(int outerNspaceId, string nspaceName)
+    public VNspaceEdit EnsureNspace(int outerId, string nspaceName)
     {
-        if (!TryReadNspace(outerNspaceId, nspaceName, out var rinfo))
+        if (!TryReadNspace(outerId, nspaceName, out var read))
         {
-            var outer = Edit<VNspace>(outerNspaceId, $"outerId={outerNspaceId} nspaceName={nspaceName}");
-            var info = new VNspace(nspaceName);
+            var outer = EditAt<VNspaceEdit>(outerId);
+            var edit = new VNspaceEdit(nspaceName);
 
-            outer.NspacesMut[nspaceName] = AddNode(VKind.Nspace, info, outer.Id);
-            return info;
+            outer.NspacesMut[nspaceName] = AddNode(VKind.Nspace, edit, outer.Id);
+            return edit;
         }
 
-        return Edit<VNspace>(rinfo, $"outerId={outerNspaceId} nspaceName={nspaceName}");
+        return Edit<VNspaceEdit>(read);
     }
-}
-public static class EmptyDict
-{
-    public static readonly IReadOnlyDictionary<string, List<int>> Names = new Dictionary<string, List<int>>(0);
-    public static readonly IReadOnlyDictionary<GenericId, List<int>> GenericNames = new Dictionary<GenericId, List<int>>(0);
-
-    //SPECIAL
-    public static readonly IReadOnlyDictionary<GenericId, int> Types = new Dictionary<GenericId, int>(0);
-    public static readonly IReadOnlyDictionary<string, int> Nspaces = new Dictionary<string, int>(0);
-    public static readonly IReadOnlyCollection<int> Ctors = Array.Empty<int>();
 }
 
 //===== VIRTUAL NODES =====
@@ -201,7 +181,7 @@ public enum VKind
 //========================
 //      VIRTUAL CORE
 //========================
-public interface IVReadOnlyInfo
+public interface VInfo
 {
     public int Id { get; }
     public string Name { get; }
@@ -209,55 +189,55 @@ public interface IVReadOnlyInfo
     //METADATA
     public bool IsCompilerGenerated { get; }
 }
-public abstract class VInfo : IVReadOnlyInfo
+public abstract class VInfoEdit : VInfo
 {
     public int Id { get; internal set; }
     public string Name { get; }
 
-    internal VInfo(string name)
+    internal VInfoEdit(string name)
     { Name = name; }
 
     //METADATA
     public bool IsCompilerGenerated { get; internal set; }
 }
 
-//>>>> VNSPACE <<<<
-public interface IVReadOnlyTypeContainer
-{
-    public IReadOnlyDictionary<GenericId, int> Types { get; }
-}
+//>>>> TYPE CONTAINER <<<<
 public interface VTypeContainer
 {
-    public Dictionary<GenericId, int> TypesMut { get; }
-    public IReadOnlyDictionary<GenericId, int> Types { get; }
+    public IReadOnlyDictionary<GenName, int> Types { get; }
+}
+public interface VTypeContainerEdit : VTypeContainer
+{
+    public Dictionary<GenName, int> TypesMut { get; }
 }
 
-public interface IVReadOnlyNspace : IVReadOnlyInfo, IVReadOnlyTypeContainer
+//>>>> NSPACE <<<<
+public interface VNspace : VInfo, VTypeContainer
 {
     //SCHEME
     public IReadOnlyDictionary<string, int> Nspaces { get; }
 }
-public sealed class VNspace : VInfo, IVReadOnlyNspace, VTypeContainer
+public sealed class VNspaceEdit : VInfoEdit, VNspace, VTypeContainerEdit
 {
-    internal VNspace(string name) : base(name) { }
+    internal VNspaceEdit(string name) : base(name) { }
 
     //SCHEME
     Dictionary<string, int>? _nspaces;
     public Dictionary<string, int> NspacesMut { get => _nspaces ??= []; }
-    public IReadOnlyDictionary<string, int> Nspaces => _nspaces ?? EmptyDict.Nspaces;
+    public IReadOnlyDictionary<string, int> Nspaces => _nspaces ?? Empty.IdByName;
 
-    Dictionary<GenericId, int>? _types;
-    public Dictionary<GenericId, int> TypesMut { get => _types ??= []; }
-    public IReadOnlyDictionary<GenericId, int> Types => _types ?? EmptyDict.Types;
+    Dictionary<GenName, int>? _types;
+    public Dictionary<GenName, int> TypesMut { get => _types ??= []; }
+    public IReadOnlyDictionary<GenName, int> Types => _types ?? Empty.IdByGenName;
 }
 
 //===== GENERICS =====
-public readonly record struct GenericId(string Name, int GenericArity)
+public readonly record struct GenName(string Name, int GenericArity)
 {
-    public GenericId(string Name) : this(Name, 0) { }
+    public GenName(string Name) : this(Name, 0) { }
     public override string ToString() => Name + '`' + GenericArity;
 }
-public readonly struct VGenericParam
+public readonly struct VGenParam
 (string name, ImmutableArray<UType> constraints, bool hasParamlessCtor = false, bool isReferenceType = false, bool isValueType = false)
 {
     public string Name => name;
@@ -267,23 +247,24 @@ public readonly struct VGenericParam
     public bool IsValueType => isValueType;
 }
 
-public interface IReadGeneric
+public interface IGeneric
 {
     public int GenericArity { get; }
-    public ImmutableArray<VGenericParam> GenericParams { get; }
+    public ImmutableArray<VGenParam> GenericParams { get; }
 }
-public interface IGeneric : IReadGeneric
+public interface IGenericEdit : IGeneric
 {
-    public new int GenericArity { get; }
-    public new ImmutableArray<VGenericParam> GenericParams { get; set; }
+    public new ImmutableArray<VGenParam> GenericParams { get; set; }
 }
 
 //===========================
 //      VIRTUAL MEMBERS
 //===========================
-public interface IVReadOnlyMember : IVReadOnlyInfo { }
-public abstract class VMember : VInfo, IVReadOnlyMember
-{ internal VMember(string name) : base(name) { } }
+public interface VMember : VInfo { }
+public abstract class VMemberEdit : VInfoEdit, VMember
+{
+    internal VMemberEdit(string name) : base(name) { }
+}
 
 //===========================
 //    VIRTUAL MEMBER MODS
@@ -291,17 +272,17 @@ public abstract class VMember : VInfo, IVReadOnlyMember
 public enum VMemberVisibility
 { PUBLIC, ASSEMBLY, PRIVATE, FAMILY, FAMILY_OR_ASSEMBLY, FAMILY_AND_ASSEMBLY }
 
-public interface IReadVisibility { public VMemberVisibility Visibility { get; } }
-public interface IVisibility : IReadVisibility { public new VMemberVisibility Visibility { get; set; } }
+public interface IVisibility { public VMemberVisibility Visibility { get; } }
+public interface IVisibilityEdit : IVisibility { public new VMemberVisibility Visibility { get; set; } }
 
-public interface IReadStatic { public bool IsStatic { get; } }
-public interface IStatic : IReadStatic { public new bool IsStatic { get; set; } }
+public interface IStatic { public bool IsStatic { get; } }
+public interface IStaticEdit : IStatic { public new bool IsStatic { get; set; } }
 
-public interface IReadAbstract { public bool IsAbstract { get; } }
-public interface IAbstract : IReadAbstract { public new bool IsAbstract { get; set; } }
+public interface IAbstract { public bool IsAbstract { get; } }
+public interface IAbstractEdit : IAbstract { public new bool IsAbstract { get; set; } }
 
-public interface IReadVirtual { public bool IsVirtual { get; } }
-public interface IVirtual : IReadVirtual { public new bool IsVirtual { get; set; } }
+public interface IVirtual { public bool IsVirtual { get; } }
+public interface IVirtualEdit : IVirtual { public new bool IsVirtual { get; set; } }
 
-public interface IReadSealed { public bool IsSealed { get; } }
-public interface ISealed : IReadSealed { public new bool IsSealed { get; set; } }
+public interface ISealed { public bool IsSealed { get; } }
+public interface ISealedEdit : ISealed { public new bool IsSealed { get; set; } }

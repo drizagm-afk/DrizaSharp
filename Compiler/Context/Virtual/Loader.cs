@@ -72,7 +72,7 @@ internal partial class CompilationContext
 //>>>> VIRTUAL LOADER (VASM) <<<<
 internal static partial class VirtualLoader
 {
-    internal static void Load(CompilationContext ctx, VAssembly vasm)
+    internal static void Load(CompilationContext ctx, VAssemblyEdit vasm)
     {
         VirtualContext vctx = new(ctx, vasm);
 
@@ -93,11 +93,11 @@ internal static partial class VirtualLoader
             onLoadFailure("BIND ASSEMBLY DATA", e);
         }
     }
-    private readonly struct VirtualContext(CompilationContext ctx, VAssembly vasm)
+    private readonly struct VirtualContext(CompilationContext ctx, VAssemblyEdit vasm)
     {
         public CompilationContext Ctx => ctx;
 
-        public VAssembly Asm => vasm;
+        public VAssemblyEdit Asm => vasm;
         public AssemblyDefinition Definition => Asm.Definition;
     }
 }

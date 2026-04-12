@@ -8,14 +8,14 @@ namespace DrzSharp.Compiler;
 internal partial class CompilationContext
 {
     //>>>> STATIC: CACHED ASSEMBLIES <<<<
-    private static readonly List<VAssembly> _assemblies = [];
-    public static IEnumerable<VAssembly> Assemblies => _assemblies;
-    public static VAssembly AssemblyAt(int id)
+    private static readonly List<VAssemblyEdit> _assemblies = [];
+    public static IEnumerable<VAssemblyEdit> Assemblies => _assemblies;
+    public static VAssemblyEdit AssemblyAt(int id)
     => _assemblies[id];
-    private static VAssembly AddAssembly(AssemblyDefinition definition, AssemblyHash hash)
+    private static VAssemblyEdit AddAssembly(AssemblyDefinition definition, AssemblyHash hash)
     {
         var asmId = _assemblies.Count;
-        var vasm = new VAssembly(asmId) { Definition = definition };
+        var vasm = new VAssemblyEdit(asmId) { Definition = definition };
 
         _assemblies.Add(vasm);
         _assembliesByHash[hash] = asmId;
@@ -24,7 +24,7 @@ internal partial class CompilationContext
     }
 
     private static readonly Dictionary<AssemblyHash, int> _assembliesByHash = [];
-    private static bool TryGetLoadedAssembly(AssemblyHash hash, out VAssembly vasm)
+    private static bool TryGetLoadedAssembly(AssemblyHash hash, out VAssemblyEdit vasm)
     {
         vasm = null!;
         if (!_assembliesByHash.TryGetValue(hash, out int asmId))
@@ -36,7 +36,7 @@ internal partial class CompilationContext
 
     //>>>> DEPENDENCIES <<<<
     private readonly List<int> _deps = [];
-    public IEnumerable<VAssembly> Dependencies
+    public IEnumerable<VAssemblyEdit> Dependencies
     {
         get
         {
@@ -44,9 +44,9 @@ internal partial class CompilationContext
                 yield return AssemblyAt(dep);
         }
     }
-    public VAssembly DependencyAt(int id)
+    public VAssemblyEdit DependencyAt(int id)
     => AssemblyAt(_deps[id]);
-    private int AddDependency(VAssembly vasm)
+    private int AddDependency(VAssemblyEdit vasm)
     {
         _deps.Add(vasm.Id);
         _depsByName[vasm.Definition.DependencyName()] = vasm.Id;
@@ -63,11 +63,11 @@ internal partial class CompilationContext
     }
 
     private readonly Dictionary<DependencyName, int> _depsByName = [];
-    internal VAssembly GetDependency(DependencyName name)
+    internal VAssemblyEdit GetDependency(DependencyName name)
     => AssemblyAt(_depsByName[name]);
     internal bool HasDependency(DependencyName name)
     => _depsByName.ContainsKey(name);
-    internal bool TryGetDependency(DependencyName name, out VAssembly vasm)
+    internal bool TryGetDependency(DependencyName name, out VAssemblyEdit vasm)
     {
         vasm = null!;
         if (!_depsByName.TryGetValue(name, out int asmId))

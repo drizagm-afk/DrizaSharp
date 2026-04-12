@@ -15,8 +15,10 @@ public static class Bindings
         ctx.BindRule<EntryPointRule>(Realms.VIRTUAL);
 
         //LOGIC
-        ctx.BindRule<VarDeclRule>(Realms.Logic);
         ctx.BindRule<RepeatStmtRule>(Realms.Logic);
+        ctx.BindRule<IfStmtRule>(Realms.Logic);
+
+        ctx.BindRule<VarDeclRule>(Realms.Logic);
         ctx.BindRule<VarSetRule>(Realms.Logic);
         ctx.BindRule<PrintRule>(Realms.Logic);
 
@@ -27,7 +29,13 @@ public static class Bindings
         ctx.BindRule<VarGetRule, MonoExprRule>(isAbstract: true);
         ctx.BindRule<NumberLitRule, MonoExprRule>(isAbstract: true);
 
-        ctx.BindRule<OperExprRule, ChainExprRule>(isAbstract: true);
+        ctx.BindRule<AddExprRule, ChainExprRule>(isAbstract: true);
+        ctx.BindRule<SubExprRule, ChainExprRule>(isAbstract: true);
+        ctx.BindRule<MulExprRule, ChainExprRule>(isAbstract: true);
+
+        ctx.BindRule<GreaterExprRule, ChainExprRule>(isAbstract: true);
+        ctx.BindRule<LessExprRule, ChainExprRule>(isAbstract: true);
+        ctx.BindRule<EqualExprRule, ChainExprRule>(isAbstract: true);
 
         /*
         //VIRTUAL

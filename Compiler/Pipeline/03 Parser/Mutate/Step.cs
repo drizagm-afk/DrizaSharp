@@ -5,15 +5,14 @@ namespace DrzSharp.Compiler.Parser;
 
 public partial class ParserProcess
 {
-    public enum Pass { Build, Bind, BindData, Validate }
-    private Pass _lastPhase;
-    private Pass _curPhase;
+    public enum Pass { Build, Bind, BindData, Validate, Emit }
+    private Pass _curPass;
+    private Pass _curMutatePass;
 
     //>>>> MUTATE PROJECT <<<<
-    private void Mutate(Pass phase)
+    private void Mutate()
     {
-        _lastPhase = phase;
-        _curPhase = phase;
+        _curMutatePass = _curPass;
         foreach (var file in Project.Files)
             Mutate(file);
     }
@@ -32,13 +31,13 @@ public partial class ParserProcess
             _tokenNodes.Clear();
             _evalRules.Clear();
 
-            if (_curPhase == Pass.Build)
+            if (_curMutatePass == Pass.Build)
                 inst.BuildMutate(this);
-            else if (_curPhase == Pass.Bind)
+            else if (_curMutatePass == Pass.Bind)
                 inst.BindMutate(this);
-            else if (_curPhase == Pass.BindData)
+            else if (_curMutatePass == Pass.BindData)
                 inst.BindDataMutate(this);
-            else if (_curPhase == Pass.Validate)
+            else if (_curMutatePass == Pass.Validate)
                 inst.ValidateMutate(this);
 
             if (inst.IsRewritten)
@@ -73,7 +72,7 @@ public partial class ParserProcess
     private void ApplyRecompile(int nodeId, bool recompileNode)
     {
         ref readonly var node = ref TAST.NodeAt(nodeId);
-        var srtPhase = _curPhase;
+        var srtPass = _curMutatePass;
 
         //START
         if (recompileNode)
@@ -82,37 +81,44 @@ public partial class ParserProcess
             RecompileChildren(node);
 
         //END
-        _curPhase = srtPhase;
+        _curMutatePass = srtPass;
     }
     private void Recompile(in TASTNode node)
     {
-        _curPhase = Pass.Build;
+        _curMutatePass = Pass.Build;
         Mutate(node);
 
         //BIND
-        _curPhase = Pass.Bind;
-        if (_lastPhase < _curPhase)
+        _curMutatePass = Pass.Bind;
+        if (_curPass < _curMutatePass)
             return;
 
+        InitTagsMemory();
         Bind(node);
+        ClearTagsMemory();
         Mutate(node);
 
         //BIND DATA
-        _curPhase = Pass.BindData;
-        if (_lastPhase < _curPhase)
+        _curMutatePass = Pass.BindData;
+        if (_curPass < _curMutatePass)
             return;
 
+        InitTagsMemory();
         BindData(node);
+        ClearTagsMemory();
         Mutate(node);
 
         //VALIDATE
-        _curPhase = Pass.Validate;
-        if (_lastPhase < _curPhase)
+        _curMutatePass = Pass.Validate;
+        if (_curPass < _curMutatePass)
             return;
 
+        InitTagsMemory();
         Validate(node);
+        ClearTagsMemory();
         Mutate(node);
     }
+    /*TO FIX, RESOLVE CHILDREN RECOMPILATION, MUST BE PARALLEL BETWEEN ALL CHILDREN*/
     private void RecompileChildren(in TASTNode node)
     {
         if (node.IsFlat()) return;
@@ -123,5 +129,11 @@ public partial class ParserProcess
             Recompile(child);
             childExists = TAST.TryNodeAt(child.NextSiblingId, out child);
         }
+    }
+
+    /*TO FIX, RESOLVE RELOADING TAGS*/
+    private void ReloadTags(in TASTNode node)
+    {
+        
     }
 }

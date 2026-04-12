@@ -25,6 +25,7 @@ public static class Bindings
         ctx.BindRule(Ruleset.StringRule);
 
         ctx.BindRule(Ruleset.StringKeywordRule);
+        ctx.BindRule(Ruleset.EmojiKeywordRule);
     }
 }
 public static class TokenType

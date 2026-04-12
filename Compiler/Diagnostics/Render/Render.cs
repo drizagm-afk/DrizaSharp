@@ -143,6 +143,8 @@ public partial class Render
             return;
         if (DebugEntries(Stage.Lowerer, File.LowererDiagnostics))
             return;
+        else
+            WriteLine(">> COMPILER ENTRIES: NONE\n");
 
         WriteLine();
     }

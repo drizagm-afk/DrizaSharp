@@ -1,10 +1,10 @@
 namespace DrzSharp.Compiler.Parser;
 
-public interface SemanticView : IReadOnlyAttrs
+public interface SemanticView : Context, VirtualView, AttrsView
 {
     
 }
-public interface SemanticContext : SemanticView, IAttrs, ITags
+public interface SemanticContext : SemanticView, VirtualContext, Attrs, Tags
 {
     
 }

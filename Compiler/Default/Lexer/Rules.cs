@@ -147,4 +147,12 @@ public static class Ruleset
             kw.Append(c);
         }
     }
+
+    public static void EmojiKeywordRule(LexContext ctx, ReadOnlySpan<char> content)
+    {
+        if (content.Length >= 2 && char.IsHighSurrogate(content[0]) && char.IsLowSurrogate(content[1]))
+        {
+            ctx.NewToken(TokenType.Keyword, 2);
+        }
+    }
 }

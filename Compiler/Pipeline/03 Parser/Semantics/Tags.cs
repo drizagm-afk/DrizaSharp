@@ -5,7 +5,7 @@ using DrzSharp.Compiler.Rules.Parser;
 namespace DrzSharp.Compiler.Parser;
 
 //>>>> TAGS <<<<
-public interface ITags
+public interface Tags
 {
     //STORE TAG
     public void StoreTag(string tag, string tagDesc);
@@ -40,7 +40,7 @@ public interface ITags
     public RuleInstance ResolveTag(string tag)
     => ResolveTag<RuleInstance>(tag);
 }
-public partial class ParserProcess : ITags
+public partial class ParserProcess : Tags
 {
     private readonly Dictionary<TagKey, List<int>> _scope = [];
     private readonly List<List<TagKey>> _scopeFrames = [];
@@ -142,7 +142,7 @@ public partial class ParserProcess : ITags
         inst = null!;
         if (!TryFindTag(tag, tagDesc, out var nodeId) || !TAST.TryGetApplyRule(nodeId, out var rinst))
             return false;
-        
+
         Debug.Assert(rinst is R);
         inst = (R)rinst;
         return true;
@@ -155,17 +155,51 @@ public partial class ParserProcess : ITags
         Debug.Assert(inst is R);
         return (R)inst;
     }
+
+    //==== PERSISTENT TAGS ====
+    private readonly Dictionary<PersistTagKey, List<TagKey>> _persistTags = [];
+    private void StorePTag(int nodeId, TagKey tag)
+    {
+        PersistTagKey key = new(_curPass, nodeId, true);
+        if (!_persistTags.TryGetValue(key, out var list))
+            list = _persistTags[key] = [];
+
+        list.Add(tag);
+    }
+    private void StoreOuterPTag(int nodeId, TagKey tag)
+    {
+        PersistTagKey key = new(_curPass, nodeId, false);
+        if (!_persistTags.TryGetValue(key, out var list))
+            list = _persistTags[key] = [];
+
+        list.Add(tag);
+    }
+    private void DropPersistentTags(Pass pass, int nodeId)
+    {
+        _persistTags.Remove(new(pass, nodeId, true));
+        _persistTags.Remove(new(pass, nodeId, false));
+    }
+    private IEnumerable<TagKey> PersistentTagsAt(Pass pass, int nodeId, bool includeInner = true)
+    {
+        if (includeInner && _persistTags.TryGetValue(new(pass, nodeId, true), out var tags))
+        {
+            foreach (var tag in tags)
+                yield return tag;
+        }
+        if (_persistTags.TryGetValue(new(pass, nodeId, false), out tags))
+        {
+            foreach (var tag in tags)
+                yield return tag;
+        }
+    }
 }
+internal readonly record struct PersistTagKey
+(ParserProcess.Pass Pass, int NodeId, bool IsInner);
 internal readonly record struct TagKey
 (string Tag, string TagDesc);
 
 //>>>> ATTRIBUTES <<<<
-public interface IAttrs : IReadOnlyAttrs
-{
-    //STORE ATTRIBUTE
-    public void StoreAttr(string attr);
-}
-public interface IReadOnlyAttrs
+public interface AttrsView
 {
     //HAS ATTRIBUTE
     public bool HasAttr(int nodeId, string attr);
@@ -173,14 +207,20 @@ public interface IReadOnlyAttrs
     public bool HasAttr(FileNodeId nodeId, string attr)
     => HasAttr(nodeId.FileId, nodeId.NodeId, attr);
 }
-public partial class ParserProcess : IAttrs
+public interface Attrs : AttrsView
 {
     //STORE ATTRIBUTE
-    public void StoreAttr(string attr)
-    => TAST.StoreAttr(RuleInst!.NodeId, attr);
-
+    public void StoreAttr(string attr);
+}
+public partial class ParserProcess : Attrs
+{
+    //HAS ATTRIBUTE
     public bool HasAttr(int nodeId, string attr)
     => TAST.HasAttr(nodeId, attr);
     public bool HasAttr(int fileId, int nodeId, string attr)
     => Project.Files[fileId].TAST.HasAttr(nodeId, attr);
+
+    //STORE ATTRIBUTE
+    public void StoreAttr(string attr)
+    => TAST.StoreAttr(RuleInst!.NodeId, attr);
 }

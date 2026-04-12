@@ -1,11 +1,11 @@
-#Run {
+Algoritmo
+    🔥 := 6
     a := 0
-    b := 1
 
-    repeat (10) {
-        temp := a
-        a = b
-        b = temp + b
-        print(a)
-    }
-}
+    Repetir 5 Veces
+        Si 🔥 < 10 Entonces
+            a = 🔥 + 1
+            Escribir a
+        FinSi
+    FinRepetir
+FinAlgoritmo

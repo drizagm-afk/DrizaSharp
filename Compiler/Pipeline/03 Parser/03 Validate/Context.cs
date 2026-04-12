@@ -2,7 +2,7 @@ using DrzSharp.Compiler.Rules.Parser;
 
 namespace DrzSharp.Compiler.Parser;
 
-public interface ValidateContext : Context, ITags, IAttrs
+public interface ValidateContext : Context, SemanticContext
 {
     //DIAGNOSTICS
     public void AddError(string message = "Invalid Text Span");

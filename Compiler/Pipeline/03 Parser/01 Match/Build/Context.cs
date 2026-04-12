@@ -60,5 +60,5 @@ public partial class ParserProcess : NestContext
     }
 }
 
-public interface BuildContext : Context, IAttrs { }
+public interface BuildContext : Context, Attrs { }
 public partial class ParserProcess : BuildContext { }

@@ -8,9 +8,9 @@ namespace DrzSharp.Compiler;
 public enum DzProjectType { SINGLE_FILE, MULTI_FILE }
 public class DzProject
 {
-    public readonly int Id;
-    public readonly string Path;
-    public readonly DzProjectType Type;
+    public int Id { get; }
+    public string Path { get; }
+    public DzProjectType Type { get; }
 
     internal DzProject(int id, string path, DzProjectType type)
     {
@@ -19,7 +19,14 @@ public class DzProject
         Type = type;
     }
 
-    public VIR Virtual = new();
+    public VIR VIR { get; } = new();
+    public VAssembly AssemblyAt(int assemblyId)
+    {
+        if (assemblyId < 0)
+            return VIR;
+
+        return CompilationContext.AssemblyAt(assemblyId);
+    }
 
     public ImmutableArray<DzModule> Modules { get; internal set; }
     public ImmutableArray<DzFile> Files { get; internal set; }
@@ -30,8 +37,8 @@ public class DzProject
 }
 public class DzModule
 {
-    public readonly int Id;
-    public readonly int NspaceId;
+    public int Id { get; }
+    public int NspaceId { get; }
 
     internal DzModule(int id, int nspaceId)
     {
@@ -43,10 +50,10 @@ public class DzModule
 }
 public class DzFile
 {
-    public readonly int Id;
-    public readonly string Path;
+    public int Id { get; }
+    public string Path { get; }
 
-    public readonly int ModuleId;
+    public int ModuleId { get; }
 
     internal DzFile(int id, string path, int moduleId, SourceText source)
     {
@@ -59,9 +66,9 @@ public class DzFile
         TASI = new();
     }
 
-    public readonly SourceText Source;
-    public readonly TAST TAST;
-    public readonly TASI TASI;
+    public SourceText Source { get; }
+    public TAST TAST { get; }
+    public TASI TASI { get; }
 
     public readonly FileDiagnostics<RuleId> LexerDiagnostics = new();
     public readonly FileDiagnostics<int> ParserDiagnostics = new();

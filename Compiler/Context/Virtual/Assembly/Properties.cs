@@ -2,46 +2,45 @@ using Mono.Cecil;
 
 namespace DrzSharp.Compiler.Virtual;
 
-public partial interface IVReadOnlyAssembly
+public partial interface VAssembly
 {
     //**VPROPERTY**
-    public bool TryReadProperty(int typeId, string propertyName, out IVReadOnlyProperty rinfo);
+    public bool TryReadProperty(int typeId, string propertyName, out VProperty read);
 }
-public partial class VAssembly
+public partial class VAssemblyEdit
 {
     //**VPROPERTY**
-    public bool TryReadProperty(int typeId, string propertyName, out IVReadOnlyProperty rinfo)
+    public bool TryReadProperty(int typeId, string propertyName, out VProperty read)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"A NON-COMPOSABLE TYPE DOESN'T HAVE PROPERTIES: typeId{typeId} propertyName={propertyName}");
 
-        rinfo = null!;
-        if (TryReadMemberList(typeId, propertyName, out var list)
-        && list.Count > 0 && TryReadInfoAt(list[0], out rinfo))
+        read = null!;
+        var list = ReadMembers(typeId, propertyName);
+        if (list.Count > 0 && TryReadAt(list[0], out read))
             return true;
 
         return false;
     }
-    public bool TryEditProperty(int typeId, string propertyName, out VProperty info)
+    public bool TryEditProperty(int typeId, string propertyName, out VPropertyEdit edit)
     {
-        info = null!;
-        return TryReadProperty(typeId, propertyName, out var rinfo) && TryEdit(rinfo, out info);
+        edit = null!;
+        return TryReadProperty(typeId, propertyName, out var read) && Edit(read, out edit);
     }
-
-    public VProperty AddProperty(int typeId, string propertyName)
+    public VPropertyEdit AddProperty(int typeId, string propertyName)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"CANNOT ADD PROPERTIES TO A NON-COMPOSABLE TYPE: typeId{typeId} propertyName={propertyName}");
 
-        var info = new VProperty(propertyName);
+        var edit = new VPropertyEdit(propertyName);
 
-        EditMemberList(typeId, propertyName).Add(AddNode(VKind.Property, info, typeId));
-        return info;
+        EditMembers(typeId, propertyName).Add(AddNode(VKind.Property, edit, typeId));
+        return edit;
     }
 }
 
 //>>>> VPROPERTY <<<<
-public interface IVReadOnlyPropertyBase : IVReadOnlyMember
+public interface VPropertyMember : VMember
 {
     //METADATA
     public UType Type { get; }
@@ -50,9 +49,9 @@ public interface IVReadOnlyPropertyBase : IVReadOnlyMember
     public int Setter { get; }
     public bool HasSetter();
 }
-public abstract class VPropertyBase : VMember, IVReadOnlyPropertyBase
+public abstract class VPropertyMemberEdit : VMemberEdit, VPropertyMember
 {
-    internal VPropertyBase(string name) : base(name) { }
+    internal VPropertyMemberEdit(string name) : base(name) { }
 
     //METADATA
     public UType Type { get; set; } = null!;
@@ -66,8 +65,8 @@ public abstract class VPropertyBase : VMember, IVReadOnlyPropertyBase
 }
 
 //DEFAULT PROPERTY
-public interface IVReadOnlyProperty : IVReadOnlyPropertyBase { }
-public sealed class VProperty : VPropertyBase, IVReadOnlyProperty
+public interface VProperty : VPropertyMember { }
+public sealed class VPropertyEdit : VPropertyMemberEdit, VProperty
 {
-    internal VProperty(string name) : base(name) { }
+    internal VPropertyEdit(string name) : base(name) { }
 }

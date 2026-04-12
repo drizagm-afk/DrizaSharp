@@ -8,6 +8,7 @@ public partial class ParserProcess
     //>>>> EMIT PROJECT <<<<
     public partial void Emit()
     {
+        _curPass = Pass.Emit;
         foreach (var file in Project.Files)
             Emit(file);
     }

@@ -3,142 +3,130 @@ using Mono.Cecil;
 
 namespace DrzSharp.Compiler.Virtual;
 
-public partial interface IVReadOnlyAssembly
+public partial interface VAssembly
 {
     //**VMETHOD**
-    public IEnumerable<IVReadOnlyMethod> ReadMethodOverloads(int typeId, GenericId methodName);
-    public IEnumerable<IVReadOnlyMethod> ReadMethodNameOverloads(int typeId, string methodName);
+    public IEnumerable<VMethod> ReadMethodOverloads(int typeId, GenName methodName);
+    public IEnumerable<VMethod> ReadMethodOverloadsByName(int typeId, string methodName);
 
     //**VCTOR**
-    public IEnumerable<IVReadOnlyCtor> ReadCtorOverloads(int typeId);
+    public IEnumerable<VCtor> ReadCtorOverloads(int typeId);
 
     //===== FIND METHOD =====
     public bool TryFindMethodName(int typeId, string methodName, out int methodId, params ImmutableArray<UMethodParam> parameters);
-    public bool TryFindMethod(int typeId, GenericId methodName, out int methodId, params ImmutableArray<UMethodParam> parameters);
+    public bool TryFindMethod(int typeId, GenName methodName, out int methodId, params ImmutableArray<UMethodParam> parameters);
 
     public bool TryFindCtor(int typeId, out int ctorId, params ImmutableArray<UMethodParam> parameters);
 }
-public partial class VAssembly
+public partial class VAssemblyEdit
 {
     //**VMETHOD**
-    public IEnumerable<IVReadOnlyMethod> ReadMethodOverloads(int typeId, GenericId methodName)
+    public IEnumerable<VMethod> ReadMethodOverloads(int typeId, GenName methodName)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"A NON-COMPOSABLE TYPE DOESN'T HAVE METHOD OVERLOADS: typeId{typeId}");
-
-        if (!TryReadGenericMemberList(typeId, methodName, out var list))
+        
+        var list = ReadMembers(typeId, methodName);
+        if (list.Count < 0)
             yield break;
 
         foreach (var id in list)
         {
-            if (TryReadInfoAt<VMethod>(id, out var rinfo))
-                yield return rinfo;
+            if (TryReadAt<VMethod>(id, out var read))
+                yield return read;
         }
     }
-    public IEnumerable<VMethod> EditMethodOverloads(int typeId, GenericId methodName)
+    public IEnumerable<VMethodEdit> EditMethodOverloads(int typeId, GenName methodName)
     {
         foreach (var method in ReadMethodOverloads(typeId, methodName))
         {
-            yield return Edit<VMethod>(method, $"typeId={typeId} methodName={methodName}");
+            yield return Edit<VMethodEdit>(method);
         }
     }
-
-    public IEnumerable<IVReadOnlyMethod> ReadMethodNameOverloads(int typeId, string methodName)
+    public IEnumerable<VMethod> ReadMethodOverloadsByName(int typeId, string methodName)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"A NON-COMPOSABLE TYPE DOESN'T HAVE METHOD OVERLOADS: typeId{typeId} methodName{methodName}");
 
-        foreach (var (key, list) in ReadInfoAt<VType>(typeId).GenericMembersMut)
+        foreach (var (key, list) in EditAt<VTypeEdit>(typeId).GenericMembersMut)
         {
             if (key.Name == methodName)
             {
                 foreach (var id in list)
                 {
-                    if (TryReadInfoAt<VMethod>(id, out var rinfo))
-                        yield return rinfo;
+                    if (TryReadAt<VMethod>(id, out var read))
+                        yield return read;
                 }
             }
         }
     }
-    public IEnumerable<VMethod> EditMethodNameOverloads(int typeId, string methodName)
+    public IEnumerable<VMethodEdit> EditMethodOverloadsByName(int typeId, string methodName)
     {
-        foreach (var method in ReadMethodNameOverloads(typeId, methodName))
+        foreach (var method in ReadMethodOverloadsByName(typeId, methodName))
         {
-            yield return Edit<VMethod>(method, $"typeId={typeId} methodName={methodName}");
+            yield return Edit<VMethodEdit>(method);
         }
     }
-
-    public VMethod AddMethod(int typeId, GenericId methodName)
+    public VMethodEdit AddMethod(int typeId, GenName methodName)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"CANNOT ADD METHODS TO A NON-COMPOSABLE TYPE: typeId{typeId}");
 
-        var info = new VMethod(methodName);
+        var edit = new VMethodEdit(methodName);
 
-        EditGenericMemberList(typeId, methodName).Add(AddNode(VKind.Method, info, typeId));
-        return info;
+        EditMembers(typeId, methodName).Add(AddNode(VKind.Method, edit, typeId));
+        return edit;
     }
 
     //**VCTOR**
-    public IEnumerable<IVReadOnlyCtor> ReadCtorOverloads(int typeId)
+    public IEnumerable<VCtor> ReadCtorOverloads(int typeId)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"A NON-COMPOSABLE TYPE DOESN'T HAVE CONSTRUCTOR OVERLOADS: typeId{typeId}");
-        if (!IsKind(typeId, VKind.Type))
+        if (KindOf(typeId) != VKind.Type)
             throw new Exception($"A NON-CLASS TYPE DOESN'T HAVE CONSTRUCTOR OVERLOADS: typeId{typeId}");
 
-        foreach (var ctorId in ReadInfoAt<VComposableType>(typeId).Ctors)
-            yield return ReadInfoAt<VCtor>(ctorId);
+        foreach (var ctorId in ReadAt<VComposableType>(typeId).Ctors)
+            yield return ReadAt<VCtor>(ctorId);
     }
-    public IEnumerable<VCtor> EditCtorOverloads(int typeId)
+    public IEnumerable<VCtorEdit> EditCtorOverloads(int typeId)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"A NON-COMPOSABLE TYPE DOESN'T HAVE CONSTRUCTOR OVERLOADS: typeId{typeId}");
 
-        foreach (var ctorId in ReadInfoAt<VComposableType>(typeId).Ctors)
-            yield return Edit<VCtor>(ctorId, $"typeId={typeId} ctor");
+        foreach (var ctorId in ReadAt<VComposableType>(typeId).Ctors)
+            yield return EditAt<VCtorEdit>(ctorId);
     }
-
-    public VCtor AddCtor(int typeId)
+    public VCtorEdit AddCtor(int typeId)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"CANNOT ADD CONSTRUCTORS TO A NON-COMPOSABLE TYPE: typeId{typeId}");
 
-        var info = new VCtor();
+        var edit = new VCtorEdit();
 
-        var type = Edit<VComposableType>(typeId, $"typeId={typeId} ctor");
-        type.CtorsMut.Add(AddNode(VKind.Ctor, info, typeId));
-        return info;
+        var type = EditAt<VComposableTypeEdit>(typeId);
+        type.CtorsMut.Add(AddNode(VKind.Ctor, edit, typeId));
+        return edit;
     }
 
     //**VACCESSOR**
-    public VAccessor AddAccessor(int typeId, int sourceId, string accessorName)
+    public VAccessorEdit AddAccessor(int typeId, int sourceId, string accessorName)
     {
         if (!IsComposableType(typeId))
             throw new Exception($"CANNOT ADD ACCESSORS TO A NON-COMPOSABLE TYPE: typeId{typeId}");
 
-        var info = new VAccessor(accessorName, sourceId);
+        var edit = new VAccessorEdit(accessorName, sourceId);
 
-        EditMemberList(typeId, accessorName).Add(AddNode(VKind.Accessor, info, typeId));
-        return info;
+        EditMembers(typeId, accessorName).Add(AddNode(VKind.Accessor, edit, typeId));
+        return edit;
     }
 
     //===== FIND METHOD =====
-    private static bool MethodEquals(IVReadOnlyMethodBase method, ImmutableArray<UMethodParam> parameters)
-    {
-        if (method.Params.Length != parameters.Length) return false;
-        for (int i = 0; i < parameters.Length; i++)
-        {
-            if (!method.Params[i].Equals(parameters[i]))
-                return false;
-        }
-        return true;
-    }
     public bool TryFindMethodName(int typeId, string methodName, out int methodId, params ImmutableArray<UMethodParam> parameters)
     {
-        foreach (var method in ReadMethodNameOverloads(typeId, methodName))
+        foreach (var method in ReadMethodOverloadsByName(typeId, methodName))
         {
-            if (MethodEquals(method, parameters))
+            if (method.ParamsEqual(parameters))
             {
                 methodId = method.Id;
                 return true;
@@ -148,11 +136,11 @@ public partial class VAssembly
         methodId = -1;
         return false;
     }
-    public bool TryFindMethod(int typeId, GenericId methodName, out int methodId, params ImmutableArray<UMethodParam> parameters)
+    public bool TryFindMethod(int typeId, GenName methodName, out int methodId, params ImmutableArray<UMethodParam> parameters)
     {
         foreach (var method in ReadMethodOverloads(typeId, methodName))
         {
-            if (MethodEquals(method, parameters))
+            if (method.ParamsEqual(parameters))
             {
                 methodId = method.Id;
                 return true;
@@ -167,7 +155,7 @@ public partial class VAssembly
     {
         foreach (var ctor in ReadCtorOverloads(typeId))
         {
-            if (MethodEquals(ctor, parameters))
+            if (ctor.ParamsEqual(parameters))
             {
                 ctorId = ctor.Id;
                 return true;
@@ -180,17 +168,28 @@ public partial class VAssembly
 }
 
 //>>>> VMETHOD <<<<
-public interface IVReadOnlyMethodBase : IVReadOnlyMember, IReadVisibility
+public interface VMethodMember : VMember, IVisibility
 {
     //METADATA
     public ImmutableArray<VMethodParam> Params { get; }
+    public bool ParamsEqual(params ImmutableArray<UMethodParam> parameters);
 }
-public abstract class VMethodBase : VMember, IVReadOnlyMethodBase, IVisibility
+public abstract class VMethodMemberEdit : VMemberEdit, VMethodMember, IVisibilityEdit
 {
-    internal VMethodBase(string name) : base(name) { }
+    internal VMethodMemberEdit(string name) : base(name) { }
 
     //METADATA
     public ImmutableArray<VMethodParam> Params { get; set; }
+    public bool ParamsEqual(params ImmutableArray<UMethodParam> parameters)
+    {
+        if (Params.Length != parameters.Length) return false;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (!Params[i].Equals(parameters[i]))
+                return false;
+        }
+        return true;
+    }
 
     public VMemberVisibility Visibility { get; set; }
 
@@ -223,19 +222,19 @@ public readonly struct UMethodParam(UType type, VMethodParamMods mods)
 }
 
 //DEFAULT METHOD
-public interface IReadReturnable { public UType ReturnType { get; } }
-public interface IReturnable : IReadReturnable { public new UType ReturnType { get; set; } }
+public interface IReturnable { public UType ReturnType { get; } }
+public interface IReturnableEdit : IReturnable { public new UType ReturnType { get; set; } }
 
-public interface IVReadOnlyMethod : IVReadOnlyMethodBase, IReadGeneric, IReadReturnable, IReadStatic, IReadAbstract, IReadVirtual { }
-public sealed class VMethod : VMethodBase, IVReadOnlyMethod, IGeneric, IReturnable, IStatic, IAbstract, IVirtual
+public interface VMethod : VMethodMember, IGeneric, IReturnable, IStatic, IAbstract, IVirtual { }
+public sealed class VMethodEdit : VMethodMemberEdit, VMethod, IGenericEdit, IReturnableEdit, IStaticEdit, IAbstractEdit, IVirtualEdit
 {
     public int GenericArity { get; }
 
-    internal VMethod(GenericId name) : base(name.Name)
+    internal VMethodEdit(GenName name) : base(name.Name)
     { GenericArity = name.GenericArity; }
 
     //METADATA
-    public ImmutableArray<VGenericParam> GenericParams { get; set; }
+    public ImmutableArray<VGenParam> GenericParams { get; set; }
     public UType ReturnType { get; set; } = null!;
 
     public bool IsStatic { get; set; }
@@ -244,25 +243,25 @@ public sealed class VMethod : VMethodBase, IVReadOnlyMethod, IGeneric, IReturnab
 }
 
 //CONSTRUCTOR METHOD
-public interface IVReadOnlyCtor : IVReadOnlyMethodBase, IReadStatic { }
-public sealed class VCtor : VMethodBase, IVReadOnlyCtor, IStatic
+public interface VCtor : VMethodMember, IStatic { }
+public sealed class VCtorEdit : VMethodMemberEdit, VCtor, IStaticEdit
 {
-    internal VCtor() : base(".ctor") { }
+    internal VCtorEdit() : base(".ctor") { }
 
     //METADATA
     public bool IsStatic { get; set; }
 }
 
 //ACCESSOR METHOD
-public interface IVReadOnlyAccessor : IVReadOnlyMethodBase, IReadReturnable, IReadStatic, IReadAbstract, IReadVirtual
+public interface VAccessor : VMethodMember, IReturnable, IStatic, IAbstract, IVirtual
 {
     public int SourceId { get; }
 }
-public sealed class VAccessor : VMethodBase, IVReadOnlyAccessor, IReturnable, IStatic, IAbstract, IVirtual
+public sealed class VAccessorEdit : VMethodMemberEdit, VAccessor, IReturnableEdit, IStaticEdit, IAbstractEdit, IVirtualEdit
 {
     public int SourceId { get; }
 
-    internal VAccessor(string name, int sourceId) : base(name)
+    internal VAccessorEdit(string name, int sourceId) : base(name)
     { SourceId = sourceId; }
 
     //METADATA

@@ -21,7 +21,7 @@ public partial class LoaderProcess
         var builder = ImmutableArray.CreateBuilder<DzModule>();
 
         //MAIN MODULE
-        builder.Add(RestoreModuleDependencies(0, VAssembly.GlobalNspaceId));
+        builder.Add(RestoreModuleDependencies(0, VAssemblyEdit.GlobalNspaceId));
 
         Project.Modules = builder.ToImmutable();
     }
