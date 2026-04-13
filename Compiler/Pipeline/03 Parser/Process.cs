@@ -30,9 +30,20 @@ public partial class ParserProcess
 
     private RuleInstance? RuleInst;
 
+    //>>>> DEBUG <<<<
+    public bool HasError()
+    {
+        foreach (var file in Project.Files)
+        {
+            if (file.ParserDiagnostics.HasError)
+                return true;
+        }
+        return false;
+    }
+
     //>>>> PHASES <<<<
-    public partial void Match();
-    public partial void Bind();
-    public partial void Validate();
-    public partial void Emit();
+    public partial bool Match();
+    public partial bool Bind();
+    public partial bool Validate();
+    public partial bool Emit();
 }

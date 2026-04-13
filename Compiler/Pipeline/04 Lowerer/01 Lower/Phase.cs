@@ -7,14 +7,20 @@ namespace DrzSharp.Compiler.Lowerer;
 public partial class LowererProcess
 {
     //>>>> LOWER PROJECT <<<<
-    public partial void Lower()
+    public partial bool Lower()
     {
         CreateAssembly();
 
         LowerVirtual();
+        if (HasError())
+            return false;
+
         LowerInstructions();
+        if (HasError())
+            return false;
 
         WriteAssembly();
+        return true;
     }
     private void CreateAssembly()
     {

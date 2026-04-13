@@ -131,7 +131,6 @@ public class IfStmt : RuleInstance
     }
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Expr.NodeId);
         ctx.AddInstr(Branch.GotoIfFalse(ctx, _labelEnd));
         ctx.AddInnerEmit(Body);
@@ -297,7 +296,6 @@ public class VarSet : RuleInstance
     }
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Expr.NodeId);
         ctx.AddInstr(Local.Store(ctx, _varId));
         ctx.Emit();
@@ -329,7 +327,6 @@ public class Print : RuleInstance
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Expr.NodeId);
         ctx.AddInstr(Temporal.Print(ctx));
         ctx.Emit();
@@ -433,7 +430,6 @@ public class AddExpr : ChainExpr
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Left.NodeId);
         ctx.AddInnerEmit(Right.NodeId);
         ctx.AddInstr(Arith.Add(ctx));
@@ -470,7 +466,6 @@ public class SubExpr : ChainExpr
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Left.NodeId);
         ctx.AddInnerEmit(Right.NodeId);
         ctx.AddInstr(Arith.Sub(ctx));
@@ -507,7 +502,6 @@ public class MulExpr : ChainExpr
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Left.NodeId);
         ctx.AddInnerEmit(Right.NodeId);
         ctx.AddInstr(Arith.Mul(ctx));
@@ -544,7 +538,6 @@ public class GreaterExpr : ChainExpr
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Left.NodeId);
         ctx.AddInnerEmit(Right.NodeId);
         ctx.AddInstr(Compare.GreaterThan(ctx));
@@ -580,7 +573,6 @@ public class LessExpr : ChainExpr
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Left.NodeId);
         ctx.AddInnerEmit(Right.NodeId);
         ctx.AddInstr(Compare.LessThan(ctx));
@@ -616,7 +608,6 @@ public class EqualExpr : ChainExpr
 
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(InstrType.None);
         ctx.AddInnerEmit(Left.NodeId);
         ctx.AddInnerEmit(Right.NodeId);
         ctx.AddInstr(Compare.Equal(ctx));

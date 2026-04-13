@@ -2,18 +2,29 @@ namespace DrzSharp.Compiler.Diagnostics;
 
 public class GroupDiagnostics<T> where T : struct
 {
+    public bool HasError { get; protected set; }
+
     protected readonly List<DiagnosticEntry<T>> _reports = [];
     public IReadOnlyList<DiagnosticEntry<T>> Reports => _reports;
 }
 public class ProjectDiagnostics : GroupDiagnostics<bool>
 {
     internal void ReportUnexpected(SourceSlice source, string message)
-    => _reports.Add(new(DiagnosticCode.Unexpected, source, null, message));
+    {
+        _reports.Add(new(DiagnosticCode.Unexpected, source, null, message));
+        HasError = true;
+    }
     internal void ReportUnhandled(SourceSlice source, string message)
-    => _reports.Add(new(DiagnosticCode.Unhandled, source, null, message));
+    {
+        _reports.Add(new(DiagnosticCode.Unhandled, source, null, message));
+        HasError = true;
+    }
 
     public void AddError(SourceSlice source, string message)
-    => _reports.Add(new(DiagnosticCode.UserError, source, null, message));
+    {
+        _reports.Add(new(DiagnosticCode.UserError, source, null, message));
+        HasError = true;
+    }
     public void AddWarning(SourceSlice source, string message)
     => _reports.Add(new(DiagnosticCode.UserWarning, source, null, message));
     public void AddInfo(SourceSlice source, string message)
@@ -22,16 +33,25 @@ public class ProjectDiagnostics : GroupDiagnostics<bool>
 public class FileDiagnostics<T> : GroupDiagnostics<T> where T : struct
 {
     internal void ReportUnexpected(SourceSlice source, string message)
-    => _reports.Add(new(DiagnosticCode.Unexpected, source, null, message));
+    {
+        _reports.Add(new(DiagnosticCode.Unexpected, source, null, message));
+        HasError = true;
+    }
     internal void ReportUnhandled(SourceSlice source, string message)
     => ReportUnhandled(source, null, message);
     internal void ReportUnhandled(SourceSlice source, T? caller, string message)
-    => _reports.Add(new(DiagnosticCode.Unhandled, source, caller, message));
+    {
+        _reports.Add(new(DiagnosticCode.Unhandled, source, caller, message));
+        HasError = true;
+    }
 
     public void AddError(SourceSlice source, string message)
     => AddError(source, null, message);
     public void AddError(SourceSlice source, T? caller, string message)
-    => _reports.Add(new(DiagnosticCode.UserError, source, caller, message));
+    {
+        _reports.Add(new(DiagnosticCode.UserError, source, caller, message));
+        HasError = true;
+    }
     public void AddWarning(SourceSlice source, string message)
     => AddWarning(source, null, message);
     public void AddWarning(SourceSlice source, T? caller, string message)

@@ -4,7 +4,7 @@ namespace DrzSharp.Compiler.Loader;
 
 public partial class LoaderProcess
 {
-    public partial void Load()
+    public partial bool Load()
     {
         var builder = ImmutableArray.CreateBuilder<DzFile>();
 
@@ -14,6 +14,8 @@ public partial class LoaderProcess
             throw new Exception("MULTI-FILE PROJECTS ARE UNSUPPORTED YET");
         
         Project.Files = builder.ToImmutable();
+
+        return !HasError();
     }
     private DzFile LoadFile(int id, string path, int moduleId)
     {

@@ -5,11 +5,13 @@ namespace DrzSharp.Compiler.Loader;
 
 public partial class LoaderProcess
 {
-    public partial void Restore()
+    public partial bool Restore()
     {
         RestoreDependencies();
         RestoreModules();
         RestoreRuleset();
+
+        return !HasError();
     }
     public void RestoreDependencies()
     {

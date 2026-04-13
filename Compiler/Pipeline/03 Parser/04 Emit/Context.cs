@@ -29,7 +29,12 @@ public partial class ParserProcess : EmitContext
 
     private ImmutableArray<(int, int)>.Builder _innerEmits = ImmutableArray.CreateBuilder<(int, int)>();
     public void AddInnerEmit(int nodeId)
-    => _innerEmits.Add((nodeId, TASI.InstructionCount - _instrCount - 1));
+    {
+        if (TASI.InstructionCount == _instrCount)
+            AddInstr(InstrType.None);
+
+        _innerEmits.Add((nodeId, TASI.InstructionCount - _instrCount - 1));
+    }
 
     public void Emit(EmitTarget? nullTarget)
     {

@@ -17,71 +17,58 @@ public static partial class Compiler
         var loader = Loader.Manager.NewProcess(path);
         var proj = loader.Project;
 
+        var lexer = Lexer.Manager.NewProcess(proj);
+        var parser = Parser.Manager.NewProcess(proj);
+        var lowerer = Lowerer.Manager.NewProcess(proj);
+
         void execPipeline()
         {
-            //01 LOADER
-            loader.Restore();
-            procTime.Add(("[LOADER] RESTORE", sw.Elapsed.TotalMilliseconds));
+            bool flag;
 
-            loader.Load();
+            //01 LOADER
+            flag = loader.Restore();
+            procTime.Add(("[LOADER] RESTORE", sw.Elapsed.TotalMilliseconds));
+            if (!flag) return;
+
+            flag = loader.Load();
             procTime.Add(("[LOADER] LOAD", sw.Elapsed.TotalMilliseconds));
+            if (!flag) return;
 
             //02 LEXER
-            var lexer = Lexer.Manager.NewProcess(proj);
-            lexer.Lex();
+            flag = lexer.Lex();
             procTime.Add(("[LEXER] LEX", sw.Elapsed.TotalMilliseconds));
-
-            lexer.EndProcess();
+            if (!flag) return;
 
             //03 PARSER
-            var parser = Parser.Manager.NewProcess(proj);
-            parser.Match();
+            flag = parser.Match();
             procTime.Add(("[PARSER] MATCH", sw.Elapsed.TotalMilliseconds));
+            if (!flag) return;
 
-            parser.Bind();
+            flag = parser.Bind();
             procTime.Add(("[PARSER] BIND", sw.Elapsed.TotalMilliseconds));
+            if (!flag) return;
 
-            parser.Validate();
+            flag = parser.Validate();
             procTime.Add(("[PARSER] VALIDATE", sw.Elapsed.TotalMilliseconds));
+            if (!flag) return;
 
-            if (proj.HasError()) return;
-
-            parser.Emit();
+            flag = parser.Emit();
             procTime.Add(("[PARSER] EMIT", sw.Elapsed.TotalMilliseconds));
-
-            parser.EndProcess();
+            if (!flag) return;
 
             //04 LOWERER
-            var lowerer = Lowerer.Manager.NewProcess(proj);
-            lowerer.Lower();
+            flag = lowerer.Lower();
             procTime.Add(("[LOWERER] LOWER", sw.Elapsed.TotalMilliseconds));
-
-            lowerer.EndProcess();
+            if (!flag) return;
         }
         execPipeline();
 
         loader.EndProcess();
+        lexer.EndProcess();
+        parser.EndProcess();
+        lowerer.EndProcess();
 
-        //>>>> DEBUGGING <<<<
-        ShowProcessTime(procTime);
-
-        Diagnostics.Manager.Debug(proj);
-
-        /*
-        VirtualDebugger.Debug(proj.Assembly.Virtual);
-
-        var opts = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        opts.Converters.Add(new JsonStringEnumConverter());
-        var json = File.ReadAllText(@"C:\Driza\DrizaSharp\dzdiag.config.json");
-        var config = JsonSerializer.Deserialize<Diagnostics.Config>(json, opts);
-        */
-    }
-
-    public static void ShowProcessTime(List<(string, double)> procTime)
-    {
+        //>>>> COMPILER TIME DISPLAY <<<<
         double total = 0;
         foreach (var (name, time) in procTime)
         {
@@ -90,5 +77,18 @@ public static partial class Compiler
         }
 
         Console.WriteLine($"COMPILING TIME: {total:F4}\n\n");
+
+        //>>>> DEBUGGING <<<<
+        Diagnostics.Manager.Debug(proj);
+
+        /*
+        var opts = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        opts.Converters.Add(new JsonStringEnumConverter());
+        var json = File.ReadAllText(@"C:\Driza\DrizaSharp\dzdiag.config.json");
+        var config = JsonSerializer.Deserialize<Diagnostics.Config>(json, opts);
+        */
     }
 }

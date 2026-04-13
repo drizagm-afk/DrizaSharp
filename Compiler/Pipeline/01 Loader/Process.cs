@@ -29,7 +29,11 @@ public partial class LoaderProcess
         };
     }
 
+    //>>>> DEBUG <<<<
+    public bool HasError()
+    => Project.LoaderDiagnostics.HasError;
+
     //>>>> PHASES <<<<
-    public partial void Restore();
-    public partial void Load();
+    public partial bool Restore();
+    public partial bool Load();
 }

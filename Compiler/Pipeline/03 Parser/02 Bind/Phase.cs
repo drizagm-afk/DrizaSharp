@@ -6,17 +6,22 @@ namespace DrzSharp.Compiler.Parser;
 public partial class ParserProcess
 {
     //>>>> BIND PROJECT <<<<
-    public partial void Bind()
+    public partial bool Bind()
     {
         _curPass = Pass.Bind;
         foreach (var file in Project.Files)
             Bind(file);
         Mutate();
 
+        if (HasError())
+            return false;
+
         _curPass = Pass.BindData;
         foreach (var file in Project.Files)
             Bind(file);
         Mutate();
+
+        return !HasError();
     }
 
     //>>>> BIND FILE <<<<

@@ -24,6 +24,17 @@ public partial class LexerProcess
     private TAST TAST => File.TAST;
     private FileDiagnostics<RuleId> Diagnostics => File.LexerDiagnostics;
 
+    //>>>> DEBUG <<<<
+    public bool HasError()
+    {
+        foreach (var file in Project.Files)
+        {
+            if (file.LexerDiagnostics.HasError)
+                return true;
+        }
+        return false;
+    }
+
     //>>>> PHASES <<<<
-    public partial void Lex();
+    public partial bool Lex();
 }

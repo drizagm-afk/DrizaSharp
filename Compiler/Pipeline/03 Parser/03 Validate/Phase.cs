@@ -6,12 +6,14 @@ namespace DrzSharp.Compiler.Parser;
 public partial class ParserProcess
 {
     //>>>> VALIDATE PROJECT <<<<
-    public partial void Validate()
+    public partial bool Validate()
     {
         _curPass = Pass.Validate;
         foreach (var file in Project.Files)
             Validate(file);
         Mutate();
+
+        return !HasError();
     }
 
     //>>>> VALIDATE FILE <<<<

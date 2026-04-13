@@ -5,39 +5,6 @@ namespace DrzSharp.Compiler.Diagnostics;
 
 public static class Manager
 {
-    public static bool HasError(this DzProject project)
-    {
-        if (HasError(project.LoaderDiagnostics))
-            return true;
-        if (HasError(project.ParserDiagnostics))
-            return true;
-        if (HasError(project.LowererDiagnostics))
-            return true;
-
-        foreach (var file in project.Files)
-        {
-            if (HasError(file.LexerDiagnostics))
-                return true;
-            if (HasError(file.ParserDiagnostics))
-                return true;
-            if (HasError(file.LowererDiagnostics))
-                return true;
-        }
-        return false;
-    }
-    private static bool HasError<T>(GroupDiagnostics<T> diag) where T : struct
-    {
-        foreach(var entry in diag.Reports)
-        {
-            if (entry.Code 
-            is DiagnosticCode.Unhandled 
-            or DiagnosticCode.Unexpected 
-            or DiagnosticCode.UserError)
-                return true;
-        }
-        return false;
-    }
-
     public static void Debug(this DzProject project)
     => new Render().DebugProject(project);
 }

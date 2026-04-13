@@ -6,10 +6,12 @@ namespace DrzSharp.Compiler.Lexer;
 public partial class LexerProcess
 {
     //>>>> LEX PROJECT <<<<
-    public partial void Lex()
+    public partial bool Lex()
     {
         foreach (var file in Project.Files)
             Lex(file);
+
+        return !HasError();
     }
 
     //>>>> LEX FILE <<<<

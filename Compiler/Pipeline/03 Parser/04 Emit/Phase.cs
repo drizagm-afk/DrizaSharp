@@ -6,11 +6,13 @@ namespace DrzSharp.Compiler.Parser;
 public partial class ParserProcess
 {
     //>>>> EMIT PROJECT <<<<
-    public partial void Emit()
+    public partial bool Emit()
     {
         _curPass = Pass.Emit;
         foreach (var file in Project.Files)
             Emit(file);
+        
+        return !HasError();
     }
 
     //>>>> EMIT FILE <<<<

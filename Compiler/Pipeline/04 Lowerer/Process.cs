@@ -28,6 +28,20 @@ public partial class LowererProcess
     private AssemblyNameDefinition _asmName = null!;
     private AssemblyDefinition _asm = null!;
 
+    //>>>> DEBUG <<<<
+    public bool HasError()
+    {
+        if (Project.LowererDiagnostics.HasError)
+            return true;
+        
+        foreach (var file in Project.Files)
+        {
+            if (file.LowererDiagnostics.HasError)
+                return true;
+        }
+        return false;
+    }
+
     //>>>> PHASES <<<<
-    public partial void Lower();
+    public partial bool Lower();
 }
