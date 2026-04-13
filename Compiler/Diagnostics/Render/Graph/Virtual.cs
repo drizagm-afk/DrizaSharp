@@ -112,8 +112,8 @@ public partial class Render
                 _ => "NON-SUPPORTED"
             };
 
-            if (node.Kind != VKind.Nspace && vir is VIR VIR)
-                PrintGConn($"[{kind}] {header} from <000>", tabs);
+            if (node.Kind != VKind.Nspace && vir is VIR VIR && vir.TryGetSourceNode(node.Id, out var sourceId))
+                PrintGConn($"[{kind}] {header} from <{sourceId.FileId:D3} | {sourceId.NodeId:D3}>", tabs);
             else
                 PrintGConn($"[{kind}] {header}", tabs);
 

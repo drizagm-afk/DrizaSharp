@@ -6,11 +6,12 @@ public partial class Render
 
     private void PrintProjectHeader()
     {
-        int padd = barSize - 9;
+        const string inline = " PROJECT ";
+        int padd = barSize - inline.Length;
         int left = padd / 2;
         int right = padd - left;
 
-        WriteLine('='.Repeat(left) + " PROJECT " + '='.Repeat(right));
+        WriteLine('='.Repeat(left) + inline + '='.Repeat(right));
         WriteLine($"FILE:   {Project.Path}");
         WriteLine($"AUTHOR: devdriz");
         WriteLine('='.Repeat(barSize));
@@ -18,7 +19,12 @@ public partial class Render
     }
     private void PrintFileHeader()
     {
-        WriteLine('/'.Repeat(barSize));
+        string inline = $" <{File.Id:D3}> ";
+        int padd = barSize - inline.Length;
+        int left = padd / 2;
+        int right = padd - left;
+
+        WriteLine('/'.Repeat(left) + inline + '/'.Repeat(right));
         WriteLine($"FILE:   {File.Path}");
         WriteLine($"MODULE: <main>");
         WriteLine('/'.Repeat(barSize));

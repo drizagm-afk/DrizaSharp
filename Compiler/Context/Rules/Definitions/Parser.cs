@@ -61,7 +61,6 @@ public abstract class RuleInstance
     protected virtual void OnBuildMutate(MutateContext ctx) { }
 
     //MUTATE
-    public bool IsRewritten { get; internal set; }
     internal void Rewrite(Context ctx) => OnRewrite(ctx);
     protected virtual void OnRewrite(Context ctx)
     {
@@ -81,8 +80,8 @@ public abstract class RuleInstance
     protected virtual void OnBindMutate(SemanticMutateContext ctx) { }
 
     //BIND DATA
-    internal void BindData(BindDataContext ctx) => OnBindData(ctx);
-    protected virtual void OnBindData(BindDataContext ctx) { }
+    internal void BindData(BindContext ctx) => OnBindData(ctx);
+    protected virtual void OnBindData(BindContext ctx) { }
     internal void BindDataMutate(SemanticMutateContext ctx) => OnBindDataMutate(ctx);
     protected virtual void OnBindDataMutate(SemanticMutateContext ctx) { }
 

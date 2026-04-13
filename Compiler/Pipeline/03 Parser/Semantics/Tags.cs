@@ -42,8 +42,8 @@ public interface Tags
 }
 public partial class ParserProcess : Tags
 {
-    private readonly Dictionary<TagKey, List<int>> _scope = [];
-    private readonly List<List<TagKey>> _scopeFrames = [];
+    private readonly Dictionary<TagValue, List<int>> _scope = [];
+    private readonly List<List<TagValue>> _scopeFrames = [];
 
     private void EnterScope()
     => _scopeFrames.Add([]);
@@ -74,45 +74,49 @@ public partial class ParserProcess : Tags
     //STORE TAG
     public void StoreTag(string tag, string tagDesc)
     {
-        TagKey key = new(tag, tagDesc);
+        TagValue val = new(tag, tagDesc);
         var nodeId = RuleInst!.NodeId;
 
-        if (!_scope.TryGetValue(key, out var stack))
-            stack = _scope[key] = [];
+        if (!_scope.TryGetValue(val, out var stack))
+            stack = _scope[val] = [];
 
         stack.Add(nodeId);
-        _scopeFrames[^1].Add(key);
+        _scopeFrames[^1].Add(val);
+
+        StorePTag(nodeId, val);
     }
     public void StoreOuterTag(string tag, string tagDesc)
     {
-        TagKey key = new(tag, tagDesc);
+        TagValue val = new(tag, tagDesc);
         var nodeId = RuleInst!.NodeId;
 
         if (_scopeFrames.Count < 2)
             throw new Exception("There's no previous scope");
 
-        if (!_scope.TryGetValue(key, out var stack))
+        if (!_scope.TryGetValue(val, out var stack))
         {
-            stack = _scope[key] = [];
+            stack = _scope[val] = [];
             stack.Add(nodeId);
         }
         else
         {
             int i = stack.Count;
             foreach (var _key in _scopeFrames[^1])
-                if (_key == key) i--;
+                if (_key == val) i--;
 
             stack.Insert(i, nodeId);
         }
 
-        _scopeFrames[^2].Add(key);
+        _scopeFrames[^2].Add(val);
+
+        StoreOuterPTag(nodeId, val);
     }
 
     //HAS TAG
     public bool HasTag(string tag, string tagDesc)
     {
-        TagKey key = new(tag, tagDesc);
-        return _scope.TryGetValue(key, out var stack) && stack.Count > 0;
+        TagValue val = new(tag, tagDesc);
+        return _scope.TryGetValue(val, out var stack) && stack.Count > 0;
     }
 
     //FIND TAG
@@ -125,9 +129,9 @@ public partial class ParserProcess : Tags
     }
     public bool TryFindTag(string tag, string tagDesc, out int nodeId)
     {
-        TagKey key = new(tag, tagDesc);
+        TagValue val = new(tag, tagDesc);
 
-        if (_scope.TryGetValue(key, out var stack) && stack.Count > 0)
+        if (_scope.TryGetValue(val, out var stack) && stack.Count > 0)
         {
             nodeId = stack[^1];
             return true;
@@ -157,46 +161,23 @@ public partial class ParserProcess : Tags
     }
 
     //==== PERSISTENT TAGS ====
-    private readonly Dictionary<PersistTagKey, List<TagKey>> _persistTags = [];
-    private void StorePTag(int nodeId, TagKey tag)
+    private readonly Dictionary<TagKey, List<TagValue>> _persistTags = [];
+    private void StorePTag(int nodeId, TagValue val)
     {
-        PersistTagKey key = new(_curPass, nodeId, true);
+        TagKey key = new(_curPass, nodeId);
         if (!_persistTags.TryGetValue(key, out var list))
             list = _persistTags[key] = [];
 
-        list.Add(tag);
+        list.Add(val);
     }
-    private void StoreOuterPTag(int nodeId, TagKey tag)
-    {
-        PersistTagKey key = new(_curPass, nodeId, false);
-        if (!_persistTags.TryGetValue(key, out var list))
-            list = _persistTags[key] = [];
+    private void StoreOuterPTag(int nodeId, TagValue val)
+    => StorePTag(TAST.NodeAt(nodeId).ParentId, val);
 
-        list.Add(tag);
-    }
-    private void DropPersistentTags(Pass pass, int nodeId)
-    {
-        _persistTags.Remove(new(pass, nodeId, true));
-        _persistTags.Remove(new(pass, nodeId, false));
-    }
-    private IEnumerable<TagKey> PersistentTagsAt(Pass pass, int nodeId, bool includeInner = true)
-    {
-        if (includeInner && _persistTags.TryGetValue(new(pass, nodeId, true), out var tags))
-        {
-            foreach (var tag in tags)
-                yield return tag;
-        }
-        if (_persistTags.TryGetValue(new(pass, nodeId, false), out tags))
-        {
-            foreach (var tag in tags)
-                yield return tag;
-        }
-    }
+    internal readonly record struct TagKey
+    (Pass Pass, int NodeId);
+    internal readonly record struct TagValue
+    (string Tag, string TagDesc);
 }
-internal readonly record struct PersistTagKey
-(ParserProcess.Pass Pass, int NodeId, bool IsInner);
-internal readonly record struct TagKey
-(string Tag, string TagDesc);
 
 //>>>> ATTRIBUTES <<<<
 public interface AttrsView

@@ -7,7 +7,7 @@ AUTHOR: devdriz
 >> VIR (Virtual Intermediate Representation): 
 [GLOBAL NSPACE] 
 
-//////////////////////////////////////////////////
+///////////////////// <000> //////////////////////
 FILE:   C:\Driza\DrizaSharp\Program.dz
 MODULE: <main>
 //////////////////////////////////////////////////
@@ -19,7 +19,7 @@ MODULE: <main>
 [002 NEWLINE] (L2)
 [003 Keyword] "🔥" (L2:C5 - L2:C7)
 [004 Operator] ":=" (L2:C8 - L2:C10)
-[005 Number Literal] "1" (L2:C11)
+[005 Number Literal] "6" (L2:C11)
 [006 NEWLINE] (L3)
 [007 Keyword] "a" (L3:C5)
 [008 Operator] ":=" (L3:C7 - L3:C9)
@@ -62,7 +62,7 @@ VIRTUAL ROOT [000, 035]
  │   │   ├─ <004> VarDeclRule [003 - 004]
  │   │   │  <Keyword "🔥", Operator ":=", ...>
  │   │   │   ├─ <003> NumberLitRule [005]
- │   │   │   │  <Number Literal "1">
+ │   │   │   │  <Number Literal "6">
  │   │   ├─ <006> VarDeclRule [007 - 008]
  │   │   │  <Keyword "a", Operator ":=", ...>
  │   │   │   ├─ <005> NumberLitRule [009]

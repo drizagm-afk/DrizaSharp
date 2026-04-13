@@ -67,7 +67,6 @@ public partial class ParserProcess : SemanticMutateContext
         TAST.Rewrite(nodeId, new(_tokenCount, TAST.TokenCount - _tokenCount), _tokenNodes.MoveToImmutable());
         TAST.UpdateLinearity(nodeId);
 
-        RuleInst.IsRewritten = true;
         ApplyMutate(nodeId, _evalRules.MoveToImmutable());
         RuleInst.Rewrite(this);
         ApplyRecompile(nodeId, false);

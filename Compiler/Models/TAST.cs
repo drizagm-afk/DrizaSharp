@@ -239,6 +239,9 @@ public sealed partial class TAST
     {
         Update(nodeId, start: tokenSlice.Start, length: tokenSlice.Length, firstChildId: FirstId(tokenNodes));
 
+        ref readonly var info = ref InfoAt(nodeId);
+        _nodeInfos[nodeId] = new(info.RealmId, info.IsScoped, info.IsLinear, true, info.IsAppended);
+
         Fill(nodeId, tokenSlice, tokenNodes);
     }
 
@@ -248,7 +251,7 @@ public sealed partial class TAST
 
         int appendId = NewNode(
             -1, -1, tokenSlice.Start, tokenSlice.Length, FirstId(tokenNodes),
-            parentId: nodeId, info: new(InfoAt(nodeId).RealmId)
+            parentId: nodeId, info: new(InfoAt(nodeId).RealmId, isAppended: true)
         );
 
         if (node.FirstChildId < 0)
@@ -541,11 +544,14 @@ public readonly struct TokenSpan
 }
 
 //===== NODE INFO =====
-public readonly struct TASTInfo(int realmId, bool isScoped = false, bool isLinear = true)
+public readonly struct TASTInfo(int realmId, bool isScoped = false, bool isLinear = true, bool isRewritten = false, bool isAppended = false)
 {
-    public readonly int RealmId = realmId;
-    public readonly bool IsScoped = isScoped;
-    public readonly bool IsLinear = isLinear;
+    public int RealmId => realmId;
+    public bool IsScoped => isScoped;
+    public bool IsLinear => isLinear;
+
+    public bool IsRewritten => isRewritten;
+    public bool IsAppended => isAppended;
 }
 
 //>>>> NODE ATTACHMENTS <<<<

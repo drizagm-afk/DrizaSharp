@@ -51,13 +51,12 @@ public partial class Render
 
             header += $"<{nodeId:D3}> ";
 
+            if (info.IsAppended)
+                header += "APPENDED ";
+            if (info.IsRewritten)
+                header += "REWRITTEN ";
             if (TAST.TryGetApplyRule(nodeId, out var inst))
-            {
-                if (inst.IsRewritten)
-                    header += "REWRITTEN ";
-                
-                header += Rules.Parser.RuleExt.GetRule(Project, inst.RuleId).Name + " ";
-            }
+                header += $"{Rules.Parser.RuleExt.GetRule(Project, inst.RuleId).Name} ";
 
             return header;
         }
@@ -141,7 +140,7 @@ public partial class Render
 
                 var log = tokenType.Name;
                 if (tokenType.ShowValue)
-                    log +=  $" \"{TAST.GetText(id)}\"";
+                    log += $" \"{TAST.GetText(id)}\"";
 
                 return log;
             });
