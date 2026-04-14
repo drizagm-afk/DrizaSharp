@@ -15,7 +15,6 @@ public partial interface VAssembly
     //NODE AT
     public ref readonly VNode NodeAt(int nodeId);
     public VKind KindOf(int nodeId);
-    public bool IsKind(int nodeId, VKind kind);
 
     //INFO AT
     public VInfo ReadAt(int nodeId);
@@ -24,6 +23,10 @@ public partial interface VAssembly
 
     //**VNSPACE**
     public bool TryReadNspace(int outerId, string name, out VNspace read);
+
+    //==== MEMBER ====
+    public bool IsMember(int nodeId)
+    => KindOf(nodeId) is not VKind.Nspace;
 }
 public partial class VAssemblyEdit : VAssembly
 {
@@ -85,8 +88,6 @@ public partial class VAssemblyEdit : VAssembly
 
     public VKind KindOf(int nodeId)
     => NodeAt(nodeId).Kind;
-    public bool IsKind(int nodeId, VKind kind)
-    => KindOf(nodeId) == kind;
 
     //INFO AT
     public VInfo ReadAt(int nodeId)
@@ -172,7 +173,7 @@ public readonly struct VNode
 public enum VKind
 {
     Nspace,
-    Type, Interface, //Delegate, Enum
+    Object, Struct, Interface, //Delegate, Enum
     Field, //Constant,
     Property, //Indexer,
     Method, Ctor, Accessor, //Operator, Converter, Dctor
@@ -271,9 +272,13 @@ public abstract class VMemberEdit : VInfoEdit, VMember
 //===========================
 public enum VMemberVisibility
 { PUBLIC, ASSEMBLY, PRIVATE, FAMILY, FAMILY_OR_ASSEMBLY, FAMILY_AND_ASSEMBLY }
-
 public interface IVisibility { public VMemberVisibility Visibility { get; } }
 public interface IVisibilityEdit : IVisibility { public new VMemberVisibility Visibility { get; set; } }
+
+public enum VTypeLayout
+{ AUTO, SEQUENTIAL, EXPLICIT }
+public interface ILayout { public VTypeLayout Layout { get; } }
+public interface ILayoutEdit : ILayout { public new VTypeLayout Layout { get; set; } }
 
 public interface IStatic { public bool IsStatic { get; } }
 public interface IStaticEdit : IStatic { public new bool IsStatic { get; set; } }

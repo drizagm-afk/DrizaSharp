@@ -5,6 +5,9 @@ namespace DrzSharp.Compiler.Virtual;
 
 public partial interface VAssembly
 {
+    //===== METHOD =====
+    public bool IsMethod(int nodeId);
+
     //**VMETHOD**
     public IEnumerable<VMethod> ReadMethodOverloads(int typeId, GenName methodName);
     public IEnumerable<VMethod> ReadMethodOverloadsByName(int typeId, string methodName);
@@ -20,6 +23,10 @@ public partial interface VAssembly
 }
 public partial class VAssemblyEdit
 {
+    //===== METHOD =====
+    public bool IsMethod(int nodeId)
+    => KindOf(nodeId) is VKind.Method or VKind.Ctor or VKind.Accessor;
+
     //**VMETHOD**
     public IEnumerable<VMethod> ReadMethodOverloads(int typeId, GenName methodName)
     {
@@ -47,8 +54,9 @@ public partial class VAssemblyEdit
     {
         if (!IsComposableType(typeId))
             throw new Exception($"A NON-COMPOSABLE TYPE DOESN'T HAVE METHOD OVERLOADS: typeId{typeId} methodName{methodName}");
-
-        foreach (var (key, list) in EditAt<VTypeEdit>(typeId).GenericMembersMut)
+        
+        var type = EditAt<VTypeMemberEdit>(typeId);
+        foreach (var (key, list) in (type as VComposableTypeEdit)!.GenericMembersMut)
         {
             if (key.Name == methodName)
             {
@@ -83,8 +91,6 @@ public partial class VAssemblyEdit
     {
         if (!IsComposableType(typeId))
             throw new Exception($"A NON-COMPOSABLE TYPE DOESN'T HAVE CONSTRUCTOR OVERLOADS: typeId{typeId}");
-        if (KindOf(typeId) != VKind.Type)
-            throw new Exception($"A NON-CLASS TYPE DOESN'T HAVE CONSTRUCTOR OVERLOADS: typeId{typeId}");
 
         foreach (var ctorId in ReadAt<VComposableType>(typeId).Ctors)
             yield return ReadAt<VCtor>(ctorId);

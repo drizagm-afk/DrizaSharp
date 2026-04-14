@@ -4,11 +4,18 @@ namespace DrzSharp.Compiler.Virtual;
 
 public partial interface VAssembly
 {
+    //===== FIELD =====
+    public bool IsField(int nodeId);
+
     //**VFIELD**
     public bool TryReadField(int typeId, string fieldName, out VField read);
 }
 public partial class VAssemblyEdit
 {
+    //===== FIELD =====
+    public bool IsField(int nodeId)
+    => KindOf(nodeId) is VKind.Field;
+
     //**VFIELD**
     public bool TryReadField(int typeId, string fieldName, out VField read)
     {

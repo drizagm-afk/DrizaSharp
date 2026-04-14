@@ -6,13 +6,17 @@ namespace DrzSharp.Compiler.Virtual;
 public partial interface VAssembly
 {
     //===== TYPE =====
-    public bool IsComposableType(int typeId);
+    public bool IsType(int nodeId);
+    public bool IsComposableType(int nodeId);
 
     public bool TryReadTypeMember(int outerId, GenName typeName, out VTypeMember read);
     public VTypeMember ReadTypeMember(int outerId, GenName typeName);
 
-    //**VTYPE**
-    public bool TryReadType(int outerId, GenName typeName, out VType read);
+    //**VOBJECT**
+    public bool TryReadObject(int outerId, GenName objectName, out VObject read);
+
+    //**VSTRUCT**
+    public bool TryReadStruct(int outerId, GenName structName, out VStruct read);
 
     //**VINTERFACE**
     public bool TryReadInterface(int outerId, GenName interfaceName, out VInterface read);
@@ -29,14 +33,18 @@ public partial interface VAssembly
 public partial class VAssemblyEdit
 {
     //===== TYPE =====
-    public bool IsComposableType(int typeId)
-    => KindOf(typeId) is VKind.Type or VKind.Interface;
+    public bool IsType(int nodeId)
+    => KindOf(nodeId) is VKind.Object or VKind.Struct or VKind.Interface;
+    public bool IsComposableType(int nodeId)
+    => KindOf(nodeId) is VKind.Object or VKind.Struct or VKind.Interface;
 
     private static VKind KindOfType<T>() where T : VTypeMember
     {
         var type = typeof(T);
-        if (type == typeof(VTypeEdit))
-            return VKind.Type;
+        if (type == typeof(VObjectEdit))
+            return VKind.Object;
+        if (type == typeof(VStructEdit))
+            return VKind.Struct;
         if (type == typeof(VInterfaceEdit))
             return VKind.Interface;
 
@@ -47,8 +55,10 @@ public partial class VAssemblyEdit
         VTypeMember construct()
         {
             var type = typeof(T);
-            if (type == typeof(VTypeEdit))
-                return new VTypeEdit(typeName, isNested);
+            if (type == typeof(VObjectEdit))
+                return new VObjectEdit(typeName, isNested);
+            if (type == typeof(VStructEdit))
+                return new VStructEdit(typeName, isNested);
             if (type == typeof(VInterfaceEdit))
                 return new VInterfaceEdit(typeName, isNested);
 
@@ -67,8 +77,10 @@ public partial class VAssemblyEdit
         VTypeContainer outer;
         if (kind == VKind.Nspace)
             outer = ReadAt<VNspace>(outerId);
-        else if (kind == VKind.Type)
-            outer = ReadAt<VType>(outerId);
+        else if (kind == VKind.Object)
+            outer = ReadAt<VObject>(outerId);
+        else if (kind == VKind.Struct)
+            outer = ReadAt<VStruct>(outerId);
         else
             return false;
 
@@ -85,10 +97,12 @@ public partial class VAssemblyEdit
         VTypeContainer outer;
         if (kind == VKind.Nspace)
             outer = ReadAt<VNspace>(outerId);
-        else if (kind == VKind.Type)
-            outer = ReadAt<VType>(outerId);
+        else if (kind == VKind.Object)
+            outer = ReadAt<VObject>(outerId);
+        else if (kind == VKind.Struct)
+            outer = ReadAt<VStruct>(outerId);
         else
-            throw new Exception($"A NON-NAMESPACE AND NON-CLASS TYPE CAN'T CONTAIN NESTED TYPES: outerId={outerId} {md}");
+            throw new Exception($"A NON NAMESPACE, OBJECT OR STRUCT SYMBOL CAN'T CONTAIN NESTED TYPES: outerId={outerId} {md}");
 
         if (!outer.Types.TryGetValue(typeName, out int nodeId) || !TryReadAt(nodeId, out T read))
             throw new Exception($"THE TYPE DOESN'T EXIST: outerId={outerId} {md}");
@@ -111,13 +125,17 @@ public partial class VAssemblyEdit
             outer = EditAt<VNspaceEdit>(outerId);
             edit = NewOfType<T>(typeName, false);
         }
-        else if (kind == VKind.Type)
+        else if (kind is VKind.Object or VKind.Struct)
         {
-            outer = EditAt<VTypeEdit>(outerId);
+            if (kind == VKind.Object)
+                outer = EditAt<VObjectEdit>(outerId);
+            else
+                outer = EditAt<VStructEdit>(outerId);
+
             edit = NewOfType<T>(typeName, true);
         }
         else
-            throw new Exception($"CANNOT CREATE A NEW TYPE INSIDE A NON-NAMESPACE AND NON-CLASS TYPE: outerId={outerId} {md}");
+            throw new Exception($"CANNOT CREATE A NEW TYPE INSIDE A NON NAMESPACE, OBJECT OR STRUCT SYMBOL: outerId={outerId} {md}");
 
         outer.TypesMut[typeName] = AddNode(KindOfType<T>(), edit, outerId);
         return edit;
@@ -128,17 +146,25 @@ public partial class VAssemblyEdit
     public bool TryEditTypeMember(int outerId, GenName typeName, out VTypeMemberEdit edit)
     => TryEditTypeMember<VTypeMemberEdit>(outerId, typeName, out edit);
     public VTypeMember ReadTypeMember(int outerId, GenName typeName)
-    => ReadTypeMember<VTypeMember>(outerId, typeName, $"typeBaseName={typeName}");
+    => ReadTypeMember<VTypeMember>(outerId, typeName, $"typeName={typeName}");
     public VTypeMemberEdit EditTypeMember(int outerId, GenName typeName)
-    => EditTypeMember<VTypeMemberEdit>(outerId, typeName, $"typeBaseName={typeName}");
+    => EditTypeMember<VTypeMemberEdit>(outerId, typeName, $"typeName={typeName}");
 
-    //**VTYPE**
-    public bool TryReadType(int outerId, GenName typeName, out VType read)
-    => TryReadTypeMember(outerId, typeName, out read);
-    public bool TryEditType(int outerId, GenName typeName, out VTypeEdit edit)
-    => TryEditTypeMember(outerId, typeName, out edit);
-    public VTypeEdit AddType(int outerId, GenName typeName)
-    => AddTypeMember<VTypeEdit>(outerId, typeName, $"typeName={typeName}");
+    //**VOBJECT**
+    public bool TryReadObject(int outerId, GenName objectName, out VObject read)
+    => TryReadTypeMember(outerId, objectName, out read);
+    public bool TryEditObject(int outerId, GenName objectName, out VObjectEdit edit)
+    => TryEditTypeMember(outerId, objectName, out edit);
+    public VObjectEdit AddObject(int outerId, GenName objectName)
+    => AddTypeMember<VObjectEdit>(outerId, objectName, $"objectName={objectName}");
+
+    //**VSTRUCT**
+    public bool TryReadStruct(int outerId, GenName structName, out VStruct read)
+    => TryReadTypeMember(outerId, structName, out read);
+    public bool TryEditStruct(int outerId, GenName structName, out VStructEdit edit)
+    => TryEditTypeMember(outerId, structName, out edit);
+    public VStructEdit AddStruct(int outerId, GenName structName)
+    => AddTypeMember<VStructEdit>(outerId, structName, $"structName={structName}");
 
     //**VINTERFACE**
     public bool TryReadInterface(int outerId, GenName interfaceName, out VInterface read)
@@ -159,7 +185,7 @@ public partial class VAssemblyEdit
         if (TryReadAt(typeId, out VComposableType type)
         && type.Members.TryGetValue(memberName, out var list))
             return list;
-        
+
         return Empty.IdList;
     }
     private List<int> EditMembers(int typeId, string memberName)
@@ -181,7 +207,7 @@ public partial class VAssemblyEdit
         if (TryReadAt(typeId, out VComposableType type)
         && type.GenericMembers.TryGetValue(memberName, out var list))
             return list;
-        
+
         return Empty.IdList;
     }
     private List<int> EditMembers(int typeId, GenName memberName)
@@ -289,22 +315,20 @@ public abstract class VComposableTypeEdit : VTypeMemberEdit, VComposableType, IG
     public IReadOnlyDictionary<GenName, List<int>> GenericMembers => _genericMembers ?? Empty.IdListByGenName;
 }
 
-//DEFAULT TYPE
-public interface VType : VComposableType, VTypeContainer, IAbstract, ISealed
+//OBJECT
+public interface VObject : VComposableType, VTypeContainer, ILayout, IAbstract, ISealed
 {
     //METADATA
     public UType? Base { get; }
-
-    public VTypeLayout Layout { get; }
 }
-public sealed class VTypeEdit : VComposableTypeEdit, VType, VTypeContainerEdit, IAbstractEdit, ISealedEdit
+public sealed class VObjectEdit : VComposableTypeEdit, VObject, VTypeContainerEdit, ILayoutEdit, IAbstractEdit, ISealedEdit
 {
-    internal VTypeEdit(GenName name, bool isNested) : base(name, isNested) { }
+    internal VObjectEdit(GenName name, bool isNested) : base(name, isNested) { }
 
     //METADATA
     public UType? Base { get; set; } = null;
 
-    public VTypeLayout Layout { get; set; }
+    public VTypeLayout Layout { get; set; } = VTypeLayout.AUTO;
     public bool IsAbstract { get; set; }
     public bool IsSealed { get; set; }
 
@@ -313,8 +337,21 @@ public sealed class VTypeEdit : VComposableTypeEdit, VType, VTypeContainerEdit, 
     public Dictionary<GenName, int> TypesMut { get => _types ??= []; }
     public IReadOnlyDictionary<GenName, int> Types => _types ?? Empty.IdByGenName;
 }
-public enum VTypeLayout
-{ AUTO, SEQUENTIAL, EXPLICIT }
+
+//STRUCT
+public interface VStruct : VComposableType, VTypeContainer, ILayout { }
+public sealed class VStructEdit : VComposableTypeEdit, VStruct, VTypeContainerEdit, ILayoutEdit
+{
+    internal VStructEdit(GenName name, bool isNested) : base(name, isNested) { }
+
+    //METADATA
+    public VTypeLayout Layout { get; set; } = VTypeLayout.SEQUENTIAL;
+
+    //SCHEME
+    Dictionary<GenName, int>? _types;
+    public Dictionary<GenName, int> TypesMut { get => _types ??= []; }
+    public IReadOnlyDictionary<GenName, int> Types => _types ?? Empty.IdByGenName;
+}
 
 //INTERFACE
 public interface VInterface : VComposableType { }

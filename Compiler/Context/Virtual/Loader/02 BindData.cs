@@ -21,8 +21,10 @@ internal static partial class VirtualLoader
         {
             var kind = vctx.Asm.KindOf(typeId);
 
-            if (kind == VKind.Type)
-                BindTypeData(vctx, vctx.Asm.EditAt<VTypeEdit>(typeId));
+            if (kind == VKind.Object)
+                BindObjectData(vctx, vctx.Asm.EditAt<VObjectEdit>(typeId));
+            else if (kind == VKind.Struct)
+                BindStructData(vctx, vctx.Asm.EditAt<VStructEdit>(typeId));
             else if (kind == VKind.Interface)
                 BindInterfaceData(vctx, vctx.Asm.EditAt<VInterfaceEdit>(typeId));
         }
@@ -125,13 +127,13 @@ internal static partial class VirtualLoader
             }
         }
     }
-    private static void BindTypeData(VirtualContext vctx, VTypeEdit vtype)
+    private static void BindObjectData(VirtualContext vctx, VObjectEdit vobject)
     {
-        var type = BindMemberTypeData(vtype);
+        var type = BindMemberTypeData(vobject);
 
         //BASE
-        if (type.BaseType != null)
-            vtype.Base = ResolveReference(vctx, type.BaseType);
+        if (type.BaseType is not null && type.BaseType.MetadataType != MetadataType.Object)
+            vobject.Base = ResolveReference(vctx, type.BaseType);
 
         //LAYOUT
         var lay = VTypeLayout.AUTO;
@@ -140,14 +142,30 @@ internal static partial class VirtualLoader
         else if (type.IsExplicitLayout)
             lay = VTypeLayout.EXPLICIT;
 
-        vtype.Layout = lay;
+        vobject.Layout = lay;
 
         //ATTRIBUTES
-        vtype.IsAbstract = type.IsAbstract;
-        vtype.IsSealed = type.IsSealed;
+        vobject.IsAbstract = type.IsAbstract;
+        vobject.IsSealed = type.IsSealed;
 
-        BindComposableTypeData(vctx, vtype);
-        LoadContainedTypes(vctx, vtype);
+        BindComposableTypeData(vctx, vobject);
+        LoadContainedTypes(vctx, vobject);
+    }
+    private static void BindStructData(VirtualContext vctx, VStructEdit vstruct)
+    {
+        var type = BindMemberTypeData(vstruct);
+
+        //LAYOUT
+        var lay = VTypeLayout.AUTO;
+        if (type.IsSequentialLayout)
+            lay = VTypeLayout.SEQUENTIAL;
+        else if (type.IsExplicitLayout)
+            lay = VTypeLayout.EXPLICIT;
+
+        vstruct.Layout = lay;
+
+        BindComposableTypeData(vctx, vstruct);
+        LoadContainedTypes(vctx, vstruct);
     }
     private static void BindInterfaceData(VirtualContext vctx, VInterfaceEdit vinterface)
     {
@@ -250,7 +268,7 @@ internal static partial class VirtualLoader
 
         //RETURN TYPE
         var ret = vmethod.Definition.ReturnType;
-        if (ret.FullName == "System.Void")
+        if (ret.MetadataType == MetadataType.Void)
             vmethod.ReturnType = UVoidType.Type;
         else
             vmethod.ReturnType = ResolveReference(vctx, ret, vmethod);

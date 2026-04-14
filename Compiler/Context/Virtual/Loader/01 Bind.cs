@@ -46,27 +46,45 @@ internal static partial class VirtualLoader
             BindInterface(vctx, outerId, type);
             return;
         }
+        if (type.IsValueType && !type.IsEnum)
+        {
+            BindStruct(vctx, outerId, type);
+            return;
+        }
 
-        //===== BASE TYPE =====
-        var vtype = vctx.Asm.AddType(outerId, GenericNameOf(name));
+        //===== OBJECT =====
+        var vobject = vctx.Asm.AddObject(outerId, GenericNameOf(name));
 
         //**NESTED TYPES**
         foreach (var nestedType in type.NestedTypes)
-            BindType(vctx, vtype.Id, nestedType);
+            BindType(vctx, vobject.Id, nestedType);
 
-        if (IsTypeGenerated(vtype, type))
+        if (IsTypeGenerated(vobject, type))
             return;
 
-        BindMembers(vctx, vtype);
+        BindMembers(vctx, vobject);
+    }
+    private static void BindStruct(VirtualContext vctx, int outerId, TypeDefinition type)
+    {
+        var vstruct = vctx.Asm.AddStruct(outerId, GenericNameOf(type.Name));
+
+        //**NESTED TYPES**
+        foreach (var nestedType in type.NestedTypes)
+            BindType(vctx, vstruct.Id, nestedType);
+
+        if (IsTypeGenerated(vstruct, type))
+            return;
+
+        BindMembers(vctx, vstruct);
     }
     private static void BindInterface(VirtualContext vctx, int outerId, TypeDefinition type)
     {
-        var vtype = vctx.Asm.AddInterface(outerId, GenericNameOf(type.Name));
+        var vinterface = vctx.Asm.AddInterface(outerId, GenericNameOf(type.Name));
 
-        if (IsTypeGenerated(vtype, type))
+        if (IsTypeGenerated(vinterface, type))
             return;
 
-        BindMembers(vctx, vtype);
+        BindMembers(vctx, vinterface);
     }
 
     //>>>> BIND FIELD <<<<
@@ -140,15 +158,15 @@ internal static partial class VirtualLoader
     }
     private static void BindCtor(VirtualContext vctx, int typeId, MethodDefinition method)
     {
-        var vCtor = vctx.Asm.AddCtor(typeId);
-        BindMethodMemberEdit(vCtor, method);
+        var vctor = vctx.Asm.AddCtor(typeId);
+        BindMethodMemberEdit(vctor, method);
     }
     private static int BindAccessor(VirtualContext vctx, int typeId, int sourceId, MethodDefinition method)
     {
-        var vAccessor = vctx.Asm.AddAccessor(typeId, sourceId, method.Name);
-        BindMethodMemberEdit(vAccessor, method);
+        var vaccessor = vctx.Asm.AddAccessor(typeId, sourceId, method.Name);
+        BindMethodMemberEdit(vaccessor, method);
 
-        return vAccessor.Id;
+        return vaccessor.Id;
     }
 
     //=======================

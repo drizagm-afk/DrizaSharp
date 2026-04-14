@@ -36,7 +36,9 @@ public partial interface VirtualView
     public bool TryReadMembers(GlobalId typeId, GenName memberName, out IReadOnlyList<int> members);
     public IReadOnlyList<int> ReadMembers(GlobalId typeId, GenName memberName);
 
-    public bool TryReadType(GlobalId outerId, GenName name, out VType read);
+    public bool TryReadObject(GlobalId outerId, GenName name, out VObject read);
+
+    public bool TryReadStruct(GlobalId outerId, GenName name, out VStruct read);
 
     public bool TryReadInterface(GlobalId outerId, GenName interfaceName, out VInterface read);
 
@@ -99,8 +101,11 @@ public partial interface VirtualView
     public IReadOnlyList<int> ReadMembers(int typeId, GenName memberName)
     => ReadMembers(new GlobalId(-1, typeId), memberName);
 
-    public bool TryReadType(int outerId, GenName name, out VType read)
-    => TryReadType(new GlobalId(-1, outerId), name, out read);
+    public bool TryReadObject(int outerId, GenName name, out VObject read)
+    => TryReadObject(new GlobalId(-1, outerId), name, out read);
+
+    public bool TryReadStruct(int outerId, GenName name, out VStruct read)
+    => TryReadStruct(new GlobalId(-1, outerId), name, out read);
 
     public bool TryReadInterface(int outerId, GenName interfaceName, out VInterface read)
     => TryReadInterface(new GlobalId(-1, outerId), interfaceName, out read);
@@ -164,13 +169,13 @@ public partial class ParserProcess : VirtualView
 
     //===== MEMBERS =====
     public bool IsMember(GlobalId symId)
-    => KindOf(symId) is not VKind.Nspace;
+    => AssemblyAt(symId).IsMember(symId.LocalId);
 
     //TYPE
     public bool IsType(GlobalId symId)
-    => KindOf(symId) is VKind.Type or VKind.Interface;
+    => AssemblyAt(symId).IsType(symId.LocalId);
     public bool IsComposableType(GlobalId symId)
-    => KindOf(symId) is VKind.Type or VKind.Interface;
+    => AssemblyAt(symId).IsComposableType(symId.LocalId);
 
     public bool TryReadTypeMember(GlobalId outerId, GenName name, out VTypeMember read)
     => AssemblyAt(outerId).TryReadTypeMember(outerId.LocalId, name, out read);
@@ -186,29 +191,32 @@ public partial class ParserProcess : VirtualView
     public IReadOnlyList<int> ReadMembers(GlobalId typeId, GenName memberName)
     => AssemblyAt(typeId).ReadMembers(typeId.LocalId, memberName);
 
-    public bool TryReadType(GlobalId outerId, GenName name, out VType read)
-    => AssemblyAt(outerId).TryReadType(outerId.LocalId, name, out read);
+    public bool TryReadObject(GlobalId outerId, GenName name, out VObject read)
+    => AssemblyAt(outerId).TryReadObject(outerId.LocalId, name, out read);
+
+    public bool TryReadStruct(GlobalId outerId, GenName name, out VStruct read)
+    => AssemblyAt(outerId).TryReadStruct(outerId.LocalId, name, out read);
 
     public bool TryReadInterface(GlobalId outerId, GenName interfaceName, out VInterface read)
     => AssemblyAt(outerId).TryReadInterface(outerId.LocalId, interfaceName, out read);
 
     //FIELD
     public bool IsField(GlobalId symId)
-    => KindOf(symId) is VKind.Field;
+    => AssemblyAt(symId).IsField(symId.LocalId);
 
     public bool TryReadField(GlobalId typeId, string fieldName, out VField read)
     => AssemblyAt(typeId).TryReadField(typeId.LocalId, fieldName, out read);
 
     //PROPERTY
     public bool IsProperty(GlobalId symId)
-    => KindOf(symId) is VKind.Property;
+    => AssemblyAt(symId).IsProperty(symId.LocalId);
 
     public bool TryReadProperty(GlobalId typeId, string propertyName, out VProperty read)
     => AssemblyAt(typeId).TryReadProperty(typeId.LocalId, propertyName, out read);
 
     //METHOD
     public bool IsMethod(GlobalId symId)
-    => KindOf(symId) is VKind.Method or VKind.Ctor or VKind.Accessor;
+    => AssemblyAt(symId).IsMethod(symId.LocalId);
 
     public IEnumerable<VMethod> ReadMethodOverloads(GlobalId typeId, GenName methodName)
     => AssemblyAt(typeId).ReadMethodOverloads(typeId.LocalId, methodName);
@@ -241,8 +249,11 @@ public interface VirtualContext : VirtualView
     public bool TryEditTypeMember(int outerId, GenName typeName, out VTypeMemberEdit edit);
     public VTypeMemberEdit EditTypeMember(int outerId, GenName typeName);
 
-    public bool TryEditType(int outerId, GenName typeName, out VTypeEdit edit);
-    public VTypeEdit AddType(int outerId, GenName typeName);
+    public bool TryEditObject(int outerId, GenName typeName, out VObjectEdit edit);
+    public VObjectEdit AddObject(int outerId, GenName typeName);
+
+    public bool TryEditStruct(int outerId, GenName typeName, out VStructEdit edit);
+    public VStructEdit AddStruct(int outerId, GenName typeName);
 
     public bool TryEditInterface(int outerId, GenName interfaceName, out VInterfaceEdit edit);
     public VInterfaceEdit AddInterface(int outerId, GenName interfaceName);
@@ -304,11 +315,21 @@ public partial class ParserProcess : VirtualContext
     public VTypeMemberEdit EditTypeMember(int outerId, GenName typeName)
     => VIR.EditTypeMember(outerId, typeName);
 
-    public bool TryEditType(int outerId, GenName typeName, out VTypeEdit edit)
-    => VIR.TryEditType(outerId, typeName, out edit);
-    public VTypeEdit AddType(int outerId, GenName typeName)
+    public bool TryEditObject(int outerId, GenName typeName, out VObjectEdit edit)
+    => VIR.TryEditObject(outerId, typeName, out edit);
+    public VObjectEdit AddObject(int outerId, GenName typeName)
     {
-        var edit = VIR.AddType(outerId, typeName);
+        var edit = VIR.AddObject(outerId, typeName);
+        SetSourceNode(edit);
+
+        return edit;
+    }
+
+    public bool TryEditStruct(int outerId, GenName typeName, out VStructEdit edit)
+    => VIR.TryEditStruct(outerId, typeName, out edit);
+    public VStructEdit AddStruct(int outerId, GenName typeName)
+    {
+        var edit = VIR.AddStruct(outerId, typeName);
         SetSourceNode(edit);
 
         return edit;

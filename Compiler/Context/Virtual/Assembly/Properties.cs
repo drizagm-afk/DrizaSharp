@@ -4,11 +4,18 @@ namespace DrzSharp.Compiler.Virtual;
 
 public partial interface VAssembly
 {
+    //===== PROPERTY =====
+    public bool IsProperty(int nodeId);
+
     //**VPROPERTY**
     public bool TryReadProperty(int typeId, string propertyName, out VProperty read);
 }
 public partial class VAssemblyEdit
 {
+    //===== PROPERTY =====
+    public bool IsProperty(int nodeId)
+    => KindOf(nodeId) is VKind.Property;
+
     //**VPROPERTY**
     public bool TryReadProperty(int typeId, string propertyName, out VProperty read)
     {

@@ -64,8 +64,14 @@ public partial class Render
                 case VNspace nspace:
                     header = nspace.Name;
                     break;
-                case VType type:
-                    header = $"{type.Name}{generics(type)}";
+                case VObject obj:
+                    header = $"{obj.Name}{generics(obj)}";
+                    break;
+                case VStruct value:
+                    header = $"{value.Name}{generics(value)}";
+                    break;
+                case VInterface inter:
+                    header = $"{inter.Name}{generics(inter)}";
                     break;
                 //FIELDS
                 case VField field:
@@ -100,7 +106,8 @@ public partial class Render
             {
                 VKind.Nspace => "NSPACE",
 
-                VKind.Type => "TYPE",
+                VKind.Object => "OBJECT",
+                VKind.Struct => "STRUCT",
                 VKind.Interface => "INTERFACE",
 
                 VKind.Field => "FIELD",
