@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using DrzSharp.Compiler.Virtual;
 
 namespace DrzSharp.Compiler.Loader;
@@ -16,27 +15,26 @@ public partial class LoaderProcess
     public void RestoreDependencies()
     {
         //CORELIB
-        Context.LoadDependency(@"C:\Driza\DrizaSharp\packages\System.Private.CoreLib.dll");
+        Context.LoadCoreLib();
     }
     public void RestoreModules()
     {
-        var builder = ImmutableArray.CreateBuilder<DzModule>();
+        var builder = ArrayBuilder.Create<DzModule>();
 
         //MAIN MODULE
         builder.Add(RestoreModuleDependencies(0, VAssemblyEdit.GlobalNspaceId));
 
-        Project.Modules = builder.ToImmutable();
+        Project.Modules = builder.MoveToView();
     }
     public DzModule RestoreModuleDependencies(int id, int nspaceId)
     {
         DzModule module = new(id, nspaceId);
-        var builder = ImmutableArray.CreateBuilder<GlobalId>();
+        var builder = ArrayBuilder.Create<GlobalId>();
 
         //SELF DEPENDENCY
         builder.Add(new(-1, nspaceId));
 
-        module.Dependencies = builder.ToImmutable();
-
+        module.Dependencies = builder.MoveToView();
         return module;
     }
     public void RestoreRuleset()

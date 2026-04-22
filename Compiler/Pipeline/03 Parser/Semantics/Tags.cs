@@ -164,7 +164,7 @@ public partial class ParserProcess : Tags
     private readonly Dictionary<TagKey, List<TagValue>> _persistTags = [];
     private void StorePTag(int nodeId, TagValue val)
     {
-        TagKey key = new(_curPass, nodeId);
+        TagKey key = new(_curPass, File.Id, nodeId);
         if (!_persistTags.TryGetValue(key, out var list))
             list = _persistTags[key] = [];
 
@@ -174,7 +174,7 @@ public partial class ParserProcess : Tags
     => StorePTag(TAST.NodeAt(nodeId).ParentId, val);
 
     internal readonly record struct TagKey
-    (Pass Pass, int NodeId);
+    (Pass Pass, int FileId, int NodeId);
     internal readonly record struct TagValue
     (string Tag, string TagDesc);
 }

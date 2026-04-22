@@ -9,26 +9,26 @@ public class GroupDiagnostics<T> where T : struct
 }
 public class ProjectDiagnostics : GroupDiagnostics<bool>
 {
-    internal void ReportUnexpected(SourceSlice source, string message)
+    internal void ReportUnexpected(string message)
     {
-        _reports.Add(new(DiagnosticCode.Unexpected, source, null, message));
+        _reports.Add(new(DiagnosticCode.Unexpected, default, null, message));
         HasError = true;
     }
-    internal void ReportUnhandled(SourceSlice source, string message)
+    internal void ReportUnhandled(string message)
     {
-        _reports.Add(new(DiagnosticCode.Unhandled, source, null, message));
+        _reports.Add(new(DiagnosticCode.Unhandled, default, null, message));
         HasError = true;
     }
 
-    public void AddError(SourceSlice source, string message)
+    public void AddError(string message)
     {
-        _reports.Add(new(DiagnosticCode.UserError, source, null, message));
+        _reports.Add(new(DiagnosticCode.UserError, default, null, message));
         HasError = true;
     }
-    public void AddWarning(SourceSlice source, string message)
-    => _reports.Add(new(DiagnosticCode.UserWarning, source, null, message));
-    public void AddInfo(SourceSlice source, string message)
-    => _reports.Add(new(DiagnosticCode.UserInfo, source, null, message));
+    public void AddWarning(string message)
+    => _reports.Add(new(DiagnosticCode.UserWarning, default, null, message));
+    public void AddInfo(string message)
+    => _reports.Add(new(DiagnosticCode.UserInfo, default, null, message));
 }
 public class FileDiagnostics<T> : GroupDiagnostics<T> where T : struct
 {

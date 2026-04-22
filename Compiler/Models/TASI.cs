@@ -132,31 +132,46 @@ public readonly struct Instr(InstrType type, int start, int length, SourceSlice 
 public enum InstrType
 {
     None,
-    
-    //CONSTANTS
-    LdcInt32, LdcInt64, LdcFloat32, LdcFloat64, Ldstr, Ldnull,
-    //STACK
-    Dup, Pop,
 
-    //>>>> MATH <<<<
-    //COMPARISON
-    Equal, GreaterThan, LessThan,
+    //>>>> CONST
+    LoadInt32, LoadInt64, LoadFloat32, LoadFloat64, LoadString, LoadNull,
+
+    //>>>> FLOW
+    EnterMethod, ExitMethod, Return,
+    //BRANCHES
+    Label, Goto, GotoIfTrue, GotoIfFalse,
+
+    //>>>> MATH
     //ARITHMETIC
-    Add, Sub, Mul, Div, Rem,
+    Add, Sub, Neg, Mul, Div, DivUnsigned, Rem, RemUnsigned,
     //BITWISE
     And, Or, Xor, Not, ShiftLeft, ShiftRight,
+    //COMPARISON
+    Equal, GreaterThan, GreaterThanUnsigned, LessThan, LessThanUnsigned,
 
-    //>>>> STORAGE <<<<
+    //>>>> STACK
+    Dup, Pop,
+
+    //>>>> CALL
+    Call, CallVirt, NewObject,
+
+    //>>>> TYPE
+    //STRUCT
+    Unbox, UnboxAddress, Box,
+    //ARRAY
+    NewArray, LoadLength, LoadElement, LoadElementAddress, StoreElement,
+    //CAST
+    CastTo, TryCastTo,
+    //ADDRESS
+    LoadFromAddress, StoreAtAddress, InitAtAddress,
+
+    //>>>> STORAGE
     //LOCALS
-    DeclLocal, LoadLocal, StoreLocal,
-
-    //>>>> FLOW <<<<
-    Return,
-    //BRANCHES
-    Label, Br, BrTrue, BrFalse,
-
-    //>>>> TEMPORAL <<<<
-    EnterMethod, Print,
+    LoadLocal, LoadLocalAddress, StoreLocal, DeclLocal,
+    //ARGS
+    LoadArg, LoadArgAddress, StoreArg,
+    //FIELDS
+    LoadField, LoadFieldAddress, StoreField,
 }
 
 //=================

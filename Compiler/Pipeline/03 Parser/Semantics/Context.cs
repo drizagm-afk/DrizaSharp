@@ -1,5 +1,6 @@
 namespace DrzSharp.Compiler.Parser;
 
-public interface SemanticView : Context, VirtualView, AttrsView { }
-public interface SemanticContext : SemanticView, VirtualContext, Attrs, Tags { }
+//ADD VirtualView AND VirtualContext
+public interface SemanticView : Context, AttrsView { }
+public interface SemanticContext : SemanticView, Attrs, Tags { }
 public partial class ParserProcess : SemanticContext { }

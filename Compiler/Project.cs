@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using DrzSharp.Compiler.Diagnostics;
 using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Virtual;
@@ -28,8 +27,8 @@ public class DzProject
         return CompilationContext.AssemblyAt(assemblyId);
     }
 
-    public ImmutableArray<DzModule> Modules { get; internal set; }
-    public ImmutableArray<DzFile> Files { get; internal set; }
+    public ArrayView<DzModule> Modules { get; internal set; }
+    public ArrayView<DzFile> Files { get; internal set; }
 
     public readonly ProjectDiagnostics LoaderDiagnostics = new();
     public readonly ProjectDiagnostics ParserDiagnostics = new();
@@ -46,7 +45,7 @@ public class DzModule
         NspaceId = nspaceId;
     }
 
-    public ImmutableArray<GlobalId> Dependencies { get; internal set; }
+    public ArrayView<GlobalId> Dependencies { get; internal set; }
 }
 public class DzFile
 {

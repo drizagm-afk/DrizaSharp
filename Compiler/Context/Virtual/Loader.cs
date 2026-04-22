@@ -20,9 +20,24 @@ internal partial class CompilationContext
         return TryLoadAssembly(asm, hash);
     }
 
+    //>>>> CORELIB <<<<
+    public static string PATH_TO_CORELIB { get; } = @"C:\Driza\DrizaSharp\packages\System.Private.CoreLib.dll";
+    internal int LoadCoreLib()
+    => LoadDependency(PATH_TO_CORELIB);
+
     //>>>> ASSEMBLY LOADING <<<<
+    public static DefaultAssemblyResolver Resolver { get; } = SetResolver();
+    private static DefaultAssemblyResolver SetResolver()
+    {
+        var resolver = new DefaultAssemblyResolver();
+        resolver.AddSearchDirectory(Path.GetDirectoryName(PATH_TO_CORELIB));
+
+        return resolver;
+    }
+
     private readonly static ReaderParameters _readParams = new()
     {
+        AssemblyResolver = Resolver,
         ReadSymbols = false,
         ReadingMode = ReadingMode.Deferred,
         InMemory = true,

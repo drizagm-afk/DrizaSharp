@@ -1,3 +1,3 @@
 namespace DrzSharp.Compiler;
 
-public class AbortException : Exception { }
+internal class AbortException(string? msg = null) : Exception(msg) { }

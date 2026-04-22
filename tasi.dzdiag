@@ -1,51 +1,51 @@
 From <002> EntryPointRule
-[0] EnterMethod                                     (System.MyEntryPoint)
+[000] EnterMethod                                   (<ENTRYPOINT>)
  ├─ From <004> VarDeclRule
- │  [1] DeclLocal                                   (decl LOCAL_0: int32)
+ │  [001] DeclLocal                                 (decl LOCAL_0: System.Int32)
  │   ├─ From <003> NumberLitRule
- │   │  [2] LdcInt32                                (6 | -> stack [6])
- │  [3] StoreLocal                                  (LOCAL_0 = 6 | <- stack [])
+ │   │  [002] LdcInt32                              (6 | -> stack [6])
+ │  [003] StoreLocal                                (LOCAL_0 = 6 | <- stack [])
  ├─ From <006> VarDeclRule
- │  [4] DeclLocal                                   (decl LOCAL_1: int32)
+ │  [004] DeclLocal                                 (decl LOCAL_1: System.Int32)
  │   ├─ From <005> NumberLitRule
- │   │  [5] LdcInt32                                (0 | -> stack [0])
- │  [6] StoreLocal                                  (LOCAL_1 = 0 | <- stack [])
+ │   │  [005] LdcInt32                              (0 | -> stack [0])
+ │  [006] StoreLocal                                (LOCAL_1 = 0 | <- stack [])
  ├─ From <009> RepeatStmtRule
- │  [7] DeclLocal                                   (decl LOCAL_2: int32)
+ │  [007] DeclLocal                                 (decl LOCAL_2: System.Int32)
  │   ├─ From <008> NumberLitRule
- │   │  [8] LdcInt32                                (5 | -> stack [5])
- │  [9] StoreLocal                                  (LOCAL_2 = 5 | <- stack [])
- │  [10] Label                                      (decl LABEL_0)
- │  [11] LoadLocal                                  (LOCAL_1 | -> stack [LOCAL_1])
- │  [12] LdcInt32                                   (0 | -> stack [LOCAL_1, 0])
- │  [13] GreaterThan                                (LOCAL_1 > 0 => VALUE_0: bool | <-> stack [VALUE_0])
- │  [14] BrFalse                                    (if !VALUE_0 goto LABEL_1 | <- stack[])
+ │   │  [008] LdcInt32                              (5 | -> stack [5])
+ │  [009] StoreLocal                                (LOCAL_2 = 5 | <- stack [])
+ │  [010] Label                                     (decl LABEL_0)
+ │  [011] LoadLocal                                 (LOCAL_1 | -> stack [LOCAL_1])
+ │  [012] LdcInt32                                  (0 | -> stack [LOCAL_1, 0])
+ │  [013] GreaterThan                               (VALUE_0: System.Bool as System.Int32 = LOCAL_1 > 0 | <-> stack [VALUE_0])
+ │  [014] BrFalse                                   (if !VALUE_0 goto LABEL_1 | <- stack[])
  │   ├─ From <014> IfStmtRule
  │   │   ├─ From <013> LessExprRule
  │   │   │   ├─ From <011> VarGetRule
- │   │   │   │  [15] LoadLocal                      (LOCAL_0 | -> stack [LOCAL_0])
+ │   │   │   │  [015] LoadLocal                     (LOCAL_0 | -> stack [LOCAL_0])
  │   │   │   ├─ From <012> NumberLitRule
- │   │   │   │  [16] LdcInt32                       (10 | -> stack [LOCAL_0, 10])
- │   │   │  [17] LessThan                           (LOCAL_0 < 10 => VALUE_1: bool | <-> stack [VALUE_1])
- │   │  [18] BrFalse                                (if !VALUE_1 goto LABEL_2 | <- stack[])
+ │   │   │   │  [016] LdcInt32                      (10 | -> stack [LOCAL_0, 10])
+ │   │   │  [017] LessThan                          (VALUE_1: System.Bool as System.Int32 = LOCAL_0 < 10 | <-> stack [VALUE_1])
+ │   │  [018] BrFalse                               (if !VALUE_1 goto LABEL_2 | <- stack[])
  │   │   ├─ From <018> VarSetRule
  │   │   │   ├─ From <017> AddExprRule
  │   │   │   │   ├─ From <015> VarGetRule
- │   │   │   │   │  [19] LoadLocal                  (LOCAL_0 | -> stack [LOCAL_0])
+ │   │   │   │   │  [019] LoadLocal                 (LOCAL_0 | -> stack [LOCAL_0])
  │   │   │   │   ├─ From <016> NumberLitRule
- │   │   │   │   │  [20] LdcInt32                   (1 | -> stack [LOCAL_0, 1])
- │   │   │   │  [21] Add                            (LOCAL_0 + 1 => VALUE_2: int32 | <-> stack [VALUE_2])
- │   │   │  [22] StoreLocal                         (LOCAL_0 = VALUE_2 | <- stack [])
+ │   │   │   │   │  [020] LdcInt32                  (1 | -> stack [LOCAL_0, 1])
+ │   │   │   │  [021] Add                           (VALUE_2: System.Int32 = LOCAL_0 + 1 | <-> stack [VALUE_2])
+ │   │   │  [022] StoreLocal                        (LOCAL_0 = VALUE_2 | <- stack [])
  │   │   ├─ From <020> PrintRule
  │   │   │   ├─ From <019> VarGetRule
- │   │   │   │  [23] LoadLocal                      (LOCAL_0 | -> stack [LOCAL_0])
- │   │   │  [24] Print                              ([corelib]System.Console::WriteLine(int32) | <- stack [])
- │   │  [25] Label                                  (decl LABEL_2)
- │  [26] LoadLocal                                  (LOCAL_2 | -> stack [LOCAL_2])
- │  [27] LdcInt32                                   (1 | -> stack [LOCAL_2, 1])
- │  [28] Sub                                        (LOCAL_2 - 1 => VALUE_3: int32 | <-> stack [VALUE_3])
- │  [29] StoreLocal                                 (LOCAL_2 = VALUE_3 | <- stack [])
- │  [30] Br                                         (goto LABEL_0 | stack [])
- │  [31] Label                                      (decl LABEL_1)
-[32] Return                                         (void | stack [])
-[33] ExitMethod
+ │   │   │   │  [023] LoadLocal                     (LOCAL_0 | -> stack [LOCAL_0])
+ │   │   │  [024] Call                              ([corelib]System.Console::WriteLine(System.Int32) -> void | <- stack [])
+ │   │  [025] Label                                 (decl LABEL_2)
+ │  [026] LoadLocal                                 (LOCAL_2 | -> stack [LOCAL_2])
+ │  [027] LdcInt32                                  (1 | -> stack [LOCAL_2, 1])
+ │  [028] Sub                                       (VALUE_3: System.Int32 = LOCAL_2 - 1 | <-> stack [VALUE_3])
+ │  [029] StoreLocal                                (LOCAL_2 = VALUE_3 | <- stack [])
+ │  [030] Br                                        (goto LABEL_0 | stack [])
+ │  [031] Label                                     (decl LABEL_1)
+[032] Return                                        (void | stack [])
+[033] ExitMethod

@@ -1,3 +1,5 @@
+/*
+using System.Collections.Immutable;
 using System.Diagnostics;
 using DrzSharp.Compiler.Model;
 using DrzSharp.Compiler.Rules.Parser;
@@ -28,8 +30,11 @@ public partial interface VirtualView
     public bool IsType(GlobalId symId);
     public bool IsComposableType(GlobalId symId);
 
-    public bool TryReadTypeMember(GlobalId outerId, GenName name, out VTypeMember read);
-    public VTypeMember ReadTypeMember(GlobalId outerId, GenName name);
+    public bool TryReadType(GlobalId outerId, GenName name, out VType read);
+    public VType ReadType(GlobalId outerId, GenName name);
+
+    public bool TryFindType(int assemblyId, ImmutableArray<string> nspaceList, GenName name, out int typeId);
+    public int FindType(int assemblyId, ImmutableArray<string> nspaceList, GenName name);
 
     public bool TryReadMembers(GlobalId typeId, string memberName, out IReadOnlyList<int> members);
     public IReadOnlyList<int> ReadMembers(GlobalId typeId, string memberName);
@@ -87,10 +92,15 @@ public partial interface VirtualView
     public bool IsComposableType(int symId)
     => IsComposableType(new GlobalId(-1, symId));
 
-    public bool TryReadTypeMember(int outerId, GenName name, out VTypeMember read)
-    => TryReadTypeMember(new GlobalId(-1, outerId), name, out read);
-    public VTypeMember ReadTypeMember(int outerId, GenName name)
-    => ReadTypeMember(new GlobalId(-1, outerId), name);
+    public bool TryReadType(int outerId, GenName name, out VType read)
+    => TryReadType(new GlobalId(-1, outerId), name, out read);
+    public VType ReadType(int outerId, GenName name)
+    => ReadType(new GlobalId(-1, outerId), name);
+
+    public bool TryFindType(ImmutableArray<string> nspaceList, GenName name, out int typeId)
+    => TryFindType(-1, nspaceList, name, out typeId);
+    public int FindType(ImmutableArray<string> nspaceList, GenName name)
+    => FindType(-1, nspaceList, name);
 
     public bool TryReadMembers(int typeId, string memberName, out IReadOnlyList<int> members)
     => TryReadMembers(new GlobalId(-1, typeId), memberName, out members);
@@ -177,10 +187,15 @@ public partial class ParserProcess : VirtualView
     public bool IsComposableType(GlobalId symId)
     => AssemblyAt(symId).IsComposableType(symId.LocalId);
 
-    public bool TryReadTypeMember(GlobalId outerId, GenName name, out VTypeMember read)
-    => AssemblyAt(outerId).TryReadTypeMember(outerId.LocalId, name, out read);
-    public VTypeMember ReadTypeMember(GlobalId outerId, GenName name)
-    => AssemblyAt(outerId).ReadTypeMember(outerId.LocalId, name);
+    public bool TryReadType(GlobalId outerId, GenName name, out VType read)
+    => AssemblyAt(outerId).TryReadType(outerId.LocalId, name, out read);
+    public VType ReadType(GlobalId outerId, GenName name)
+    => AssemblyAt(outerId).ReadType(outerId.LocalId, name);
+
+    public bool TryFindType(int assemblyId, ImmutableArray<string> nspaceList, GenName name, out int typeId)
+    => AssemblyAt(assemblyId).TryFindType(nspaceList, name, out typeId);
+    public int FindType(int assemblyId, ImmutableArray<string> nspaceList, GenName name)
+    => AssemblyAt(assemblyId).FindType(nspaceList, name);
 
     public bool TryReadMembers(GlobalId typeId, string memberName, out IReadOnlyList<int> members)
     => AssemblyAt(typeId).TryReadMembers(typeId.LocalId, memberName, out members);
@@ -246,17 +261,17 @@ public interface VirtualContext : VirtualView
 
     //===== MEMBERS =====
     //TYPE
-    public bool TryEditTypeMember(int outerId, GenName typeName, out VTypeMemberEdit edit);
-    public VTypeMemberEdit EditTypeMember(int outerId, GenName typeName);
+    public bool TryEditType(int outerId, GenName typeName, out VTypeEdit edit);
+    public VTypeEdit EditType(int outerId, GenName typeName);
 
     public bool TryEditObject(int outerId, GenName typeName, out VObjectEdit edit);
-    public VObjectEdit AddObject(int outerId, GenName typeName);
+    public VObjectEdit AddObject(int outerId, string typeName, ImmutableArray<string> genParams);
 
     public bool TryEditStruct(int outerId, GenName typeName, out VStructEdit edit);
-    public VStructEdit AddStruct(int outerId, GenName typeName);
+    public VStructEdit AddStruct(int outerId, string typeName, ImmutableArray<string> genParams);
 
     public bool TryEditInterface(int outerId, GenName interfaceName, out VInterfaceEdit edit);
-    public VInterfaceEdit AddInterface(int outerId, GenName interfaceName);
+    public VInterfaceEdit AddInterface(int outerId, string interfaceName, ImmutableArray<string> genParams);
 
     //FIELD
     public bool TryEditField(int typeId, string fieldName, out VFieldEdit edit);
@@ -269,12 +284,12 @@ public interface VirtualContext : VirtualView
     //METHOD
     public IEnumerable<VMethodEdit> EditMethodOverloads(int typeId, GenName methodName);
     public IEnumerable<VMethodEdit> EditMethodOverloadsByName(int typeId, string methodName);
-    public VMethodEdit AddMethod(int typeId, GenName methodName);
+    public VMethodEdit AddMethod(int typeId, string methodName, ImmutableArray<string> genParams);
 
     public IEnumerable<VCtorEdit> EditCtorOverloads(int typeId);
     public VCtorEdit AddCtor(int typeId);
 
-    public VAccessorEdit AddAccessor(int typeId, int sourceId, string accessorName);
+    public VAccessorEdit AddAccessor(int typeId, int sourceId, VAccessorKind kind);
 }
 public partial class ParserProcess : VirtualContext
 {
@@ -310,16 +325,16 @@ public partial class ParserProcess : VirtualContext
 
     //===== MEMBERS =====
     //TYPE
-    public bool TryEditTypeMember(int outerId, GenName typeName, out VTypeMemberEdit edit)
-    => VIR.TryEditTypeMember(outerId, typeName, out edit);
-    public VTypeMemberEdit EditTypeMember(int outerId, GenName typeName)
-    => VIR.EditTypeMember(outerId, typeName);
+    public bool TryEditType(int outerId, GenName typeName, out VTypeEdit edit)
+    => VIR.TryEditType(outerId, typeName, out edit);
+    public VTypeEdit EditType(int outerId, GenName typeName)
+    => VIR.EditType(outerId, typeName);
 
     public bool TryEditObject(int outerId, GenName typeName, out VObjectEdit edit)
     => VIR.TryEditObject(outerId, typeName, out edit);
-    public VObjectEdit AddObject(int outerId, GenName typeName)
+    public VObjectEdit AddObject(int outerId, string typeName, ImmutableArray<string> genParams)
     {
-        var edit = VIR.AddObject(outerId, typeName);
+        var edit = VIR.AddObject(outerId, typeName, genParams);
         SetSourceNode(edit);
 
         return edit;
@@ -327,9 +342,9 @@ public partial class ParserProcess : VirtualContext
 
     public bool TryEditStruct(int outerId, GenName typeName, out VStructEdit edit)
     => VIR.TryEditStruct(outerId, typeName, out edit);
-    public VStructEdit AddStruct(int outerId, GenName typeName)
+    public VStructEdit AddStruct(int outerId, string typeName, ImmutableArray<string> genParams)
     {
-        var edit = VIR.AddStruct(outerId, typeName);
+        var edit = VIR.AddStruct(outerId, typeName, genParams);
         SetSourceNode(edit);
 
         return edit;
@@ -337,9 +352,9 @@ public partial class ParserProcess : VirtualContext
 
     public bool TryEditInterface(int outerId, GenName interfaceName, out VInterfaceEdit edit)
     => VIR.TryEditInterface(outerId, interfaceName, out edit);
-    public VInterfaceEdit AddInterface(int outerId, GenName interfaceName)
+    public VInterfaceEdit AddInterface(int outerId, string interfaceName, ImmutableArray<string> genParams)
     {
-        var edit = VIR.AddInterface(outerId, interfaceName);
+        var edit = VIR.AddInterface(outerId, interfaceName, genParams);
         SetSourceNode(edit);
 
         return edit;
@@ -372,9 +387,9 @@ public partial class ParserProcess : VirtualContext
     => VIR.EditMethodOverloads(typeId, methodName);
     public IEnumerable<VMethodEdit> EditMethodOverloadsByName(int typeId, string methodName)
     => VIR.EditMethodOverloadsByName(typeId, methodName);
-    public VMethodEdit AddMethod(int typeId, GenName methodName)
+    public VMethodEdit AddMethod(int typeId, string methodName, ImmutableArray<string> genParams)
     {
-        var edit = VIR.AddMethod(typeId, methodName);
+        var edit = VIR.AddMethod(typeId, methodName, genParams);
         SetSourceNode(edit);
 
         return edit;
@@ -390,11 +405,12 @@ public partial class ParserProcess : VirtualContext
         return edit;
     }
 
-    public VAccessorEdit AddAccessor(int typeId, int sourceId, string accessorName)
+    public VAccessorEdit AddAccessor(int typeId, int sourceId, VAccessorKind kind)
     {
-        var edit = VIR.AddAccessor(typeId, sourceId, accessorName);
+        var edit = VIR.AddAccessor(typeId, sourceId, kind);
         SetSourceNode(edit);
 
         return edit;
     }
 }
+*/

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using DrzSharp.Compiler.Virtual;
 using Mono.Cecil;
 
@@ -10,188 +11,255 @@ internal static partial class VirtualLoader
     //=======================
     private static void BindAssembly(VirtualContext vctx)
     {
-        //LOAD TYPE NAMES
         foreach (var type in vctx.Definition.MainModule.Types)
             BindType(vctx, NspaceOf(vctx.Asm, type.Namespace).Id, type);
     }
 
     //>>>> BIND TYPE <<<<
-    private static bool IsTypeGenerated(VTypeMemberEdit vtype, TypeDefinition type)
-    {
-        vtype.Definition = type;
-        return vtype.IsCompilerGenerated = IsCompilerGenerated(type.Name);
-    }
-    private static void BindMembers(VirtualContext vctx, VComposableTypeEdit vtype)
+    private static void BindTypeMembers(VirtualContext vctx, VComposableTypeEdit vtype)
     {
         var type = vtype.Definition;
 
-        //**FIELDS**
+        //FIELDS
         foreach (var field in type.Fields)
             BindField(vctx, vtype.Id, field);
 
-        //**PROPERTIES**
+        //PROPERTIES
         foreach (var prop in type.Properties)
             BindProperty(vctx, vtype.Id, prop);
 
-        //**METHODS**
+        //METHODS
         foreach (var method in type.Methods)
             BindMethod(vctx, vtype.Id, method);
     }
     private static void BindType(VirtualContext vctx, int outerId, TypeDefinition type)
     {
         var name = type.Name;
-        //===== SPECIAL TYPES =====
+        T bindGenerics<T>(T vtype) where T : VTypeEdit, IGenericEdit
+        {
+            foreach (var param in type.GenericParameters)
+                vtype.GenericParamsMut.Add(new(param.Name));
+
+            return vtype;
+        }
+
+        //>>>> TYPES
+        VTypeEdit vtype;
         if (type.IsInterface)
+            vtype = bindGenerics(
+                vctx.Asm.AddInterface(outerId, GenericNameOf(name))
+            );
+        else if (type.IsValueType && !type.IsEnum)
+            vtype = bindGenerics(
+                vctx.Asm.AddStruct(outerId, GenericNameOf(name))
+            );
+        else
+            vtype = bindGenerics(
+                vctx.Asm.AddObject(outerId, GenericNameOf(name))
+            );
+
+        vtype.Definition = type;
+
+        //VISIBILITY
+        var vis = VMemberVisibility.PUBLIC;
+        if (type.IsNotPublic || type.IsNestedAssembly)
+            vis = VMemberVisibility.ASSEMBLY;
+        else if (type.IsNestedPrivate)
+            vis = VMemberVisibility.PRIVATE;
+        else if (type.IsNestedFamily)
+            vis = VMemberVisibility.FAMILY;
+        else if (type.IsNestedFamilyOrAssembly)
+            vis = VMemberVisibility.FAMILY_OR_ASSEMBLY;
+        else if (type.IsNestedFamilyAndAssembly)
+            vis = VMemberVisibility.FAMILY_AND_ASSEMBLY;
+        vtype.Visibility = vis;
+
+        //LAYOUT
+        if (vtype is ILayoutEdit ilayout)
         {
-            BindInterface(vctx, outerId, type);
+            var lay = VTypeLayout.AUTO;
+            if (type.IsSequentialLayout)
+                lay = VTypeLayout.SEQUENTIAL;
+            else if (type.IsExplicitLayout)
+                lay = VTypeLayout.EXPLICIT;
+            ilayout.Layout = lay;
+        }
+
+        //MODIFIERS
+        if (vtype is IAbstractEdit iabstract && type.IsAbstract)
+            iabstract.IsAbstract = true;
+        if (vtype is ISealedEdit isealed && type.IsSealed)
+            isealed.IsSealed = true;
+
+        //>>>> TYPE MEMBERS
+        if (vctx.Asm.IsTypeContainer(vtype.Id))
+        {
+            foreach (var nestedType in type.NestedTypes)
+                BindType(vctx, vtype.Id, nestedType);
+        }
+
+        if (IsCompilerGenerated(type.Name))
+        {
+            vtype.IsCompilerGenerated = true;
             return;
         }
-        if (type.IsValueType && !type.IsEnum)
-        {
-            BindStruct(vctx, outerId, type);
-            return;
-        }
 
-        //===== OBJECT =====
-        var vobject = vctx.Asm.AddObject(outerId, GenericNameOf(name));
-
-        //**NESTED TYPES**
-        foreach (var nestedType in type.NestedTypes)
-            BindType(vctx, vobject.Id, nestedType);
-
-        if (IsTypeGenerated(vobject, type))
-            return;
-
-        BindMembers(vctx, vobject);
-    }
-    private static void BindStruct(VirtualContext vctx, int outerId, TypeDefinition type)
-    {
-        var vstruct = vctx.Asm.AddStruct(outerId, GenericNameOf(type.Name));
-
-        //**NESTED TYPES**
-        foreach (var nestedType in type.NestedTypes)
-            BindType(vctx, vstruct.Id, nestedType);
-
-        if (IsTypeGenerated(vstruct, type))
-            return;
-
-        BindMembers(vctx, vstruct);
-    }
-    private static void BindInterface(VirtualContext vctx, int outerId, TypeDefinition type)
-    {
-        var vinterface = vctx.Asm.AddInterface(outerId, GenericNameOf(type.Name));
-
-        if (IsTypeGenerated(vinterface, type))
-            return;
-
-        BindMembers(vctx, vinterface);
+        if (vtype is VComposableTypeEdit vcomposable)
+            BindTypeMembers(vctx, vcomposable);
     }
 
     //>>>> BIND FIELD <<<<
-    private static void BindFieldMemberEdit(VFieldMemberEdit vfield, FieldDefinition field)
-    {
-        vfield.Definition = field;
-    }
     private static void BindField(VirtualContext vctx, int typeId, FieldDefinition field)
     {
         var name = field.Name;
         if (IsCompilerGenerated(name))
             return;
 
-        //===== SPECIAL FIELDS =====
+        //>>>> FIELDS
+        VFieldMemberEdit vfield;
+        vfield = vctx.Asm.AddField(typeId, name);
 
-        //===== BASE FIELD =====
-        var vfield = vctx.Asm.AddField(typeId, name);
-        BindFieldMemberEdit(vfield, field);
+        vfield.Definition = field;
+
+        //VISIBILITY
+        var vis = VMemberVisibility.PUBLIC;
+        if (field.IsAssembly)
+            vis = VMemberVisibility.ASSEMBLY;
+        else if (field.IsPrivate)
+            vis = VMemberVisibility.PRIVATE;
+        else if (field.IsFamily)
+            vis = VMemberVisibility.FAMILY;
+        else if (field.IsFamilyOrAssembly)
+            vis = VMemberVisibility.FAMILY_OR_ASSEMBLY;
+        else if (field.IsFamilyAndAssembly)
+            vis = VMemberVisibility.FAMILY_AND_ASSEMBLY;
+        vfield.Visibility = vis;
+
+        //MODIFIERS
+        if (vfield is IStaticEdit istatic && field.IsStatic)
+            istatic.IsStatic = true;
     }
 
     //>>>> BIND PROPERTY <<<<
-    private static void BindPropertyMemberEdit(VirtualContext vctx, int typeId, VPropertyMemberEdit vproperty, PropertyDefinition property)
-    {
-        vproperty.Definition = property;
-
-        //BIND ACCESSORS
-        int bind(MethodDefinition method)
-        => BindAccessor(vctx, typeId, vproperty.Id, method);
-
-        if (property.GetMethod is not null)
-            vproperty.Getter = bind(property.GetMethod);
-        if (property.SetMethod is not null)
-            vproperty.Setter = bind(property.SetMethod);
-    }
     private static void BindProperty(VirtualContext vctx, int typeId, PropertyDefinition property)
     {
         var name = property.Name;
         if (IsCompilerGenerated(name))
             return;
 
-        //===== SPECIAL PROPERTIES =====
+        //>>>> PROPERTY
+        VPropertyEdit vproperty;
+        vproperty = vctx.Asm.AddProperty(typeId, name);
 
-        //===== BASE PROPERTY =====
-        var vproperty = vctx.Asm.AddProperty(typeId, name);
-        BindPropertyMemberEdit(vctx, typeId, vproperty, property);
+        vproperty.Definition = property;
     }
 
     //>>>> BIND METHOD <<<<
-    private static void BindMethodMemberEdit(VMethodMemberEdit vmethod, MethodDefinition method)
-    {
-        vmethod.Definition = method;
-    }
     private static void BindMethod(VirtualContext vctx, int typeId, MethodDefinition method)
     {
         var name = method.Name;
         if (IsCompilerGenerated(name))
             return;
-
-        //===== SPECIAL METHODS =====
-        if (method.IsConstructor)
+        T bindGenerics<T>(T vtype) where T : VMethodMemberEdit, IGenericEdit
         {
-            BindCtor(vctx, typeId, method);
-            return;
+            foreach (var param in method.GenericParameters)
+                vtype.GenericParamsMut.Add(new(param.Name));
+
+            return vtype;
         }
+
+        //>>>> METHODS
+        VMethodMemberEdit vmethod = null!;
+        if (method.IsConstructor)
+            vmethod = vctx.Asm.AddCtor(typeId);
         else if (method.IsGetter || method.IsSetter)
-            return;
+        {
+            foreach (var prop in vctx.Asm.EditProperties(typeId))
+            {
+                if (prop.Definition.GetMethod == method)
+                {
+                    vmethod = vctx.Asm.AddAccessor(typeId, prop.Id, VAccessorKind.Getter);
+                    prop.Getter = vmethod.Id;
+                    break;
+                }
+                if (prop.Definition.SetMethod == method)
+                {
+                    vmethod = vctx.Asm.AddAccessor(typeId, prop.Id, VAccessorKind.Setter);
+                    prop.Setter = vmethod.Id;
+                    break;
+                }
+            }
+            if (vmethod is null)
+                throw new Exception();
+        }
+        else
+            vmethod = bindGenerics(
+                vctx.Asm.AddMethod(typeId, GenericNameOf(name))
+            );
 
-        //===== BASE METHOD =====
-        var vmethod = vctx.Asm.AddMethod(typeId, GenericNameOf(name));
-        BindMethodMemberEdit(vmethod, method);
-    }
-    private static void BindCtor(VirtualContext vctx, int typeId, MethodDefinition method)
-    {
-        var vctor = vctx.Asm.AddCtor(typeId);
-        BindMethodMemberEdit(vctor, method);
-    }
-    private static int BindAccessor(VirtualContext vctx, int typeId, int sourceId, MethodDefinition method)
-    {
-        var vaccessor = vctx.Asm.AddAccessor(typeId, sourceId, method.Name);
-        BindMethodMemberEdit(vaccessor, method);
+        vmethod.Definition = method;
 
-        return vaccessor.Id;
+        //VISIBILITY
+        var vis = VMemberVisibility.PUBLIC;
+        if (method.IsAssembly)
+            vis = VMemberVisibility.ASSEMBLY;
+        else if (method.IsPrivate)
+            vis = VMemberVisibility.PRIVATE;
+        else if (method.IsFamily)
+            vis = VMemberVisibility.FAMILY;
+        else if (method.IsFamilyOrAssembly)
+            vis = VMemberVisibility.FAMILY_OR_ASSEMBLY;
+        else if (method.IsFamilyAndAssembly)
+            vis = VMemberVisibility.FAMILY_AND_ASSEMBLY;
+        vmethod.Visibility = vis;
+
+        //MODIFIERS
+        if (vmethod is IStaticEdit istatic && method.IsStatic)
+            istatic.IsStatic = true;
+        if (vmethod is IAbstractEdit iabstract && method.IsAbstract)
+            iabstract.IsAbstract = true;
+        if (vmethod is IVirtualEdit ivirtual && method.IsVirtual)
+            ivirtual.IsVirtual = true;
+        if (vmethod is IFinalEdit ifinal && method.IsFinal)
+            ifinal.IsFinal = true;
     }
 
     //=======================
     //     NAME RESOLVER
     //=======================
-    private static VNspace NspaceOf(VAssemblyEdit vasm, string nspaceFullName)
+    private static VNspace NspaceOf(VAssemblyEdit vasm, ReadOnlySpan<char> nspaceFullName)
     {
-        VNspace vnspace = vasm.EditGlobalNspace();
-        if (nspaceFullName != string.Empty)
+        static VNspace ensureNspace(VAssemblyEdit asm, VNspace nspace, ReadOnlySpan<char> nspaceFullName, int start, int cur)
+        => asm.EnsureNspace(nspace.Id, nspaceFullName[start..cur].ToString());
+
+        VNspace vnspace = vasm.ReadGlobalNspace();
+        if (nspaceFullName.Length > 0)
         {
-            foreach (var nspaceName in nspaceFullName.Split('.'))
-                vnspace = vasm.EnsureNspace(vnspace.Id, nspaceName);
+            var start = 0;
+            var cur = 0;
+            foreach (var c in nspaceFullName)
+            {
+                if (c == '.')
+                {
+                    vnspace = ensureNspace(vasm, vnspace, nspaceFullName, start, cur);
+                    start = cur + 1;
+                }
+                cur++;
+            }
+            if (start < nspaceFullName.Length)
+                vnspace = ensureNspace(vasm, vnspace, nspaceFullName, start, cur);
         }
         return vnspace;
     }
-    private static GenName GenericNameOf(string name)
+    private static GenName GenericNameOf(ReadOnlySpan<char> name)
     {
         var index = name.IndexOf('`');
         if (index < 0)
-            return new GenName(name);
+            return new(name.ToString());
 
-        var str = name[..index];
-        var arity = int.Parse(name[(index + 1)..]);
-
-        return new GenName(str, arity);
+        var realName = name[..index];
+        var genArity = int.Parse(name[(index + 1)..]);
+        return new(realName.ToString(), genArity);
     }
     private static bool IsCompilerGenerated(string name)
     => name.Length <= 0 || name[0] == '<';

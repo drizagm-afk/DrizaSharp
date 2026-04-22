@@ -76,10 +76,6 @@ internal partial class CompilationContext
         vasm = AssemblyAt(asmId);
         return true;
     }
-
-    //>>>> INTERNAL USAGE <<<<
-    public const byte CORELIB_ID = 0;
-    public VAssembly CORELIB => DependencyAt(CORELIB_ID);
 }
 
 public readonly record struct AssemblyHash
@@ -115,4 +111,37 @@ public readonly record struct DependencyName
         _name = name;
         _publicKeyToken = BinaryPrimitives.ReadUInt64LittleEndian(publicKeyToken);
     }
+}
+
+//>>>> CORELIB <<<<
+internal partial class CompilationContext
+{
+    public int CORELIB_ID => _deps[0];
+    public VAssembly CORELIB => DependencyAt(0);
+
+    //CORELIB_TYPES
+    private static readonly ArrayView<string> NSPACE_SYSTEM = ["System"];
+
+    public VType TYPE_OBJECT => CORELIB.FindType(NSPACE_SYSTEM, new("Object"));
+    public VType TYPE_STRUCT => CORELIB.FindType(NSPACE_SYSTEM, new("Value"));
+    public VType TYPE_VOID => CORELIB.FindType(NSPACE_SYSTEM, new("Void"));
+
+    public VType TYPE_INT8 => CORELIB.FindType(NSPACE_SYSTEM, new("SByte"));
+    public VType TYPE_UINT8 => CORELIB.FindType(NSPACE_SYSTEM, new("Byte"));
+    public VType TYPE_INT16 => CORELIB.FindType(NSPACE_SYSTEM, new("Int16"));
+    public VType TYPE_UINT16 => CORELIB.FindType(NSPACE_SYSTEM, new("UInt16"));
+    public VType TYPE_INT32 => CORELIB.FindType(NSPACE_SYSTEM, new("Int32"));
+    public VType TYPE_UINT32 => CORELIB.FindType(NSPACE_SYSTEM, new("UInt32"));
+    public VType TYPE_INT64 => CORELIB.FindType(NSPACE_SYSTEM, new("Int64"));
+    public VType TYPE_UINT64 => CORELIB.FindType(NSPACE_SYSTEM, new("UInt64"));
+
+    public VType TYPE_FLOAT32 => CORELIB.FindType(NSPACE_SYSTEM, new("Single"));
+    public VType TYPE_FLOAT64 => CORELIB.FindType(NSPACE_SYSTEM, new("Double"));
+
+    public VType TYPE_INTPTR => CORELIB.FindType(NSPACE_SYSTEM, new("IntPtr"));
+    public VType TYPE_UINTPTR => CORELIB.FindType(NSPACE_SYSTEM, new("UIntPtr"));
+
+    public VType TYPE_CHAR => CORELIB.FindType(NSPACE_SYSTEM, new("Char"));
+    public VType TYPE_BOOL => CORELIB.FindType(NSPACE_SYSTEM, new("Boolean"));
+    public VType TYPE_STRING => CORELIB.FindType(NSPACE_SYSTEM, new("String"));
 }

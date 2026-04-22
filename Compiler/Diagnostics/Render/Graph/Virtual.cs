@@ -33,7 +33,7 @@ public partial class Render
             debuggedNodes[node.Id] = true;
 
             //HELPERS
-            string generics(VInfo info)
+            static string generics(VInfo info)
             {
                 if (info is IGeneric gen && gen.GenericArity > 0)
                 {
@@ -47,7 +47,7 @@ public partial class Render
             }
             string parameters(VMethodMember method)
             {
-                var paramCount = method.Params.Length;
+                var paramCount = method.Params.Count;
                 string[] methodParams = new string[paramCount];
                 for (int i = 0; i < paramCount; i++)
                 {
@@ -79,14 +79,10 @@ public partial class Render
                     break;
                 //PROPERTIES
                 case VProperty property:
-                    bool hasSetter = property.Setter >= 0;
-                    bool hasGetter = property.Getter >= 0;
+                    bool set = property.HasSetter();
+                    bool get = property.HasGetter();
 
-                    header = $"{property.Name}: {UsageToString(property.Type)} {{ {"set".If(hasSetter)}{", ".If(hasSetter && hasGetter)}{"get".If(hasGetter)} }}";
-                    if (hasSetter)
-                        debug(property.Setter, tabs + 1);
-                    if (hasGetter)
-                        debug(property.Getter, tabs + 1);
+                    header = $"{property.Name}: {UsageToString(property.Type)} {{ {"set".If(set)}{", ".If(set && get)}{"get".If(get)} }}";
                     break;
                 //METHODS
                 case VMethod method:
@@ -96,7 +92,7 @@ public partial class Render
                     header = $"{parameters(ctor)}";
                     break;
                 case VAccessor accessor:
-                    header = $"{parameters(accessor)}";
+                    header = $"";
                     break;
                 default:
                     return;
@@ -123,6 +119,15 @@ public partial class Render
                 PrintGConn($"[{kind}] {header} from <{sourceId.FileId:D3} | {sourceId.NodeId:D3}>", tabs);
             else
                 PrintGConn($"[{kind}] {header}", tabs);
+
+            //SPECIAL DEBUGGING
+            if (info is VPropertyMember prop)
+            {
+                if (prop.HasSetter())
+                    debug(prop.Setter, tabs + 1);
+                if (prop.HasGetter())
+                    debug(prop.Getter, tabs + 1);
+            }
 
             //DEBUG CHILDREN
             int childId = node.FirstChildId;
@@ -169,12 +174,10 @@ public partial class Render
                 return (InfoAt(genType.DeclId) as IGeneric)!.GenericParams[genType.ParamId].Name;
             case UArrayType arrayType:
                 return $"{UsageToString(arrayType.Type)}[{",".Repeat(arrayType.Rank)}]";
+            case UAddressType addressType:
+                return $"{UsageToString(addressType.Type)}&";
             case UPointerType ptrType:
-                return $"{UsageToString(ptrType.Type)}&";
-            case UUnsafePointerType unsafePtrType:
-                return $"{UsageToString(unsafePtrType.Type)}*";
-            case UVoidType:
-                return "void";
+                return $"{UsageToString(ptrType.Type)}*";
             default:
                 return "<INVALID>";
         }

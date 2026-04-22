@@ -13,7 +13,7 @@ public class EntryPointRule : Rule<EntryPoint>
     public EntryPointRule()
     {
         SetPattern(t => t
-            .kw("Algoritmo").Body(BODY).kw("FinAlgoritmo")
+            .kw("Run").obrace().Body(BODY).cbrace()
         );
     }
     protected override void OnInstantiate(MatchView view, EntryPoint inst)
@@ -167,35 +167,35 @@ public class RepeatStmt : RuleInstance
     public Expr Expr { get; internal set; } = null!;
     public int Body { get; private set; }
 
-    private int _varCount;
+    private int _countVar;
     private int _labelStart;
     private int _labelEnd;
     protected override void OnValidate(ValidateContext ctx)
     {
         var entryPoint = ctx.ResolveTag<EntryPoint>(Tags.MethodBody);
-        _varCount = entryPoint.AddLocal();
+        _countVar = entryPoint.AddLocal();
         _labelStart = entryPoint.AddLabel();
         _labelEnd = entryPoint.AddLabel();
     }
     protected override void OnEmit(EmitContext ctx)
     {
-        ctx.AddInstr(Local.Declare(ctx, _varCount));
+        ctx.AddInstr(ctx.DeclLocal(_countVar));
         ctx.AddInnerEmit(Expr.NodeId);
-        ctx.AddInstr(Local.Store(ctx, _varCount));
+        ctx.AddInstr(ctx.StoreLocal(_countVar));
 
-        ctx.AddInstr(Branch.Label(ctx, _labelStart));
-        ctx.AddInstr(Local.Load(ctx, _varCount));
-        ctx.AddInstr(Const.Int32(ctx, 0));
-        ctx.AddInstr(Compare.GreaterThan(ctx));
-        ctx.AddInstr(Branch.GotoIfFalse(ctx, _labelEnd));
+        ctx.AddInstr(ctx.Label(_labelStart));
+        ctx.AddInstr(ctx.LoadLocal(_countVar));
+        ctx.AddInstr(ctx.Int32(0));
+        ctx.AddInstr(ctx.GreaterThan());
+        ctx.AddInstr(ctx.GotoIfFalse(_labelEnd));
         ctx.AddInnerEmit(Body);
 
-        ctx.AddInstr(Local.Load(ctx, _varCount));
-        ctx.AddInstr(Const.Int32(ctx, 1));
-        ctx.AddInstr(Arith.Sub(ctx));
-        ctx.AddInstr(Local.Store(ctx, _varCount));
-        ctx.AddInstr(Branch.Goto(ctx, _labelStart));
-        ctx.AddInstr(Branch.Label(ctx, _labelEnd));
+        ctx.AddInstr(ctx.LoadLocal(_countVar));
+        ctx.AddInstr(ctx.Int32(1));
+        ctx.AddInstr(ctx.Sub());
+        ctx.AddInstr(ctx.StoreLocal(_countVar));
+        ctx.AddInstr(ctx.Goto(_labelStart));
+        ctx.AddInstr(ctx.Label(_labelEnd));
 
         ctx.Emit();
     }

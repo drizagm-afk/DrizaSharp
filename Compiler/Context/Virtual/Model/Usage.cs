@@ -1,5 +1,3 @@
-using System.Collections.Immutable;
-
 namespace DrzSharp.Compiler.Virtual;
 
 public abstract class UType
@@ -9,9 +7,15 @@ public abstract class UType
 public static partial class UContext
 {
     private static readonly Dictionary<DeclTypeKey, UDeclType> _declTypes = [];
-    public static UDeclType GetDeclType(GlobalId declId, UDeclType? parent)
-    => GetDeclType(declId, parent, ImmutableArray<UType>.Empty);
-    public static UDeclType GetDeclType(GlobalId declId, UDeclType? parent, params ImmutableArray<UType> args)
+
+    public static UDeclType GetDeclType(GlobalId declId)
+    => GetDeclType(null, declId);
+    public static UDeclType GetDeclType(GlobalId declId, params ArrayView<UType> args)
+    => GetDeclType(null, declId, args);
+
+    public static UDeclType GetDeclType(UDeclType? parent, GlobalId declId)
+    => GetDeclType(parent, declId, default);
+    public static UDeclType GetDeclType(UDeclType? parent, GlobalId declId, params ArrayView<UType> args)
     {
         DeclTypeKey key = new(declId, parent, args);
         if (_declTypes.TryGetValue(key, out var u))
@@ -22,13 +26,13 @@ public static partial class UContext
 }
 
 readonly record struct DeclTypeKey
-(GlobalId DeclId, UDeclType? Parent, ImmutableArray<UType> Args);
+(GlobalId DeclId, UDeclType? Parent, ArrayView<UType> Args);
 public class UDeclType : UType
 {
     public readonly GlobalId DeclId;
     public readonly UDeclType? Parent;
-    public readonly ImmutableArray<UType> Args;
-    internal UDeclType(GlobalId declId, UDeclType? parent, ImmutableArray<UType> args)
+    public readonly ArrayView<UType> Args;
+    internal UDeclType(GlobalId declId, UDeclType? parent, ArrayView<UType> args)
     { DeclId = declId; Parent = parent; Args = args; }
 }
 
@@ -83,6 +87,29 @@ public class UArrayType : UType
 //>>>> BY REFERENCE TYPE <<<<
 public static partial class UContext
 {
+    private static readonly Dictionary<AddressTypeKey, UAddressType> _addressTypes = [];
+    public static UAddressType GetAddressType(UType type)
+    {
+        AddressTypeKey key = new(type);
+        if (_addressTypes.TryGetValue(key, out var u))
+            return u;
+
+        return _addressTypes[key] = new(type);
+    }
+}
+
+readonly record struct AddressTypeKey
+(UType Type);
+public class UAddressType : UType
+{
+    public readonly UType Type;
+    internal UAddressType(UType type)
+    { Type = type; }
+}
+
+//>>>> POINTER TYPE <<<<
+public static partial class UContext
+{
     private static readonly Dictionary<PointerTypeKey, UPointerType> _pointerTypes = [];
     public static UPointerType GetPointerType(UType type)
     {
@@ -103,41 +130,11 @@ public class UPointerType : UType
     { Type = type; }
 }
 
-//>>>> POINTER TYPE <<<<
-public static partial class UContext
-{
-    private static readonly Dictionary<UnsafePointerTypeKey, UUnsafePointerType> _unsafePointerTypes = [];
-    public static UUnsafePointerType GetUnsafePointerType(UType type)
-    {
-        UnsafePointerTypeKey key = new(type);
-        if (_unsafePointerTypes.TryGetValue(key, out var u))
-            return u;
-
-        return _unsafePointerTypes[key] = new(type);
-    }
-}
-
-readonly record struct UnsafePointerTypeKey
-(UType Type);
-public class UUnsafePointerType : UType
-{
-    public readonly UType Type;
-    internal UUnsafePointerType(UType type)
-    { Type = type; }
-}
-
 //>>>> SINGLETON TYPES <<<<
 public static partial class UContext
 {
-    public static UVoidType UVoid => UVoidType.Type;
-    public static UNullType UNull => UNullType.Type;
-    public static UAnonType UAnon => UAnonType.Type;
-}
-
-public class UVoidType : UType
-{
-    internal static readonly UVoidType Type = new();
-    private UVoidType() { }
+    public static UNullType Null => UNullType.Type;
+    public static UAnonType Anon => UAnonType.Type;
 }
 public class UNullType : UType
 {
@@ -148,4 +145,31 @@ public class UAnonType : UType
 {
     internal static readonly UAnonType Type = new();
     private UAnonType() { }
+}
+
+//>>>> DECL MEMBER <<<<
+public static partial class UContext
+{
+    private static readonly Dictionary<DeclMemberKey, UDeclMember> _declMembers = [];
+    public static UDeclMember GetDeclMember(UDeclType type, GlobalId declId)
+    => GetDeclMember(type, declId, default);
+    public static UDeclMember GetDeclMember(UDeclType type, GlobalId declId, params ArrayView<UType> args)
+    {
+        DeclMemberKey key = new(declId, type, args);
+        if (_declMembers.TryGetValue(key, out var u))
+            return u;
+
+        return _declMembers[key] = new(declId, type, args);
+    }
+}
+
+readonly record struct DeclMemberKey
+(GlobalId DeclId, UDeclType Type, ArrayView<UType> Args);
+public class UDeclMember
+{
+    public readonly GlobalId DeclId;
+    public readonly UDeclType Type;
+    public readonly ArrayView<UType> Args;
+    internal UDeclMember(GlobalId declId, UDeclType type, ArrayView<UType> args)
+    { DeclId = declId; Type = type; Args = args; }
 }

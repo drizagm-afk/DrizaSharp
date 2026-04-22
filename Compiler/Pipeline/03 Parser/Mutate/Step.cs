@@ -155,7 +155,7 @@ public partial class ParserProcess
     }
     private void RestoreTags(int nodeId)
     {
-        if (_persistTags.TryGetValue(new(_curPass, nodeId), out var vals))
+        if (_persistTags.TryGetValue(new(_curPass, File.Id, nodeId), out var vals))
         {
             foreach (var val in vals)
             {
